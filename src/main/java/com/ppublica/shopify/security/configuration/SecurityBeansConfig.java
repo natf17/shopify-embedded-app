@@ -29,6 +29,7 @@ import com.ppublica.shopify.security.web.ShopifyHttpSessionOAuth2AuthorizationRe
 import com.ppublica.shopify.security.web.ShopifyOAuth2AuthorizationRequestResolver;
 import com.ppublica.shopify.security.authentication.CipherPassword;
 import com.ppublica.shopify.security.authentication.ShopifyVerificationStrategy;
+import com.ppublica.shopify.security.configurer.ShopifySecurityConfigurer;
 import com.ppublica.shopify.security.repository.TokenRepository;
 
 
@@ -41,7 +42,7 @@ public class SecurityBeansConfig {
 	private TokenRepository tokenRepository;
 	
 	@Bean
-	CipherPassword cipherPassword(@Value("${lm.security.cipher.password}") String password) {
+	CipherPassword cipherPassword(@Value("${ppublica.security.cipher.password}") String password) {
 		return new CipherPassword(password);
 	}
 	
@@ -77,12 +78,12 @@ public class SecurityBeansConfig {
 	
 	@Bean
 	public OAuth2AuthorizationRequestResolver shopifyOauth2AuthorizationRequestResolver(ClientRegistrationRepository clientRegistrationRepository) {
-		return new ShopifyOAuth2AuthorizationRequestResolver(clientRegistrationRepository, customAuthorizationRequestRepository(), SecurityConfig.INSTALL_PATH, SecurityConfig.LOGIN_ENDPOINT);
+		return new ShopifyOAuth2AuthorizationRequestResolver(clientRegistrationRepository, customAuthorizationRequestRepository(), ShopifySecurityConfigurer.INSTALL_PATH, ShopifySecurityConfigurer.LOGIN_ENDPOINT);
 	}
 	
 	@Bean
 	public ShopifyHttpSessionOAuth2AuthorizationRequestRepository customAuthorizationRequestRepository() {
-		return new ShopifyHttpSessionOAuth2AuthorizationRequestRepository(SecurityConfig.INSTALL_PATH);
+		return new ShopifyHttpSessionOAuth2AuthorizationRequestRepository(ShopifySecurityConfigurer.INSTALL_PATH);
 	}
 	
 	@Bean
@@ -92,9 +93,9 @@ public class SecurityBeansConfig {
 	
 
 	@Bean
-	protected ClientRegistration shopifyClientRegistration(@Value("${shopify.client.client_id}")String clientId,
-			 @Value("${shopify.client.client_secret}")String clientSecret, 
-			 @Value("${shopify.client.scope}")String scope) {
+	protected ClientRegistration shopifyClientRegistration(@Value("${ppublica.shopify.client.client_id}")String clientId,
+			 @Value("${ppublica.shopify.client.client_secret}")String clientSecret, 
+			 @Value("${ppublica.shopify.client.scope}")String scope) {
 		
 
         return ClientRegistration.withRegistrationId(SHOPIFY_REGISTRATION_ID)
@@ -102,7 +103,7 @@ public class SecurityBeansConfig {
             .clientSecret(clientSecret)
             .clientAuthenticationMethod(ClientAuthenticationMethod.POST)
             .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
-            .redirectUriTemplate("{baseUrl}" + SecurityConfig.AUTHORIZATION_REDIRECT_PATH + "/{registrationId}")
+            .redirectUriTemplate("{baseUrl}" + ShopifySecurityConfigurer.AUTHORIZATION_REDIRECT_PATH + "/{registrationId}")
             .scope(scope.split(","))
             .authorizationUri("https://{shop}/admin/oauth/authorize")
             .tokenUri("https://{shop}/admin/oauth/access_token")
