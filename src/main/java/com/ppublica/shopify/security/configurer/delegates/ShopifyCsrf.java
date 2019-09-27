@@ -6,6 +6,12 @@ import org.springframework.security.config.annotation.web.configurers.CsrfConfig
 
 import com.ppublica.shopify.security.configurer.ShopifySecurityConfigurer;
 
+/*
+ * Ensures that no CSRF token is required to uninstall the store.
+ * 
+ * Since WebSecurityConfigurerAdapter applies the CsrfConfigurer by default, 
+ * no configuration is necessary.
+ */
 public class ShopifyCsrf implements HttpSecurityBuilderConfigurerDelegate {
 	
 	@SuppressWarnings("unchecked")
@@ -20,6 +26,11 @@ public class ShopifyCsrf implements HttpSecurityBuilderConfigurerDelegate {
 		}
 		
 		configurer.ignoringAntMatchers(ShopifySecurityConfigurer.UNINSTALL_URI + "/*");
+		
+	}
+
+	@Override
+	public void applyShopifyInit(HttpSecurityBuilder<?> http) {
 		
 	}
 

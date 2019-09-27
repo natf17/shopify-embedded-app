@@ -11,7 +11,6 @@ import org.springframework.security.web.authentication.logout.LogoutFilter;
 
 import com.ppublica.shopify.security.authentication.ShopifyVerificationStrategy;
 import com.ppublica.shopify.security.configurer.delegates.HttpSecurityBuilderConfigurerDelegate;
-import com.ppublica.shopify.security.configurer.delegates.ShopifyAuthorization;
 import com.ppublica.shopify.security.configurer.delegates.ShopifyChannelSecurity;
 import com.ppublica.shopify.security.configurer.delegates.ShopifyCsrf;
 import com.ppublica.shopify.security.configurer.delegates.ShopifyHeaders;
@@ -43,7 +42,6 @@ public class ShopifySecurityConfigurer<H extends HttpSecurityBuilder<H>>
 		shopifyConfigurers.add(new ShopifyHeaders());
 		shopifyConfigurers.add(new ShopifyChannelSecurity());
 		shopifyConfigurers.add(new ShopifyCsrf());
-		shopifyConfigurers.add(new ShopifyAuthorization());
 		shopifyConfigurers.add(new ShopifyLogout());
 		shopifyConfigurers.add(new ShopifyOAuth2());
 
@@ -53,7 +51,7 @@ public class ShopifySecurityConfigurer<H extends HttpSecurityBuilder<H>>
 	@Override
 	public void init(H http) {
 		for(HttpSecurityBuilderConfigurerDelegate del : shopifyConfigurers) {
-			del.applyShopifyConfig(http);
+			del.applyShopifyInit(http);
 		}
 		
 	}
@@ -61,6 +59,13 @@ public class ShopifySecurityConfigurer<H extends HttpSecurityBuilder<H>>
 	
 	@Override
 	public void configure(H http) {
+		
+		for(HttpSecurityBuilderConfigurerDelegate del : shopifyConfigurers) {
+			del.applyShopifyConfig(http);
+		}
+		
+		
+		
 		ShopifyVerificationStrategy verStr = ShopifyBeansUtils.getShopifyVerificationStrategy(http);
 		OAuth2AuthorizedClientService cS = ShopifyBeansUtils.getAuthorizedClientService(http);
 		

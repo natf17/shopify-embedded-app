@@ -9,9 +9,14 @@ import com.ppublica.shopify.security.service.ShopifyBeansUtils;
 
 public class ShopifyOAuth2 implements HttpSecurityBuilderConfigurerDelegate {
 	
-	@SuppressWarnings("unchecked")
 	@Override
 	public void applyShopifyConfig(HttpSecurityBuilder<?> http) {
+		
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public void applyShopifyInit(HttpSecurityBuilder<?> http) {
 		OAuth2LoginConfigurer<HttpSecurity> configurer = new OAuth2LoginConfigurer<HttpSecurity>();		
 		
 		configurer = http.getConfigurer(configurer.getClass());
@@ -32,6 +37,7 @@ public class ShopifyOAuth2 implements HttpSecurityBuilderConfigurerDelegate {
 			          	.successHandler(ShopifyBeansUtils.getSuccessHandler(http))
 			          	.loginPage(ShopifySecurityConfigurer.LOGIN_ENDPOINT) // for use outside of an embedded app since it involves a redirect
 			          	.failureUrl(ShopifySecurityConfigurer.AUTHENTICATION_FALURE_URL); // see AbstractAuthenticationProcessingFilter	
+		
 		
 	}
 	

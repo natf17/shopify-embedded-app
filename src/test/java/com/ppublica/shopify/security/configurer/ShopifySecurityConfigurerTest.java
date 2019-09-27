@@ -23,8 +23,11 @@ import org.springframework.web.context.WebApplicationContext;
 @WebAppConfiguration
 public class ShopifySecurityConfigurerTest {
 	
-	private static final String INSTALL_PATH = ShopifySecurityConfigurer.INSTALL_PATH + "/shopify";
 	private static final String LOGIN_ENDPOINT = ShopifySecurityConfigurer.LOGIN_ENDPOINT;
+	private static final String ANY_INSTALL_PATH = ShopifySecurityConfigurer.ANY_INSTALL_PATH;
+	private static final String FAV_ICON = "/favicon.ico";
+	private static final String INSTALL_PATH = ShopifySecurityConfigurer.INSTALL_PATH;
+	
 	
 	@Autowired
 	WebApplicationContext wac;
@@ -56,7 +59,15 @@ public class ShopifySecurityConfigurerTest {
 	static class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 		@Override
 		protected void configure(HttpSecurity http) throws Exception {
-			// config here
+			// minimum requirements...
+			http.authorizeRequests()
+					.mvcMatchers(LOGIN_ENDPOINT).permitAll()
+					.mvcMatchers(ANY_INSTALL_PATH).permitAll()
+					.mvcMatchers(FAV_ICON).permitAll()
+					.anyRequest().authenticated().and()
+				.requiresChannel()
+					.anyRequest()
+						.requiresSecure();
 		}
 	}
 }

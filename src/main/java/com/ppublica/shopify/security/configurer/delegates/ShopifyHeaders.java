@@ -3,6 +3,12 @@ package com.ppublica.shopify.security.configurer.delegates;
 import org.springframework.security.config.annotation.web.HttpSecurityBuilder;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 
+/*
+ * Ensures the app can be served as an embedded app by preventing Spring from writing the X-Frame-Options header.
+ * 
+ * Since WebSecurityConfigurerAdapter applies the HeadersConfigurer by default, 
+ * no configuration is necessary.
+ */
 public class ShopifyHeaders implements HttpSecurityBuilderConfigurerDelegate {
 
 	@SuppressWarnings("unchecked")
@@ -18,6 +24,11 @@ public class ShopifyHeaders implements HttpSecurityBuilderConfigurerDelegate {
 		}
 		
 		configurer.frameOptions().disable();
+		
+	}
+
+	@Override
+	public void applyShopifyInit(HttpSecurityBuilder<?> http) {
 		
 	}
 
