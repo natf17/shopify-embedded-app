@@ -23,18 +23,21 @@
        		<groupId>org.springframework.security</groupId>
         	<artifactId>spring-security-web</artifactId>
         	<version>5.1.6.RELEASE</version> 
+        	<scope>compile</scope>
    	   	</dependency>
    	   	
     	<dependency>
         	<groupId>org.springframework.security</groupId>
         	<artifactId>spring-security-config</artifactId>
             <version>5.1.6.RELEASE</version>   
+            <scope>compile</scope>
     	</dependency>
 		
 		<dependency>
     		<groupId>org.springframework</groupId>
     		<artifactId>spring-webmvc</artifactId>
     		<version>5.1.9.RELEASE</version>
+    		<scope>compile</scope>
 		</dependency>
 		
 		<dependency>
@@ -49,6 +52,7 @@
     		<groupId>org.springframework.security</groupId>
     		<artifactId>spring-security-oauth2-client</artifactId>
     		<version>5.1.6.RELEASE</version>
+    		<scope>compile</scope>
 		</dependency>
 		
 		<dependency>
@@ -62,11 +66,13 @@
     		<groupId>commons-codec</groupId>
     		<artifactId>commons-codec</artifactId>
     		<version>1.11</version>
+    		<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>commons-io</groupId>
 			<artifactId>commons-io</artifactId>
 			<version>2.6</version>
+			<scope>compile</scope>
 		</dependency>
 		
 		<dependency>
@@ -87,6 +93,25 @@
 		    <version>5.1.9.RELEASE</version>
 		    <scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.hsqldb</groupId>
+			<artifactId>hsqldb</artifactId>
+			<scope>test</scope>
+			<version>2.5.0</version>
+		</dependency>
+		<dependency>
+		    <groupId>com.fasterxml.jackson.core</groupId>
+		    <artifactId>jackson-databind</artifactId>
+		    <version>2.10.0.pr3</version>
+		    <scope>test</scope>
+		</dependency>
+		<dependency>
+		    <groupId>org.springframework.security</groupId>
+		    <artifactId>spring-security-test</artifactId>
+		    <version>5.1.6.RELEASE</version>
+		    <scope>test</scope>
+		</dependency>
+		
 	</dependencies>
 
 </project>

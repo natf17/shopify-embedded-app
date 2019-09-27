@@ -74,7 +74,6 @@ public class ShopifyOriginFilter implements Filter {
 	@Override
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
 			throws IOException, ServletException {
-
 		boolean mustBeFromShopify = false;
 		boolean comesFromShopify = false;
 		boolean isAlreadyAuthenticated = false;

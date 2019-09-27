@@ -24,7 +24,6 @@ public class ShopifyOAuth2 implements HttpSecurityBuilderConfigurerDelegate {
 		if (configurer == null) {
 			throw new RuntimeException("OAuth2LoginConfigurer is required");
 		}
-		
 		configurer.authorizationEndpoint()
 						.authorizationRequestResolver(ShopifyBeansUtils.getRequestResolver(http))
 					.and()

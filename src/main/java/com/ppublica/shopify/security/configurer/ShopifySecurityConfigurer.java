@@ -50,6 +50,7 @@ public class ShopifySecurityConfigurer<H extends HttpSecurityBuilder<H>>
 	// this configurer's init() method is applied before all others
 	@Override
 	public void init(H http) {
+
 		for(HttpSecurityBuilderConfigurerDelegate del : shopifyConfigurers) {
 			del.applyShopifyInit(http);
 		}
@@ -63,12 +64,9 @@ public class ShopifySecurityConfigurer<H extends HttpSecurityBuilder<H>>
 		for(HttpSecurityBuilderConfigurerDelegate del : shopifyConfigurers) {
 			del.applyShopifyConfig(http);
 		}
-		
-		
-		
+			
 		ShopifyVerificationStrategy verStr = ShopifyBeansUtils.getShopifyVerificationStrategy(http);
 		OAuth2AuthorizedClientService cS = ShopifyBeansUtils.getAuthorizedClientService(http);
-		
 		http.addFilterAfter(new ShopifyOriginFilter(verStr, ANY_AUTHORIZATION_REDIRECT_PATH, ANY_INSTALL_PATH), LogoutFilter.class);
 		http.addFilterAfter(new ShopifyExistingTokenFilter(cS, INSTALL_PATH), ShopifyOriginFilter.class);
 		http.addFilterBefore(new UninstallFilter(UNINSTALL_URI, verStr, cS, ShopifyBeansUtils.getJacksonConverter(http)), OAuth2AuthorizationRequestRedirectFilter.class);

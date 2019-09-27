@@ -82,7 +82,6 @@ public class ShopifyOAuth2AuthorizationRequestResolver implements OAuth2Authoriz
 	 */
 	@Override
 	public OAuth2AuthorizationRequest resolve(HttpServletRequest request) {
-
 		// is already properly authenticated, skip
 		if(isAuthenticated(request)) {
 			return null;
