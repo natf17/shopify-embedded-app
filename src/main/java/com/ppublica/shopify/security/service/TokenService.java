@@ -3,7 +3,6 @@ package com.ppublica.shopify.security.service;
 import java.util.Set;
 
 
-import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.encrypt.Encryptors;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
 import org.springframework.security.crypto.keygen.KeyGenerators;
@@ -35,7 +34,7 @@ public class TokenService {
 
 	}
 	
-	public void saveNewStore(OAuth2AuthorizedClient authorizedClient, Authentication principal) {
+	public void saveNewStore(OAuth2AuthorizedClient authorizedClient, OAuth2AuthenticationToken principal) {
 		
 		String shop = getStoreName(principal);
 		
@@ -92,7 +91,7 @@ public class TokenService {
 	
 	
 	
-	public void updateStore(OAuth2AuthorizedClient authorizedClient, Authentication principal) {
+	public void updateStore(OAuth2AuthorizedClient authorizedClient, OAuth2AuthenticationToken principal) {
 		
 		String shop = getStoreName(principal);
 		
@@ -103,22 +102,38 @@ public class TokenService {
 	}
 	
 	public void uninstallStore(String store) {
-		this.tokenRepository.uninstallStore(store);
+		if(store != null && !store.isEmpty()) {
+			this.tokenRepository.uninstallStore(store);
+		}
 	}
 	
 	
 	
-	private String getStoreName(Authentication principal) {
-		String shop = ((OAuth2AuthenticationToken)principal).getPrincipal().getName();
+	private String getStoreName(OAuth2AuthenticationToken principal) {
+		String shop = principal.getPrincipal().getName();
 
 		return shop;
 	}
-	
+	/*
+	 * Returns null if there is an inconsistency in the salts or passwords
+	 */
 	private OAuth2AccessToken getRawToken(OAuth2AccessTokenWithSalt toS) {
 		String salt = toS.getSalt();
 		
+		if(salt == null) {
+			return null;
+		}
+		
 		OAuth2AccessToken enTok = toS.getAccess_token();
+		if(enTok == null) {
+			return null;
+		}
+		
 		String decryptedToken = decryptToken(new EncryptedTokenAndSalt(enTok.getTokenValue(), salt));
+		
+		if(decryptedToken == null) {
+			return null;
+		}
 		
 		return new OAuth2AccessToken(enTok.getTokenType(),
 									 decryptedToken,

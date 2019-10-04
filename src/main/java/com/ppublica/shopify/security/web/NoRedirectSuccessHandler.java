@@ -42,7 +42,7 @@ public class NoRedirectSuccessHandler implements AuthenticationSuccessHandler {
 		defaultHandler.onAuthenticationSuccess(request, response, authentication);
 		
 		RequestDispatcher rs = request.getRequestDispatcher(ShopifySecurityConfigurer.AUTHORIZATION_REDIRECT_PATH);
-		
+
 		rs.forward(request, response);
 		
 	}

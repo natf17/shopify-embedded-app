@@ -8,8 +8,8 @@ import org.springframework.security.core.GrantedAuthority;
 /*
  * Set by ShopifyExistingTokenFilter
  * 
- * This Authentication implementation holds information regarding the source of the request:
- * whether or not it comes from Shopify. It never exists past the ShopifyExistingTokenFilter
+ * The presence of this token indicates that the request came from Shopify. 
+ * It never exists past the ShopifyExistingTokenFilter.
  * 
  */
 public class ShopifyOriginToken implements Authentication {
@@ -18,15 +18,6 @@ public class ShopifyOriginToken implements Authentication {
 	 * 
 	 */
 	private static final long serialVersionUID = 6956977021883422793L;
-	private boolean isFromShopify;
-	
-	public ShopifyOriginToken(boolean isFromShopify) {
-		this.isFromShopify = isFromShopify;
-	}
-	
-	public boolean isFromShopify() {
-		return this.isFromShopify;
-	}
 	
 
 	@Override

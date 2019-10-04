@@ -45,7 +45,7 @@ public class ShopifyTokenRepositoryImpl implements TokenRepository {
 		return token;
 	}
 	
-	class StoreTokensMapper implements RowMapper<OAuth2AccessTokenWithSalt> {
+	static class StoreTokensMapper implements RowMapper<OAuth2AccessTokenWithSalt> {
 
 		@Override
 		public OAuth2AccessTokenWithSalt mapRow(ResultSet rs, int arg) throws SQLException {

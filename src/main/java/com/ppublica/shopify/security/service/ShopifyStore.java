@@ -24,14 +24,13 @@ public class ShopifyStore  implements OAuth2User, Serializable {
 	private final Collection<? extends GrantedAuthority> authorities;
 	private final Map<String, Object> attributes;
 	
-	public ShopifyStore(String name, String accessToken, String apiKey) {			
+	public ShopifyStore(String name, String accessToken, String apiKey, Collection<? extends GrantedAuthority> authorities) {			
 		this.name = name;
 		this.attributes = new HashMap<>();
 		this.attributes.put(ACCESS_TOKEN_KEY, accessToken);
 		this.attributes.put(API_KEY, apiKey);
 		
-		this.authorities = new ArrayList<>();
-
+		this.authorities = authorities == null ? new ArrayList<>() : authorities;
 		
 	}
 	

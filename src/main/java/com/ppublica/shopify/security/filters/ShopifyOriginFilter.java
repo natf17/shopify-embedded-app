@@ -42,13 +42,20 @@ import com.ppublica.shopify.security.authentication.ShopifyVerificationStrategy;
  * For any other matching path (/install/**), it populates the SecurityContext with a ShopifyOriginToken
  * if and only if it came from Shopify.
  * 
- * Also, for every request that matches the installation path (/install/**) and comes from Shopify, 
- * a session attribute is set to note that this is an embedded app:
+ * Also, for requests to the installation path (/install/**), a session attribute is set to indicate that 
+ * this is an embedded app:
  * 
  * session.addAttribute("SHOPIFY_EMBEDDED_APP", true);
  * 
- * If not, it's removed.
+ * It is ADDED in the following situations:
+ *  - If the request came from Shopify, whether or not the user is authenticated with a OAuth2AuthenticationToken
  * 
+ * It is REMOVED in the following situations:
+ *  - If the user is not authenticated with a OAuth2AuthenticationToken AND the request did not come from Shopify
+ *  
+ *  It will remain unchanged if the user is already authenticated and the request did not come from Shopify.
+ *  If it had the attribute, it'll remain. It it didn't have it, it will not be added. 
+
  */
 public class ShopifyOriginFilter implements Filter {
 
@@ -58,13 +65,13 @@ public class ShopifyOriginFilter implements Filter {
 	private AccessDeniedHandler accessDeniedHandler = new AccessDeniedHandlerImpl();
 	private String SHOPIFY_EMBEDDED_APP = "SHOPIFY_EMBEDDED_APP";
 	
-	public ShopifyOriginFilter(ShopifyVerificationStrategy shopifyVerificationStrategy, String authorizationPath, String... matchedPaths) {
+	public ShopifyOriginFilter(ShopifyVerificationStrategy shopifyVerificationStrategy, String authorizationPath, String... maybeUris) {
 		this.mustComeFromShopifyMatcher = new AntPathRequestMatcher(authorizationPath);
 		this.shopifyVerificationStrategy = shopifyVerificationStrategy;
 		
 		applicablePaths = new ArrayList<>();
 		applicablePaths.add(mustComeFromShopifyMatcher);
-		Arrays.stream(matchedPaths).forEach(i -> applicablePaths.add(new AntPathRequestMatcher(i)));
+		Arrays.stream(maybeUris).forEach(i -> applicablePaths.add(new AntPathRequestMatcher(i)));
 		
 	}
 	
@@ -95,10 +102,9 @@ public class ShopifyOriginFilter implements Filter {
 		if(mustBeFromShopify) {
 
 			if(comesFromShopify && hasValidNonce(request)) {
-
-				if(!isAlreadyAuthenticated) {
-					SecurityContextHolder.getContext().setAuthentication(new ShopifyOriginToken(true));
-				}
+				// we don't need the ShopifyOriginToken if the path is to the uri Shopify is sending 
+				// the authentication code to
+				
 			} else {
 				// do not set any Authentication
 				// the path must be .authenticated() 
@@ -110,11 +116,13 @@ public class ShopifyOriginFilter implements Filter {
 			if(comesFromShopify) {
 				setEmbeddedApp((HttpServletRequest)request);
 				if(!isAlreadyAuthenticated) {
-					SecurityContextHolder.getContext().setAuthentication(new ShopifyOriginToken(true));
+					SecurityContextHolder.getContext().setAuthentication(new ShopifyOriginToken());
 					
 				}
 			} else {
-				removeEmbeddedApp((HttpServletRequest)request);
+				if(!isAlreadyAuthenticated) {
+					removeEmbeddedApp((HttpServletRequest)request);
+				}
 			}
 
 		}

@@ -1,5 +1,11 @@
 package com.ppublica.shopify.security.service;
 
+import java.util.Collection;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
@@ -30,7 +36,16 @@ public class DefaultShopifyUserService implements OAuth2UserService<OAuth2UserRe
 	public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
 		Object shopName = userRequest.getAdditionalParameters().get(ShopifyOAuth2AuthorizationRequestResolver.SHOPIFY_SHOP_PARAMETER_KEY_FOR_TOKEN);
 		String apiKey = userRequest.getClientRegistration().getClientId();
-		return new ShopifyStore((String)shopName, userRequest.getAccessToken().getTokenValue(), apiKey);
+		
+		Set<String> scopes = userRequest.getAccessToken().getScopes();
+		Collection<GrantedAuthority> authorities = null;
+		if(scopes != null) {
+			authorities = scopes.stream()
+									.map(scope -> new SimpleGrantedAuthority(scope))
+									.collect(Collectors.toList());
+		}
+		
+		return new ShopifyStore((String)shopName, userRequest.getAccessToken().getTokenValue(), apiKey, authorities);
 	}
 	
 }

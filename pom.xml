@@ -111,6 +111,13 @@
 		    <version>5.1.6.RELEASE</version>
 		    <scope>test</scope>
 		</dependency>
+		<dependency>
+		    <groupId>com.squareup.okhttp3</groupId>
+		    <artifactId>mockwebserver</artifactId>
+		    <version>4.2.0</version>
+		    <scope>test</scope>
+		</dependency>
+		
 		
 	</dependencies>
 

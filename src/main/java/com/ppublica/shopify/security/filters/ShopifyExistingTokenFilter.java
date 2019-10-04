@@ -59,28 +59,18 @@ public class ShopifyExistingTokenFilter extends GenericFilterBean {
 		}
 		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
-		ShopifyOriginToken originToken = null;
 		OAuth2AuthenticationToken oauth2Token = null;
 		
 		if(auth != null && auth instanceof ShopifyOriginToken) {
 			// this request is to the installation path from an embedded app
-			originToken = (ShopifyOriginToken)auth;
 			
-			if(originToken.isFromShopify()) {
-				
-				oauth2Token = this.getToken(req);
-				if(oauth2Token != null) {
+			oauth2Token = this.getToken(req);
+			if(oauth2Token != null) {
 
-					this.setToken(oauth2Token);
-				} else {
-					// If the store has not been installed, ShopifyOriginToken is still in the SecurityContextHolder
-					// Remove it
-					clearAuthentication();
-				}
-				
-			}
-			// just in case the ShopifyOriginToken indicates the req. isn't from Shopify
-			else {
+				this.setToken(oauth2Token);
+			} else {
+				// If the store has not been installed, ShopifyOriginToken is still in the SecurityContextHolder
+				// Remove it
 				clearAuthentication();
 			}
 			
@@ -135,7 +125,7 @@ public class ShopifyExistingTokenFilter extends GenericFilterBean {
 		String apiKey = client.getClientRegistration().getClientId();
 		
 		return new ShopifyStore(client.getPrincipalName(),
-														  client.getAccessToken().getTokenValue(), apiKey);
+														  client.getAccessToken().getTokenValue(), apiKey, null);
 	}
 	
 	

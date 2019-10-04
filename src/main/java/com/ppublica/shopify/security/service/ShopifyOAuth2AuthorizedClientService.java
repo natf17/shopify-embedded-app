@@ -10,7 +10,7 @@ import org.springframework.security.oauth2.client.authentication.OAuth2Authentic
  * AuthenticatedPrincipalOAuth2AuthorizedClientRepository to save the OAuth2AuthorizedClient.
  * It's also invoked by ShopifyExistingFilter to see if, in an embedded app, the shop has already installed this app
  * 
- * It replaces the default InMemoryOAuth2AuthorizedClientService` (see OAuth2ClientConfigurerUtils)
+ * It replaces the default InMemoryOAuth2AuthorizedClientService (see OAuth2ClientConfigurerUtils)
  * 
  * This client service uses the custom tokenService to save the store in a database (instead of in memory),
  * or to update the store credentials if this store has already been "installed".
@@ -57,13 +57,20 @@ public class ShopifyOAuth2AuthorizedClientService implements OAuth2AuthorizedCli
 	@Override
 	public void saveAuthorizedClient(OAuth2AuthorizedClient authorizedClient, Authentication principal) {
 		
-		String shop = ((OAuth2AuthenticationToken)principal).getPrincipal().getName();
+		if(!OAuth2AuthenticationToken.class.isAssignableFrom(principal.getClass())) {
+			throw new IllegalArgumentException("The principal must be of type OAuth2AuthenticationToken");
+		}
+		
+		OAuth2AuthenticationToken pr = (OAuth2AuthenticationToken)principal;
+		
+		String shop = pr.getPrincipal().getName();
+		
 		boolean doesStoreExist = tokenService.doesStoreExist(shop);
 
 		if(doesStoreExist) {
-			tokenService.updateStore(authorizedClient, principal);
+			tokenService.updateStore(authorizedClient, pr);
 		} else {
-			tokenService.saveNewStore(authorizedClient, principal);
+			tokenService.saveNewStore(authorizedClient, pr);
 
 		}
 	

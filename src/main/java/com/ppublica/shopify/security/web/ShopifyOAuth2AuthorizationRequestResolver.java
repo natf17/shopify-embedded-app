@@ -86,7 +86,6 @@ public class ShopifyOAuth2AuthorizationRequestResolver implements OAuth2Authoriz
 		if(isAuthenticated(request)) {
 			return null;
 		}
-
 		// extract the registrationId (ex: "shopify")
 		String registrationId;
 		

@@ -203,7 +203,7 @@ public class ShopifyVerificationStrategy {
 	
 	public String getClientSecret(HttpServletRequest req) {
 		
-		Map.Entry<String, OAuth2AuthorizationRequest> authReq = authReqRepository.getFirstAuthorizationRequest(req);
+		OAuth2AuthorizationRequest authReq = authReqRepository.getAnAuthorizationRequest(req);
 		String clientId = null;
 		ClientRegistration reg = null;
 		String clientSecret = null;
@@ -218,7 +218,7 @@ public class ShopifyVerificationStrategy {
 			clientSecret = getClientSecretByRegistrationId(registrationId);
 			
 		} else {
-			clientId = authReq.getValue().getClientId();
+			clientId = authReq.getClientId();
 			
 			Iterator<ClientRegistration> it = ((InMemoryClientRegistrationRepository)clientRegistrationRepository).iterator();
 			

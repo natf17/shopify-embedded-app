@@ -55,7 +55,6 @@ public class UninstallFilter implements Filter {
 		
 		if(this.verificationStrategy.isHeaderShopifyRequest(req, REGISTRATION_ID)) {
 			doUninstall(req, resp);
-			unininstallSuccess(req, resp);
 			
 			return;
 		}
@@ -83,17 +82,20 @@ public class UninstallFilter implements Filter {
 
 		if(body == null) {
 			uninstallFailure(request, response);
-		}
+			return;
+		} 
 		String storeName = body.getShop_domain();
-		
+
 		if(storeName == null || storeName.isEmpty()) {
 			uninstallFailure(request, response);
+			return;
 		}
 
 		this.clientService.removeAuthorizedClient(REGISTRATION_ID, storeName);
+		uninstallSuccess(request, response);
 	}
 	
-	protected void unininstallSuccess(HttpServletRequest req, HttpServletResponse resp) {
+	protected void uninstallSuccess(HttpServletRequest req, HttpServletResponse resp) {
 
 		resp.setStatus(200);
 	}
@@ -106,12 +108,13 @@ public class UninstallFilter implements Filter {
 	private UninstallMessage extractBody(HttpServletRequest request) {
 		ServletServerHttpRequest message = new ServletServerHttpRequest(request);
 		UninstallMessage msg;
+		
 		try {
 			msg = (UninstallMessage)this.messageConverter.read(UninstallMessage.class, message);
 		} catch (Exception ex){
 			return null;
 		}
-		
+
 		return msg;
 	}
 	
