@@ -85,7 +85,14 @@ public class ShopifyAuthorizationCodeTokenResponseClientTests {
 		this.server.shutdown();
 	}
 	
-	//callsCorrectTokenUri
+	/* calls correct tokenUri and contains correct form params...
+	 * 
+	 * Shopify expects:
+	 * 	- client_id
+	 * 	- client_secret
+	 * 	- code
+	 * 
+	 */
 	@Test
 	public void getTokenResponseWhenStoreParamPresentThenCallsCorrectTokenUri() throws Exception {
 		String accessTokenSuccessResponse = "{\n" +
@@ -105,9 +112,13 @@ public class ShopifyAuthorizationCodeTokenResponseClientTests {
 		tokenResponseClient.getTokenResponse(req);
 		
 		RecordedRequest recordedRequest = this.server.takeRequest();
-
+		String body = recordedRequest.getBody().readUtf8();
 		
 		Assert.assertEquals("/admin/oauth/access_token/testStore", recordedRequest.getPath());
+
+		Assert.assertTrue(body.contains("client_id="));
+		Assert.assertTrue(body.contains("client_secret="));
+		Assert.assertTrue(body.contains("code="));
 		
 	}
 	
@@ -149,7 +160,6 @@ public class ShopifyAuthorizationCodeTokenResponseClientTests {
 		
 		String shop = (String)response.getAdditionalParameters().get(ShopifyOAuth2AuthorizationRequestResolver.SHOPIFY_SHOP_PARAMETER_KEY_FOR_TOKEN);
 
-		
 		Assert.assertEquals("testStore", shop);
 		
 	}

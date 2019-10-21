@@ -4,7 +4,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-
 import org.springframework.http.converter.FormHttpMessageConverter;
 import org.springframework.security.oauth2.client.endpoint.DefaultAuthorizationCodeTokenResponseClient;
 import org.springframework.security.oauth2.client.endpoint.OAuth2AccessTokenResponseClient;
@@ -13,28 +12,38 @@ import org.springframework.security.oauth2.client.http.OAuth2ErrorResponseErrorH
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AccessTokenResponse;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationExchange;
+import org.springframework.security.oauth2.core.http.converter.OAuth2AccessTokenResponseHttpMessageConverter;
 import org.springframework.web.client.RestOperations;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import com.ppublica.shopify.security.converter.CustomShopifyOAuth2AccessTokenResponseHttpMessageConverter;
+import com.ppublica.shopify.security.converter.ShopifyOAuth2AccessTokenResponseConverter;
 
 /*
  * This implementation of OAuth2AccessTokenResponseClient<OAuth2AuthorizationCodeGrantRequest>
- * replaces (ultimately decorating) the default DefaultAuthorizationCodeTokenResponseClient. It's invoked by the 
+ * extends the default DefaultAuthorizationCodeTokenResponseClient. It's invoked by the 
  * default OAuth2LoginAuthenticationProvider.
+ * 
+ * When OAuth2LoginAuthenticationProvider asks ShopifyAuthorizationCodeTokenResponseClient for a token response,
+ * this class (DefaultAuthorizationCodeTokenResponseClient does the work) delegates to its converters: 
+ * OAuth2AccessTokenResponseHttpMessageConverter and FormHttpMessageConverter.
+ * 
  * 
  * This class has 3 main functions:
  * 
- * It customizes the DefaultAuthorizationCodeTokenResponseClient that it is decorating by giving it a
- * CustomOAuth2AccessTokenResponseHttpMessageConverter.
+ * It customizes the composite DefaultAuthorizationCodeTokenResponseClient by setting a custom 
+ * Converter<Map<String, String>, OAuth2AccessTokenResponse> on the OAuth2AccessTokenResponseHttpMessageConverter. 
+ * The custom converter is ShopifyOAuth2AccessTokenResponseConverter.
+ * 
  * 
  * It expects to find an additional parameter in the OAuth2AuthorizationRequest: the shop name.
  * Since in Shopify every store has a unique tokenUri, this class uses the shop name to generate the store-specific
  * tokenUri, which it uses to create a new "store-specific ClientRegistration."
  * 
- * It intercepts the default response client's OAuth2AccessTokenResponse, instead returning a new OAuth2AccessTokenResponse
- * that contains the shop name as an additional parameter, since it'll be needed later (OAuth2UserService needs it).
+ * 
+ * AFTER OBTAINING THE RESPONSE, it intercepts the default response client's OAuth2AccessTokenResponse, instead returning 
+ * a new OAuth2AccessTokenResponse that contains the shop name as an additional parameter, since it'll be needed later 
+ * (OAuth2UserService needs it).
  * 
  * 
  */
@@ -45,8 +54,10 @@ public class ShopifyAuthorizationCodeTokenResponseClient implements OAuth2Access
 	
 	
 	public ShopifyAuthorizationCodeTokenResponseClient() {
+		OAuth2AccessTokenResponseHttpMessageConverter accessTokenResponseConverter = new OAuth2AccessTokenResponseHttpMessageConverter();
+		accessTokenResponseConverter.setTokenResponseConverter(new ShopifyOAuth2AccessTokenResponseConverter());
 		RestTemplate restTemplate = new RestTemplate(Arrays.asList(
-			new FormHttpMessageConverter(), new CustomShopifyOAuth2AccessTokenResponseHttpMessageConverter()));
+			new FormHttpMessageConverter(), accessTokenResponseConverter));
 	
 		restTemplate.setErrorHandler(new OAuth2ErrorResponseErrorHandler());
 		

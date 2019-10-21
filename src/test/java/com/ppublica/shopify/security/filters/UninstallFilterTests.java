@@ -195,7 +195,7 @@ public class UninstallFilterTests {
 
 	}
 	
-	// uninstallsuccess setsz 200 status code
+	// uninstallsuccess sets 200 status code
 	@Test
 	public void uninstallSuccessSets200() throws Exception {
 

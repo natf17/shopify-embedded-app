@@ -7,12 +7,9 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.never;
 
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -35,13 +32,16 @@ import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import com.ppublica.shopify.security.authentication.CipherPassword;
 import com.ppublica.shopify.security.configuration.SecurityBeansConfig;
 import com.ppublica.shopify.security.configurer.ShopifySecurityConfigurer;
-import com.ppublica.shopify.security.repository.EncryptedTokenAndSalt;
+import com.ppublica.shopify.security.repository.PersistedStoreAccessToken;
+import com.ppublica.shopify.security.repository.PersistedStoreAccessTokenUtility;
 import com.ppublica.shopify.security.repository.TokenRepository;
 
 public class TokenServiceTests {
 	
 	ClientRegistration clientRegistration;
 	Collection <? extends GrantedAuthority> authorities;
+	
+	
 	@Before
 	public void setup() {
 		clientRegistration = ClientRegistration.withRegistrationId("shopify")
@@ -62,25 +62,61 @@ public class TokenServiceTests {
 	}
 	
 	@Test
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public void saveNewStoreWhenSavingDelegatesToTokenRepository() {
-		
 		// create the TokenService
 		TokenRepository repo = mock(TokenRepository.class);
 		ClientRegistrationRepository cR = mock(ClientRegistrationRepository.class);
+		CipherPassword cp = new CipherPassword("password");
+		PersistedStoreAccessTokenUtility utility = mock(PersistedStoreAccessTokenUtility.class);
 		
+		TokenService tS = new TokenService(repo, cp, cR);
+		tS.setPersistedStoreAccessTokenUtility(utility);
+
+		// configure OAuth2AuthorizedClient
+		OAuth2AuthorizedClient client = mock(OAuth2AuthorizedClient.class);
+		OAuth2AccessToken accessToken = mock(OAuth2AccessToken.class);
+
+		when(accessToken.getTokenValue()).thenReturn("oauth-token");
+		when(client.getAccessToken()).thenReturn(accessToken);
+
+		
+		// configure OAuth2AuthenticationToken
+		OAuth2AuthenticationToken authentication = mock(OAuth2AuthenticationToken.class);
+		
+		
+		ArgumentCaptor<OAuth2AuthorizedClient> ac = ArgumentCaptor.forClass(OAuth2AuthorizedClient.class);
+		ArgumentCaptor<OAuth2AuthenticationToken> pr = ArgumentCaptor.forClass(OAuth2AuthenticationToken.class);
+		ArgumentCaptor<EncryptedTokenAndSalt> et = ArgumentCaptor.forClass(EncryptedTokenAndSalt.class);
+
+		
+		// invoke method
+		tS.saveNewStore(client, authentication);
+		
+		// assertions
+		verify(utility, times(1)).fromAuthenticationObjectsToPersistedStoreAccessToken(ac.capture(), pr.capture(), et.capture());
+		verify(repo, times(1)).saveNewStore(ArgumentMatchers.any());
+		
+		EncryptedTokenAndSalt resultEt = et.getValue();
+		Assert.assertFalse(resultEt.getEncryptedToken().isEmpty());
+		Assert.assertFalse(resultEt.getSalt().isEmpty());
+		
+		/*
+		// create the TokenService
+		TokenRepository repo = mock(TokenRepository.class);
+		ClientRegistrationRepository cR = mock(ClientRegistrationRepository.class);
+		ClientRegistrationRepository cR = mock(ClientRegistrationRepository.class);
+
 		CipherPassword cp = new CipherPassword("password");
 		
 		TokenService tS = new TokenService(repo, cp, cR);
 		
 		
-		// configure arguments
+		// configure OAuth2AuthenticationToken
 		OAuth2AuthenticationToken authentication = mock(OAuth2AuthenticationToken.class);
-		
 		ShopifyStore store = new ShopifyStore("testStore.myshopify.com", "oauth-token", "client-api-key", authorities);
-		
 		when(authentication.getPrincipal()).thenReturn(store);
 		
+		//configure OAuth2AuthorizedClient
 		OAuth2AuthorizedClient client = mock(OAuth2AuthorizedClient.class);
 		OAuth2AccessToken accessToken = mock(OAuth2AccessToken.class);
 		Set<String> scopes = new HashSet<>(Arrays.asList("read", "write"));
@@ -111,7 +147,7 @@ public class TokenServiceTests {
 		EncryptedTokenAndSalt resultEt = et.getValue();
 		Assert.assertFalse(resultEt.getEncryptedToken().isEmpty());
 		Assert.assertFalse(resultEt.getSalt().isEmpty());
-	
+	*/
 		
 	}
 	
@@ -119,8 +155,8 @@ public class TokenServiceTests {
 	public void doesStoreExistWhenYesReturnsTrue() {
 		// configure mocks for constructor args
 		TokenRepository repo = mock(TokenRepository.class);
-		TokenRepository.OAuth2AccessTokenWithSalt resp = mock(TokenRepository.OAuth2AccessTokenWithSalt.class);
-		doReturn(resp).when(repo).findTokenForRequest("testStore.myshopify.com");
+		PersistedStoreAccessToken token = mock(PersistedStoreAccessToken.class);
+		doReturn(token).when(repo).findTokenForStore("testStore.myshopify.com");
 
 		ClientRegistrationRepository cR = mock(ClientRegistrationRepository.class);
 		
@@ -149,6 +185,7 @@ public class TokenServiceTests {
 		
 	}
 	
+	
 	@Test
 	public void getStoreWhenExistsReturnsOAuth2AuthorizedClient() {
 		// configure constructor args
@@ -164,29 +201,40 @@ public class TokenServiceTests {
 		String rawTokenValue = "raw-value";
 		String encryptedTokenValue = encryptor.encrypt(rawTokenValue);
 
-		// create an OAuth2AccessToken returned by the repo
-		OAuth2AccessToken accessToken = new OAuth2AccessToken(OAuth2AccessToken.TokenType.BEARER, encryptedTokenValue, Instant.now(), Instant.MAX);
-		TokenRepository.OAuth2AccessTokenWithSalt repoResponse = new TokenRepository.OAuth2AccessTokenWithSalt(accessToken, sampleSalt);
+		// create the PersistedStoreAccessToken returned by the repo
+		PersistedStoreAccessToken repoResponse = new PersistedStoreAccessToken();
+		repoResponse.setTokenAndSalt(new EncryptedTokenAndSalt(encryptedTokenValue, sampleSalt));
 				
 		// configure the repo
 		TokenRepository repo = mock(TokenRepository.class);
-		doReturn(repoResponse).when(repo).findTokenForRequest("testStore.myshopify.com");
+		doReturn(repoResponse).when(repo).findTokenForStore("testStore.myshopify.com");
 		
 
 		// create the TokenService
 		TokenService tS = new TokenService(repo, cp, cR);
+		PersistedStoreAccessTokenUtility utility = mock(PersistedStoreAccessTokenUtility.class);
+		tS.setPersistedStoreAccessTokenUtility(utility);
 		
 		// invoke method
-		OAuth2AuthorizedClient response = tS.getStore("testStore.myshopify.com");
-		
-		// obtain desired objects
-		OAuth2AccessToken responseAccessToken = response.getAccessToken();
+		ArgumentCaptor<PersistedStoreAccessToken> psat = ArgumentCaptor.forClass(PersistedStoreAccessToken.class);
+		ArgumentCaptor<DecryptedTokenAndSalt> dts = ArgumentCaptor.forClass(DecryptedTokenAndSalt.class);
+		ArgumentCaptor<ClientRegistration> cr = ArgumentCaptor.forClass(ClientRegistration.class);
+ 
+		tS.getStore("testStore.myshopify.com");
 		
 		// assertions
-		Assert.assertEquals("testStore.myshopify.com", response.getPrincipalName());
-		Assert.assertEquals("raw-value", responseAccessToken.getTokenValue());
+		
+		verify(utility, times(1)).fromPersistedStoreAccessTokenToOAuth2AuthorizedClient(psat.capture(), dts.capture(), cr.capture());
+		
+		DecryptedTokenAndSalt decryptedToken = dts.getValue();
+		ClientRegistration clientReg = cr.getValue();
+		
+		Assert.assertEquals("raw-value", decryptedToken.getDecryptedToken());
+		Assert.assertEquals(sampleSalt, decryptedToken.getSalt());
+		Assert.assertEquals("shopify", clientReg.getRegistrationId());
 
 	}
+	
 	
 	@Test
 	public void getStoreWhenDoesntExistReturnsNull() {
@@ -195,7 +243,7 @@ public class TokenServiceTests {
 		ClientRegistrationRepository cR = mock(ClientRegistrationRepository.class);
 
 		TokenRepository repo = mock(TokenRepository.class);
-		doReturn(null).when(repo).findTokenForRequest("testStore.myshopify.com");
+		doReturn(null).when(repo).findTokenForStore("testStore.myshopify.com");
 		
 		// create the TokenService
 		TokenService tS = new TokenService(repo, cp, cR);
@@ -203,6 +251,7 @@ public class TokenServiceTests {
 		Assert.assertNull(tS.getStore("testStore.myshopify.com"));
 
 	}
+	
 	
 	@Test(expected=RuntimeException.class)
 	public void getStoreWhenNoShopifyClientRegistrationThrowsException() {
@@ -219,13 +268,13 @@ public class TokenServiceTests {
 		String rawTokenValue = "raw-value";
 		String encryptedTokenValue = encryptor.encrypt(rawTokenValue);
 
-		// create an OAuth2AccessToken returned by the repo
-		OAuth2AccessToken accessToken = new OAuth2AccessToken(OAuth2AccessToken.TokenType.BEARER, encryptedTokenValue, Instant.now(), Instant.MAX);
-		TokenRepository.OAuth2AccessTokenWithSalt repoResponse = new TokenRepository.OAuth2AccessTokenWithSalt(accessToken, sampleSalt);
+		// create the PersistedStoreAccessToken returned by the repo
+		PersistedStoreAccessToken repoResponse = new PersistedStoreAccessToken();
+		repoResponse.setTokenAndSalt(new EncryptedTokenAndSalt(encryptedTokenValue, sampleSalt));
 						
 		// configure the repo
 		TokenRepository repo = mock(TokenRepository.class);
-		doReturn(repoResponse).when(repo).findTokenForRequest("testStore.myshopify.com");
+		doReturn(repoResponse).when(repo).findTokenForStore("testStore.myshopify.com");
 				
 
 		// create the TokenService
@@ -237,6 +286,7 @@ public class TokenServiceTests {
 		
 	}
 	
+
 	@Test
 	public void getStoreWhenSaltErrorReturnsNull() {
 		// configure constructor args
@@ -253,12 +303,12 @@ public class TokenServiceTests {
 		String encryptedTokenValue = encryptor.encrypt(rawTokenValue) + "error";
 
 		// create an OAuth2AccessToken returned by the repo
-		OAuth2AccessToken accessToken = new OAuth2AccessToken(OAuth2AccessToken.TokenType.BEARER, encryptedTokenValue, Instant.now(), Instant.MAX);
-		TokenRepository.OAuth2AccessTokenWithSalt repoResponse = new TokenRepository.OAuth2AccessTokenWithSalt(accessToken, sampleSalt);
+		PersistedStoreAccessToken repoResponse = new PersistedStoreAccessToken();
+		repoResponse.setTokenAndSalt(new EncryptedTokenAndSalt(encryptedTokenValue, sampleSalt));
 				
 		// configure the repo
 		TokenRepository repo = mock(TokenRepository.class);
-		doReturn(repoResponse).when(repo).findTokenForRequest("testStore.myshopify.com");
+		doReturn(repoResponse).when(repo).findTokenForStore("testStore.myshopify.com");
 		
 
 		// create the TokenService
@@ -270,53 +320,48 @@ public class TokenServiceTests {
 
 	}
 	
+	
 	@Test
 	public void updateStoreWhenUpdatingDelegatesToTokenRepository() {
-		
 		// create the TokenService
 		TokenRepository repo = mock(TokenRepository.class);
 		ClientRegistrationRepository cR = mock(ClientRegistrationRepository.class);
-		
 		CipherPassword cp = new CipherPassword("password");
-		
+		PersistedStoreAccessTokenUtility utility = mock(PersistedStoreAccessTokenUtility.class);
+				
 		TokenService tS = new TokenService(repo, cp, cR);
-		
-		
-		// configure arguments
-		OAuth2AuthenticationToken authentication = mock(OAuth2AuthenticationToken.class);
-		
-		ShopifyStore store = new ShopifyStore("testStore.myshopify.com", "oauth-token", "client-api-key", authorities);
-		
-		when(authentication.getPrincipal()).thenReturn(store);
-		
+		tS.setPersistedStoreAccessTokenUtility(utility);
+
+		// configure OAuth2AuthorizedClient
 		OAuth2AuthorizedClient client = mock(OAuth2AuthorizedClient.class);
 		OAuth2AccessToken accessToken = mock(OAuth2AccessToken.class);
-		
-		when(accessToken.getTokenValue()).thenReturn("oauth-token");
 
+		when(accessToken.getTokenValue()).thenReturn("oauth-token");
 		when(client.getAccessToken()).thenReturn(accessToken);
-		
+
 				
-		ArgumentCaptor<String> shopName = ArgumentCaptor.forClass(String.class);
-		
+		// configure OAuth2AuthenticationToken
+		OAuth2AuthenticationToken authentication = mock(OAuth2AuthenticationToken.class);
+				
+				
+		ArgumentCaptor<OAuth2AuthorizedClient> ac = ArgumentCaptor.forClass(OAuth2AuthorizedClient.class);
+		ArgumentCaptor<OAuth2AuthenticationToken> pr = ArgumentCaptor.forClass(OAuth2AuthenticationToken.class);
 		ArgumentCaptor<EncryptedTokenAndSalt> et = ArgumentCaptor.forClass(EncryptedTokenAndSalt.class);
-		
-		
+
+				
 		// invoke method
 		tS.updateStore(client, authentication);
-		
-		
+				
 		// assertions
-		verify(repo, times(1)).updateKey(shopName.capture(), et.capture());
-		
-		Assert.assertEquals("testStore.myshopify.com", shopName.getValue());
-		
+		verify(utility, times(1)).fromAuthenticationObjectsToPersistedStoreAccessToken(ac.capture(), pr.capture(), et.capture());
+		verify(repo, times(1)).updateStore(ArgumentMatchers.any());
+				
 		EncryptedTokenAndSalt resultEt = et.getValue();
 		Assert.assertFalse(resultEt.getEncryptedToken().isEmpty());
 		Assert.assertFalse(resultEt.getSalt().isEmpty());
-	
 		
 	}
+	
 	
 	@Test
 	public void uninstallStoreWhenValidStoreNameCallRepo() {
@@ -362,6 +407,5 @@ public class TokenServiceTests {
 		
 	}
 
-	
 
 }

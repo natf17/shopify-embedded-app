@@ -9,7 +9,14 @@ import java.util.Map;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
-// stores the Access Token as an attribute
+/*
+ * A representation of a Shopify store - a "user". This object is the Principal in the
+ * OAuth2AuthenticationToken, the Authentication.
+ * 
+ * "name": store domain
+ * 
+ * The api key and raw access token are saved as attributes.
+ */
 
 public class ShopifyStore  implements OAuth2User, Serializable {
 	/**

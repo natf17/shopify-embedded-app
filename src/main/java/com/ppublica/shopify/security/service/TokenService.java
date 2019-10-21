@@ -1,8 +1,5 @@
 package com.ppublica.shopify.security.service;
 
-import java.util.Set;
-
-
 import org.springframework.security.crypto.encrypt.Encryptors;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
 import org.springframework.security.crypto.keygen.KeyGenerators;
@@ -10,15 +7,18 @@ import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
-import org.springframework.security.oauth2.core.OAuth2AccessToken;
 
 import com.ppublica.shopify.security.authentication.CipherPassword;
 import com.ppublica.shopify.security.configuration.SecurityBeansConfig;
-import com.ppublica.shopify.security.repository.EncryptedTokenAndSalt;
+import com.ppublica.shopify.security.repository.PersistedStoreAccessToken;
+import com.ppublica.shopify.security.repository.PersistedStoreAccessTokenUtility;
 import com.ppublica.shopify.security.repository.TokenRepository;
-import com.ppublica.shopify.security.repository.TokenRepository.OAuth2AccessTokenWithSalt;
 
-
+/*
+ * Used by:
+ * 
+ * ShopifyOAuth2AuthorizedClientService
+ */
 public class TokenService {
 	
 	public static final String SHOP_ATTRIBUTE_NAME = "shop";
@@ -26,6 +26,7 @@ public class TokenService {
 	private TokenRepository tokenRepository;
 	private CipherPassword cipherPassword;
 	private ClientRegistrationRepository clientRepository;
+	private PersistedStoreAccessTokenUtility persistedAccessTokenUtility = new PersistedStoreAccessTokenUtility();
 	
 	public TokenService(TokenRepository tokenRepository, CipherPassword cipherPassword, ClientRegistrationRepository clientRepository) {
 		this.tokenRepository = tokenRepository;
@@ -34,21 +35,25 @@ public class TokenService {
 
 	}
 	
+	/*
+	 * Expects an OAuth2AuthorizedClient with a raw token to create an encrypted token to persist.
+	 * 
+	 * It uses the OAuth2AuthorizedClient, OAuth2AuthenticationToken, and EncryptedTokenAndSalt to
+	 * save the store.
+	 * 
+	 */
 	public void saveNewStore(OAuth2AuthorizedClient authorizedClient, OAuth2AuthenticationToken principal) {
-		
-		String shop = getStoreName(principal);
-		
-		Set<String> scopes = authorizedClient.getAccessToken().getScopes();
-		
 		EncryptedTokenAndSalt encryptedTokenAndSalt = getTokenAndSalt(authorizedClient);
 
-		this.tokenRepository.saveNewStore(shop, scopes, encryptedTokenAndSalt);	
+		PersistedStoreAccessToken token = persistedAccessTokenUtility.fromAuthenticationObjectsToPersistedStoreAccessToken(authorizedClient, principal, encryptedTokenAndSalt);
+		
+		this.tokenRepository.saveNewStore(token);
 		
 	}
 	
 	// returns true if a store with this name exists, regardless of validity of stored credentials
-	public boolean doesStoreExist(String shop) {
-		OAuth2AccessTokenWithSalt token = this.tokenRepository.findTokenForRequest(shop);
+	public boolean doesStoreExist(String storeDomain) {
+		PersistedStoreAccessToken token = this.tokenRepository.findTokenForStore(storeDomain);
 		
 		if(token != null) {
 			return true;
@@ -58,17 +63,18 @@ public class TokenService {
 	}
 
 	// will return an existing, valid store
-	public OAuth2AuthorizedClient getStore(String shopName) {
+	public OAuth2AuthorizedClient getStore(String storeDomain) {
 		
-		OAuth2AccessTokenWithSalt ets = this.tokenRepository.findTokenForRequest(shopName);
+		PersistedStoreAccessToken ets = this.tokenRepository.findTokenForStore(storeDomain);
 		
 		if(ets == null) {
 			return null;
 		}
 		
-		OAuth2AccessToken rawToken = getRawToken(ets);
+		// obtain a representation of the raw token
+		DecryptedTokenAndSalt decryptedTokenAndSalt = getRawToken(ets);
 		
-		if(rawToken == null) {
+		if(decryptedTokenAndSalt == null) {
 			// the salt and encrypted passwords are out of date
 			return null;
 		}
@@ -79,11 +85,10 @@ public class TokenService {
 			throw new RuntimeException("An error occurred retrieving the ClientRegistration for " + SecurityBeansConfig.SHOPIFY_REGISTRATION_ID);
 		}
 		
-		return new OAuth2AuthorizedClient(
-				cr,
-				shopName,
-				rawToken,
-				null);
+		OAuth2AuthorizedClient client = persistedAccessTokenUtility.fromPersistedStoreAccessTokenToOAuth2AuthorizedClient(ets, decryptedTokenAndSalt, cr);
+
+		return client;
+	
 		
 	}
 	
@@ -93,53 +98,54 @@ public class TokenService {
 	
 	public void updateStore(OAuth2AuthorizedClient authorizedClient, OAuth2AuthenticationToken principal) {
 		
-		String shop = getStoreName(principal);
-		
 		EncryptedTokenAndSalt encryptedTokenAndSalt = getTokenAndSalt(authorizedClient);
 		
-		this.tokenRepository.updateKey(shop, encryptedTokenAndSalt);
+		PersistedStoreAccessToken token = persistedAccessTokenUtility.fromAuthenticationObjectsToPersistedStoreAccessToken(authorizedClient, principal, encryptedTokenAndSalt);
+
+		
+		this.tokenRepository.updateStore(token);
 
 	}
 	
-	public void uninstallStore(String store) {
-		if(store != null && !store.isEmpty()) {
-			this.tokenRepository.uninstallStore(store);
+	public void uninstallStore(String storeDomain) {
+		if(storeDomain != null && !storeDomain.isEmpty()) {
+			this.tokenRepository.uninstallStore(storeDomain);
 		}
 	}
 	
-	
-	
-	private String getStoreName(OAuth2AuthenticationToken principal) {
-		String shop = principal.getPrincipal().getName();
-
-		return shop;
+	public void setPersistedStoreAccessTokenUtility(PersistedStoreAccessTokenUtility customPersistedAccessTokenUtility) {
+		this.persistedAccessTokenUtility = customPersistedAccessTokenUtility;
 	}
+	
+	
 	/*
 	 * Returns null if there is an inconsistency in the salts or passwords
 	 */
-	private OAuth2AccessToken getRawToken(OAuth2AccessTokenWithSalt toS) {
-		String salt = toS.getSalt();
+	private DecryptedTokenAndSalt getRawToken(PersistedStoreAccessToken storeAccessToken) {
 		
-		if(salt == null) {
+		EncryptedTokenAndSalt etS = storeAccessToken.getTokenAndSalt();
+		if(etS == null) {
 			return null;
 		}
 		
-		OAuth2AccessToken enTok = toS.getAccess_token();
-		if(enTok == null) {
+		String salt = etS.getSalt();
+		if(salt == null || salt.isEmpty()) {
 			return null;
 		}
 		
-		String decryptedToken = decryptToken(new EncryptedTokenAndSalt(enTok.getTokenValue(), salt));
+		String encToken = etS.getEncryptedToken();
+		if(encToken == null || encToken.isEmpty()) {
+			return null;
+		}
+		
+		String decryptedToken = decryptToken(etS);
 		
 		if(decryptedToken == null) {
 			return null;
 		}
 		
-		return new OAuth2AccessToken(enTok.getTokenType(),
-									 decryptedToken,
-									 enTok.getIssuedAt(),
-									 enTok.getExpiresAt(),
-									 enTok.getScopes());
+		return new DecryptedTokenAndSalt(decryptedToken, salt);
+		
 	}
 	
 	private EncryptedTokenAndSalt getTokenAndSalt(OAuth2AuthorizedClient authorizedClient) {

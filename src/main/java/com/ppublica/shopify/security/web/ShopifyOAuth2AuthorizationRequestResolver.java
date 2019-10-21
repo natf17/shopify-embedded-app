@@ -104,9 +104,9 @@ public class ShopifyOAuth2AuthorizationRequestResolver implements OAuth2Authoriz
 
 		// At this point, either the request came from Shopify, or make sure shop param was provided
 		String shopName = null;
-				
+		
 		shopName = this.getShopName(request);
-				
+		
 		if(shopName == null || shopName.isEmpty() || registrationId == null) {
 			// shop name is required, or registrationId
 			// trigger a redirect
