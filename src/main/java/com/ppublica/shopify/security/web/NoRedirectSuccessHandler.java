@@ -11,8 +11,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
 
-import com.ppublica.shopify.security.configurer.ShopifySecurityConfigurer;
-
 /*
  * The NoRedirectSuccessHandler is invoked by OAuth2LoginAuthenticationFilter upon successful authentication.
  * 
@@ -27,10 +25,12 @@ import com.ppublica.shopify.security.configurer.ShopifySecurityConfigurer;
 public class NoRedirectSuccessHandler implements AuthenticationSuccessHandler {
 	
 	private SavedRequestAwareAuthenticationSuccessHandler defaultHandler;
+	private String authorizationRedirectPath;
 	
-	public NoRedirectSuccessHandler() {
+	public NoRedirectSuccessHandler(String authorizationRedirectPath) {
 		this.defaultHandler = new SavedRequestAwareAuthenticationSuccessHandler();
 		this.defaultHandler.setRedirectStrategy((i,j,k) -> { });
+		this.authorizationRedirectPath = authorizationRedirectPath;
 		
 		
 	}
@@ -41,7 +41,7 @@ public class NoRedirectSuccessHandler implements AuthenticationSuccessHandler {
 		
 		defaultHandler.onAuthenticationSuccess(request, response, authentication);
 		
-		RequestDispatcher rs = request.getRequestDispatcher(ShopifySecurityConfigurer.AUTHORIZATION_REDIRECT_PATH);
+		RequestDispatcher rs = request.getRequestDispatcher(authorizationRedirectPath);
 
 		rs.forward(request, response);
 		

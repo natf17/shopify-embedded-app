@@ -1,5 +1,8 @@
 package com.ppublica.shopify.security.service;
 
+import java.util.Map;
+
+import org.springframework.beans.factory.BeanFactoryUtils;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.security.config.annotation.web.HttpSecurityBuilder;
@@ -13,6 +16,8 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 
 import com.ppublica.shopify.security.authentication.ShopifyVerificationStrategy;
+import com.ppublica.shopify.security.configuration.ShopifyPaths;
+import com.ppublica.shopify.security.configurer.delegates.HttpSecurityBuilderConfigurerDelegate;
 import com.ppublica.shopify.security.web.NoRedirectSuccessHandler;
 import com.ppublica.shopify.security.web.ShopifyAuthorizationCodeTokenResponseClient;
 import com.ppublica.shopify.security.web.ShopifyOAuth2AuthorizationRequestResolver;
@@ -80,13 +85,30 @@ public class ShopifyBeansUtils {
 	}
 	
 	public static MappingJackson2HttpMessageConverter getJacksonConverter(HttpSecurityBuilder<?> http) {
-		MappingJackson2HttpMessageConverter jacksonCOnverter = http.getSharedObject(ApplicationContext.class).getBean(MappingJackson2HttpMessageConverter.class);
+		MappingJackson2HttpMessageConverter jacksonConverter = http.getSharedObject(ApplicationContext.class).getBean(MappingJackson2HttpMessageConverter.class);
 		
-		if(jacksonCOnverter == null) {
+		if(jacksonConverter == null) {
 			throw new RuntimeException("No MappingJackson2HttpMessageConverter bean found");
 		}
 		
-		return jacksonCOnverter;
+		return jacksonConverter;
+	}
+	
+	public static ShopifyPaths getShopifyPaths(HttpSecurityBuilder<?> http) {
+		ShopifyPaths shopifyPaths = http.getSharedObject(ApplicationContext.class).getBean(ShopifyPaths.class);
+		
+		if(shopifyPaths == null) {
+			throw new RuntimeException("No ShopifyPaths bean found");
+		}
+		
+		return shopifyPaths;
+	}
+	
+	public static Map<String, HttpSecurityBuilderConfigurerDelegate> getBuilderDelegates(HttpSecurityBuilder<?> http) {
+		Map<String, HttpSecurityBuilderConfigurerDelegate> delegates = BeanFactoryUtils.beansOfTypeIncludingAncestors(
+				http.getSharedObject(ApplicationContext.class), HttpSecurityBuilderConfigurerDelegate.class);
+		
+		return delegates;
 	}
 
 }

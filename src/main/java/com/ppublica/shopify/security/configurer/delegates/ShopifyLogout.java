@@ -4,8 +4,6 @@ import org.springframework.security.config.annotation.web.HttpSecurityBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.LogoutConfigurer;
 
-import com.ppublica.shopify.security.configurer.ShopifySecurityConfigurer;
-
 /*
  * Sets the "logout" and "logoutSuccessUrl" values.
  * 
@@ -13,6 +11,14 @@ import com.ppublica.shopify.security.configurer.ShopifySecurityConfigurer;
  * no configuration is necessary.
  */
 public class ShopifyLogout implements HttpSecurityBuilderConfigurerDelegate {
+	
+	private String loginEndpoint;
+	private String logoutEndpoint;
+	
+	public ShopifyLogout(String loginEndpoint, String logoutEndpoint) {
+		this.loginEndpoint = loginEndpoint;
+		this.logoutEndpoint = logoutEndpoint;
+	}
 	
 	@SuppressWarnings("unchecked")
 	@Override
@@ -25,8 +31,8 @@ public class ShopifyLogout implements HttpSecurityBuilderConfigurerDelegate {
 			throw new RuntimeException("LogoutConfigurer is required");
 		}
 		
-		configurer.logoutUrl(ShopifySecurityConfigurer.LOGOUT_ENDPOINT)
-      			  .logoutSuccessUrl(ShopifySecurityConfigurer.LOGIN_ENDPOINT);
+		configurer.logoutUrl(this.loginEndpoint)
+      			  .logoutSuccessUrl(this.logoutEndpoint);
 	}
 
 	@Override

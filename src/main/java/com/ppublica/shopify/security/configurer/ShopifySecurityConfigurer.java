@@ -2,6 +2,7 @@ package com.ppublica.shopify.security.configurer;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.security.config.annotation.web.HttpSecurityBuilder;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -10,47 +11,45 @@ import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequest
 import org.springframework.security.web.authentication.logout.LogoutFilter;
 
 import com.ppublica.shopify.security.authentication.ShopifyVerificationStrategy;
+import com.ppublica.shopify.security.configuration.ShopifyPaths;
 import com.ppublica.shopify.security.configurer.delegates.HttpSecurityBuilderConfigurerDelegate;
-import com.ppublica.shopify.security.configurer.delegates.ShopifyChannelSecurity;
-import com.ppublica.shopify.security.configurer.delegates.ShopifyCsrf;
-import com.ppublica.shopify.security.configurer.delegates.ShopifyHeaders;
-import com.ppublica.shopify.security.configurer.delegates.ShopifyLogout;
-import com.ppublica.shopify.security.configurer.delegates.ShopifyOAuth2;
 import com.ppublica.shopify.security.filters.ShopifyExistingTokenFilter;
 import com.ppublica.shopify.security.filters.ShopifyOriginFilter;
 import com.ppublica.shopify.security.filters.UninstallFilter;
 import com.ppublica.shopify.security.service.ShopifyBeansUtils;
 
-
+/*
+ * By default, the WebSecurityConfigurerAdapter will look in spring.factories for AbstractHttpConfigurers to apply, where
+ * it should find ShopifySecurityConfigurer. This configurer will be applied before all others (ex. configurers applied in 
+ * the overridden configure(Http) method), and therefore its init() and configure() methods will be invoked before those of
+ * other configurers.
+ * 
+ * init():
+ * - Find HttpSecurityBuilderConfigurerDelegate beans
+ * - Allow each to initialize HttpSecurityBuilder
+ * 
+ * configure():
+ * - Allow each HttpSecurityBuilderConfigurerDelegate to configure HttpSecurityBuilder
+ * - Add the following filters, each configured based on beans retrieved from the context:
+ * 		- ShopifyOriginFilter
+ * 		- ShopifyExistingTokenFilter
+ * 		- UninstallFilter
+ * 		- DefaultInstallFilter
+ * 		- DefaultAuthorizationRedirectPathFilter
+ * 
+ */
 public class ShopifySecurityConfigurer<H extends HttpSecurityBuilder<H>>
 	extends AbstractHttpConfigurer<ShopifySecurityConfigurer<H>, H> {
-	
-	public static final String INSTALL_PATH = "/install";
-	public static final String ANY_INSTALL_PATH = INSTALL_PATH + "/**";
-	public static final String AUTHORIZATION_REDIRECT_PATH = "/login/app/oauth2/code";
-	public static final String ANY_AUTHORIZATION_REDIRECT_PATH = AUTHORIZATION_REDIRECT_PATH + "/**";
-	public static final String LOGIN_ENDPOINT = "/init";
-	public static final String LOGOUT_ENDPOINT = "/logout";
-	public static final String AUTHENTICATION_FALURE_URL = "/auth/error";
-	public static final String UNINSTALL_URI = "/store/uninstall";
-	
-	private final List<HttpSecurityBuilderConfigurerDelegate> shopifyConfigurers;
 
-	public ShopifySecurityConfigurer() {
-		shopifyConfigurers = new ArrayList<>();
-		
-		shopifyConfigurers.add(new ShopifyHeaders());
-		shopifyConfigurers.add(new ShopifyChannelSecurity());
-		shopifyConfigurers.add(new ShopifyCsrf());
-		shopifyConfigurers.add(new ShopifyLogout());
-		shopifyConfigurers.add(new ShopifyOAuth2());
+	private final List<HttpSecurityBuilderConfigurerDelegate> shopifyConfigurers = new ArrayList<>();
 
-	}
 	
-	// this configurer's init() method is applied before all others
 	@Override
 	public void init(H http) {
-
+		Map<String, HttpSecurityBuilderConfigurerDelegate> dels = ShopifyBeansUtils.getBuilderDelegates(http);
+		
+		shopifyConfigurers.addAll(dels.values());
+		
 		for(HttpSecurityBuilderConfigurerDelegate del : shopifyConfigurers) {
 			del.applyShopifyInit(http);
 		}
@@ -67,9 +66,11 @@ public class ShopifySecurityConfigurer<H extends HttpSecurityBuilder<H>>
 			
 		ShopifyVerificationStrategy verStr = ShopifyBeansUtils.getShopifyVerificationStrategy(http);
 		OAuth2AuthorizedClientService cS = ShopifyBeansUtils.getAuthorizedClientService(http);
-		http.addFilterAfter(new ShopifyOriginFilter(verStr, ANY_AUTHORIZATION_REDIRECT_PATH, ANY_INSTALL_PATH), LogoutFilter.class);
-		http.addFilterAfter(new ShopifyExistingTokenFilter(cS, INSTALL_PATH), ShopifyOriginFilter.class);
-		http.addFilterBefore(new UninstallFilter(UNINSTALL_URI, verStr, cS, ShopifyBeansUtils.getJacksonConverter(http)), OAuth2AuthorizationRequestRedirectFilter.class);
+		ShopifyPaths sP = ShopifyBeansUtils.getShopifyPaths(http);
+		
+		http.addFilterAfter(new ShopifyOriginFilter(verStr, sP.getAnyAuthorizationRedirectPath(), sP.getAnyInstallPath()), LogoutFilter.class);
+		http.addFilterAfter(new ShopifyExistingTokenFilter(cS, sP.getInstallPath()), ShopifyOriginFilter.class);
+		http.addFilterBefore(new UninstallFilter(sP.getUninstallUri(), verStr, cS, ShopifyBeansUtils.getJacksonConverter(http)), OAuth2AuthorizationRequestRedirectFilter.class);
 		
 		
 	}

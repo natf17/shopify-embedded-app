@@ -21,7 +21,7 @@ public class HomeController {
 	 * 
 	 */
 	
-	@RequestMapping(path = ShopifySecurityConfigurer.INSTALL_PATH + "/" + SecurityBeansConfig.SHOPIFY_REGISTRATION_ID, method = RequestMethod.GET)
+	//@RequestMapping(path = ShopifySecurityConfigurer.INSTALL_PATH + "/" + SecurityBeansConfig.SHOPIFY_REGISTRATION_ID, method = RequestMethod.GET)
 	public String installAndHome() {
 
 		return "home";
@@ -30,16 +30,16 @@ public class HomeController {
 	/*
 	 * Redirect to /install/shopify
 	 */
-	@RequestMapping(path = ShopifySecurityConfigurer.INSTALL_PATH , method = RequestMethod.GET)
+	//@RequestMapping(path = ShopifySecurityConfigurer.INSTALL_PATH , method = RequestMethod.GET)
 	public String installRedirect() {
-		return "redirect:" + ShopifySecurityConfigurer.INSTALL_PATH + "/" + SecurityBeansConfig.SHOPIFY_REGISTRATION_ID;
+		return "redirect:" ;//+ ShopifySecurityConfigurer.INSTALL_PATH + "/" + SecurityBeansConfig.SHOPIFY_REGISTRATION_ID;
 	}
 	
 	/*
 	 * Called when a store parameter was not given to ANY_INSTALL_PATH
 	 * 
 	 */
-	@RequestMapping(path = ShopifySecurityConfigurer.LOGIN_ENDPOINT, method = RequestMethod.GET)
+	//@RequestMapping(path = ShopifySecurityConfigurer.LOGIN_ENDPOINT, method = RequestMethod.GET)
 	public String selectStore() {
 		return "selectStore";
 	}
@@ -48,7 +48,7 @@ public class HomeController {
 	 * Only to be called during the OAuth flow
 	 * 
 	 */
-	@RequestMapping(path = ShopifySecurityConfigurer.ANY_AUTHORIZATION_REDIRECT_PATH, method = RequestMethod.GET)
+	//@RequestMapping(path = ShopifySecurityConfigurer.ANY_AUTHORIZATION_REDIRECT_PATH, method = RequestMethod.GET)
 	public String installationSuccess() {
 
 		return "success";
@@ -58,7 +58,7 @@ public class HomeController {
 	 * To be called when an error occurs during authentication
 	 * 
 	 */
-	@RequestMapping(path = ShopifySecurityConfigurer.AUTHENTICATION_FALURE_URL, method = RequestMethod.GET)
+	//@RequestMapping(path = ShopifySecurityConfigurer.AUTHENTICATION_FALURE_URL, method = RequestMethod.GET)
 	public String authError() {
 
 		return "authError";

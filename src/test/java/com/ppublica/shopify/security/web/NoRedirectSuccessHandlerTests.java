@@ -16,7 +16,6 @@ import javax.servlet.http.HttpServletResponse;
 import org.junit.Test;
 import org.springframework.security.core.Authentication;
 
-import com.ppublica.shopify.security.configurer.ShopifySecurityConfigurer;
 
 public class NoRedirectSuccessHandlerTests {
 	
@@ -30,12 +29,12 @@ public class NoRedirectSuccessHandlerTests {
 		
 		doReturn(rd).when(req).getRequestDispatcher(ArgumentMatchers.any());
 		
-		NoRedirectSuccessHandler handler = new NoRedirectSuccessHandler();
+		NoRedirectSuccessHandler handler = new NoRedirectSuccessHandler("/login/app/oauth2/code");
 		
 		handler.onAuthenticationSuccess(req, resp, auth);
 		
 		verify(resp, never()).sendRedirect(ArgumentMatchers.any());
-		verify(req, times(1)).getRequestDispatcher(ShopifySecurityConfigurer.AUTHORIZATION_REDIRECT_PATH);
+		verify(req, times(1)).getRequestDispatcher("/login/app/oauth2/code");
 		verify(rd, times(1)).forward(req, resp);
 		
 	}

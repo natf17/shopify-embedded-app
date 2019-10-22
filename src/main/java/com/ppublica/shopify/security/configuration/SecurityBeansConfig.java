@@ -29,10 +29,28 @@ import com.ppublica.shopify.security.web.ShopifyHttpSessionOAuth2AuthorizationRe
 import com.ppublica.shopify.security.web.ShopifyOAuth2AuthorizationRequestResolver;
 import com.ppublica.shopify.security.authentication.CipherPassword;
 import com.ppublica.shopify.security.authentication.ShopifyVerificationStrategy;
-import com.ppublica.shopify.security.configurer.ShopifySecurityConfigurer;
+import com.ppublica.shopify.security.configurer.delegates.ShopifyChannelSecurity;
+import com.ppublica.shopify.security.configurer.delegates.ShopifyCsrf;
+import com.ppublica.shopify.security.configurer.delegates.ShopifyHeaders;
+import com.ppublica.shopify.security.configurer.delegates.ShopifyLogout;
+import com.ppublica.shopify.security.configurer.delegates.ShopifyOAuth2;
 import com.ppublica.shopify.security.repository.TokenRepository;
 
-
+/*
+ * ppublica.shopify.security.endpoints.install=
+ * ppublica.shopify.security.endpoints.authorization-redirect=
+ * ppublica.shopify.security.endpoints.login=
+ * ppublica.shopify.security.endpoints.logout=
+ * ppublica.shopify.security.endpoints.authentication-failure=
+ * ppublica.shopify.security.endpoints.uninstall=
+ * 
+ * ppublica.shopify.security.cipher.password=
+ * 
+ * ppublica.shopify.security.client.client_id=
+ * ppublica.shopify.security.client.client_secret=
+ * ppublica.shopify.security.client.scope=
+ * 
+ */
 @Configuration
 public class SecurityBeansConfig {
 	
@@ -42,13 +60,30 @@ public class SecurityBeansConfig {
 	private TokenRepository tokenRepository;
 	
 	@Bean
-	CipherPassword cipherPassword(@Value("${ppublica.security.cipher.password}") String password) {
+	public ShopifyPaths shopifyPaths(@Value("${ppublica.shopify.security.endpoints.install:}") String installPath,
+							  @Value("${ppublica.shopify.security.endpoints.authorization-redirect:}") String authorizationRedirectPath,
+							  @Value("${ppublica.shopify.security.endpoints.login:}") String loginEndpoint,
+							  @Value("${ppublica.shopify.security.endpoints.logout:}") String logoutEndpoint,
+							  @Value("${ppublica.shopify.security.endpoints.authentication-failure:}") String authenticationFailureUri,
+							  @Value("${ppublica.shopify.security.endpoints.uninstall:}") String uninstallUri) {
+		
+		return new ShopifyPaths(installPath, authorizationRedirectPath, loginEndpoint,
+								logoutEndpoint, authenticationFailureUri, uninstallUri);
+		
+	}
+
+	
+	@Bean
+	public CipherPassword cipherPassword(@Value("${ppublica.shopify.security.cipher.password:#{null}}") String password) {
+		if(password == null) {
+			throw new RuntimeException("Cipher password is required!");
+		}
 		return new CipherPassword(password);
 	}
 	
 	
 	@Bean
-	OAuth2UserService<OAuth2UserRequest, OAuth2User> userService() {
+	public OAuth2UserService<OAuth2UserRequest, OAuth2User> userService() {
 		return new DefaultShopifyUserService();
 	}
 	
@@ -60,42 +95,16 @@ public class SecurityBeansConfig {
 	
 	
 	@Bean
-	public AuthenticationSuccessHandler successHandler() {
-		return new NoRedirectSuccessHandler();
+	public AuthenticationSuccessHandler successHandler(ShopifyPaths shopifyPaths) {
+		return new NoRedirectSuccessHandler(shopifyPaths.getAuthorizationRedirectPath());
 	}
 	
 	
 	@Bean
-    public ClientRegistrationRepository clientRegistrationRepository(ClientRegistration shopifyClientRegistration) {
-        return new InMemoryClientRegistrationRepository(shopifyClientRegistration);
-    }
-	
-	// used by AuthenticatedPrincipalOAuth2AuthorizedClientRepository
-	@Bean
-	public OAuth2AuthorizedClientService clientService(TokenService tokenService) {
-		return new ShopifyOAuth2AuthorizedClientService(tokenService);
-	}
-	
-	@Bean
-	public OAuth2AuthorizationRequestResolver shopifyOauth2AuthorizationRequestResolver(ClientRegistrationRepository clientRegistrationRepository) {
-		return new ShopifyOAuth2AuthorizationRequestResolver(clientRegistrationRepository, customAuthorizationRequestRepository(), ShopifySecurityConfigurer.INSTALL_PATH, ShopifySecurityConfigurer.LOGIN_ENDPOINT);
-	}
-	
-	@Bean
-	public ShopifyHttpSessionOAuth2AuthorizationRequestRepository customAuthorizationRequestRepository() {
-		return new ShopifyHttpSessionOAuth2AuthorizationRequestRepository(ShopifySecurityConfigurer.INSTALL_PATH);
-	}
-	
-	@Bean
-	public TokenService tokenService(CipherPassword cipherPassword, ClientRegistrationRepository clientRegistrationRepository) {
-		return new TokenService(this.tokenRepository, cipherPassword, clientRegistrationRepository);
-	}
-	
-
-	@Bean
-	protected ClientRegistration shopifyClientRegistration(@Value("${ppublica.shopify.client.client_id}")String clientId,
-			 @Value("${ppublica.shopify.client.client_secret}")String clientSecret, 
-			 @Value("${ppublica.shopify.client.scope}")String scope) {
+	protected ClientRegistration shopifyClientRegistration(@Value("${ppublica.shopify.security.client.client_id:#{null}}")String clientId,
+			 @Value("${ppublica.shopify.security.client.client_secret:#{null}}")String clientSecret, 
+			 @Value("${ppublica.shopify.security.client.scope:#{null}}")String scope,
+			 ShopifyPaths shopifyPaths) {
 		
 
         return ClientRegistration.withRegistrationId(SHOPIFY_REGISTRATION_ID)
@@ -103,7 +112,7 @@ public class SecurityBeansConfig {
             .clientSecret(clientSecret)
             .clientAuthenticationMethod(ClientAuthenticationMethod.POST)
             .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
-            .redirectUriTemplate("{baseUrl}" + ShopifySecurityConfigurer.AUTHORIZATION_REDIRECT_PATH + "/{registrationId}")
+            .redirectUriTemplate("{baseUrl}" + shopifyPaths.getAuthorizationRedirectPath() + "/{registrationId}")
             .scope(scope.split(","))
             .authorizationUri("https://{shop}/admin/oauth/authorize")
             .tokenUri("https://{shop}/admin/oauth/access_token")
@@ -111,10 +120,45 @@ public class SecurityBeansConfig {
             .build();
     }
 	
+	
 	@Bean
-	public ShopifyVerificationStrategy shopifyVerficationStrategy(ClientRegistrationRepository clientRegistrationRepository) {
-		return new ShopifyVerificationStrategy(clientRegistrationRepository, customAuthorizationRequestRepository());
+    public ClientRegistrationRepository clientRegistrationRepository(ClientRegistration shopifyClientRegistration) {
+        return new InMemoryClientRegistrationRepository(shopifyClientRegistration);
+    }
+	
+	@Bean
+	public TokenService tokenService(CipherPassword cipherPassword, ClientRegistrationRepository clientRegistrationRepository) {
+		return new TokenService(this.tokenRepository, cipherPassword, clientRegistrationRepository);
 	}
+	
+	
+	// used by AuthenticatedPrincipalOAuth2AuthorizedClientRepository
+	@Bean
+	public OAuth2AuthorizedClientService clientService(TokenService tokenService) {
+		return new ShopifyOAuth2AuthorizedClientService(tokenService);
+	}
+	
+	
+	@Bean
+	public ShopifyHttpSessionOAuth2AuthorizationRequestRepository customAuthorizationRequestRepository(ShopifyPaths shopifyPaths) {
+		return new ShopifyHttpSessionOAuth2AuthorizationRequestRepository(shopifyPaths.getInstallPath());
+	}
+	
+	
+	@Bean
+	public OAuth2AuthorizationRequestResolver shopifyOauth2AuthorizationRequestResolver(ClientRegistrationRepository clientRegistrationRepository,
+					ShopifyHttpSessionOAuth2AuthorizationRequestRepository customAuthorizationRequestRepository,
+					ShopifyPaths shopifyPaths) {
+		return new ShopifyOAuth2AuthorizationRequestResolver(clientRegistrationRepository, customAuthorizationRequestRepository, shopifyPaths.getInstallPath(), shopifyPaths.getLoginEndpoint());
+	}
+	
+	
+	@Bean
+	public ShopifyVerificationStrategy shopifyVerficationStrategy(ClientRegistrationRepository clientRegistrationRepository,
+					ShopifyHttpSessionOAuth2AuthorizationRequestRepository customAuthorizationRequestRepository) {
+		return new ShopifyVerificationStrategy(clientRegistrationRepository, customAuthorizationRequestRepository);
+	}
+	
 	
 	@Bean
 	public CsrfTokenRepository csrfTokenRepository() {
@@ -123,5 +167,31 @@ public class SecurityBeansConfig {
 		
 		return repo;
 	}
-
+	
+	@Bean
+	public ShopifyHeaders shopifyHeaders() {
+		return new ShopifyHeaders();
+	}
+	
+	@Bean
+	public ShopifyChannelSecurity shopifyChannelSecurity() {
+		return new ShopifyChannelSecurity();
+	}
+	
+	@Bean
+	public ShopifyCsrf shopifyCsrf(ShopifyPaths shopifyPaths) {
+		return new ShopifyCsrf(shopifyPaths.getUninstallUri());
+	}
+	
+	@Bean
+	public ShopifyLogout shopifyLogout(ShopifyPaths shopifyPaths) {
+		return new ShopifyLogout(shopifyPaths.getLoginEndpoint(), shopifyPaths.getLogoutEndpoint());
+	}
+	
+	@Bean
+	public ShopifyOAuth2 shopifyOAuth2(ShopifyPaths shopifyPaths) {
+		return new ShopifyOAuth2(shopifyPaths.getAnyAuthorizationRedirectPath(), shopifyPaths.getLoginEndpoint(), shopifyPaths.getAuthenticationFailureUri());
+	}
+	
+	
 }

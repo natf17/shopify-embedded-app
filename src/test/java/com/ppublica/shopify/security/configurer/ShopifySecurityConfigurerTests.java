@@ -16,6 +16,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.PropertySource;
+import org.springframework.core.env.Environment;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -24,6 +26,7 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.oauth2.client.web.AuthorizationRequestRepository;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
@@ -35,21 +38,26 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import com.ppublica.shopify.AppConfig;
 import com.ppublica.shopify.TestDataSource;
+import com.ppublica.shopify.security.configuration.ShopifyPaths;
 import com.ppublica.shopify.security.web.ShopifyHttpSessionOAuth2AuthorizationRequestRepository;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration
+@TestPropertySource("classpath:test-application.properties")
 @WebAppConfiguration
 public class ShopifySecurityConfigurerTests {
 	
-	private static final String LOGIN_ENDPOINT = ShopifySecurityConfigurer.LOGIN_ENDPOINT;
-	private static final String ANY_INSTALL_PATH = ShopifySecurityConfigurer.ANY_INSTALL_PATH;
-	private static final String FAV_ICON = "/favicon.ico";
-	private static final String INSTALL_PATH = ShopifySecurityConfigurer.INSTALL_PATH + "/shopify";
+	private static String LOGIN_ENDPOINT = "/init";
+	private static String ANY_INSTALL_PATH = "/install/**";
+	private static String FAV_ICON = "/favicon.ico";
+	private static String INSTALL_PATH = "/install";
 	
 	
 	@Autowired
 	WebApplicationContext wac;
+	
+	@Autowired
+	ShopifyPaths shopifyPaths;
 	
 	@Autowired
 	Filter springSecurityFilterChain;
@@ -66,6 +74,10 @@ public class ShopifySecurityConfigurerTests {
 				.webAppContextSetup(wac)
 				.apply(springSecurity(springSecurityFilterChain))
 				.build();
+		
+		LOGIN_ENDPOINT = shopifyPaths.getLoginEndpoint();
+		ANY_INSTALL_PATH = shopifyPaths.getAnyInstallPath();
+		INSTALL_PATH = shopifyPaths.getInstallPath() + "/shopify";
 	}
 	
 	/*
@@ -118,8 +130,12 @@ public class ShopifySecurityConfigurerTests {
 	@Configuration
 	@Import(AppConfig.class)
 	static class WebMvcConfig implements WebMvcConfigurer {
+		@Autowired
+	    Environment env;
+		
 		@Bean
 		public JdbcTemplate getJdbcTemplate() {
+			System.out.println("printing value:" + env.getProperty("ppublica.shopify.client.client_id"));
 			DataSource dataSource = new TestDataSource("shopifysecuritytest");
 			JdbcTemplate template = new JdbcTemplate(dataSource);
 			

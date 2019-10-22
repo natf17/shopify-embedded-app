@@ -16,7 +16,6 @@ import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 
-import com.ppublica.shopify.security.configurer.ShopifySecurityConfigurer;
 import com.ppublica.shopify.security.service.TokenService;
 
 import org.junit.Assert;
@@ -42,7 +41,7 @@ public class ShopifyOAuth2AuthorizationRequestResolverTests {
 	            .clientSecret("client-secret")
 	            .clientAuthenticationMethod(ClientAuthenticationMethod.POST)
 	            .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
-	            .redirectUriTemplate("{baseUrl}" + ShopifySecurityConfigurer.AUTHORIZATION_REDIRECT_PATH + "/{registrationId}")
+	            .redirectUriTemplate("{baseUrl}/login/app/oauth2/code/{registrationId}")
 	            .scope("read_products write_products")
 	            .authorizationUri("https://{shop}/admin/oauth/authorize")
 	            .tokenUri("https://{shop}/admin/oauth/access_token")

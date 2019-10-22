@@ -4,10 +4,19 @@ import org.springframework.security.config.annotation.web.HttpSecurityBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.oauth2.client.OAuth2LoginConfigurer;
 
-import com.ppublica.shopify.security.configurer.ShopifySecurityConfigurer;
 import com.ppublica.shopify.security.service.ShopifyBeansUtils;
 
 public class ShopifyOAuth2 implements HttpSecurityBuilderConfigurerDelegate {
+	
+	private String anyAuthorizationRedirectPath;
+	private String loginEndpoint;
+	private String authenticationFailureUrl;
+	
+	public ShopifyOAuth2(String anyAuthorizationRedirectPath, String loginEndpoint, String authenticationFailureUrl) {
+		this.anyAuthorizationRedirectPath = anyAuthorizationRedirectPath;
+		this.loginEndpoint = loginEndpoint;
+		this.authenticationFailureUrl = authenticationFailureUrl;
+	}
 	
 	@Override
 	public void applyShopifyConfig(HttpSecurityBuilder<?> http) {
@@ -27,15 +36,15 @@ public class ShopifyOAuth2 implements HttpSecurityBuilderConfigurerDelegate {
 		configurer.authorizationEndpoint()
 						.authorizationRequestResolver(ShopifyBeansUtils.getRequestResolver(http))
 					.and()
-		          		.redirectionEndpoint().baseUri(ShopifySecurityConfigurer.ANY_AUTHORIZATION_REDIRECT_PATH) // same as filterProcessesUrl
+		          		.redirectionEndpoint().baseUri(this.anyAuthorizationRedirectPath) // same as filterProcessesUrl
 		          	.and()
 		          		.tokenEndpoint().accessTokenResponseClient(ShopifyBeansUtils.getAccessTokenResponseClient(http)) // allows for seamless unit testing
 		          	.and()
 		          		.userInfoEndpoint().userService(ShopifyBeansUtils.getUserService(http))
 		          	.and()
 			          	.successHandler(ShopifyBeansUtils.getSuccessHandler(http))
-			          	.loginPage(ShopifySecurityConfigurer.LOGIN_ENDPOINT) // for use outside of an embedded app since it involves a redirect
-			          	.failureUrl(ShopifySecurityConfigurer.AUTHENTICATION_FALURE_URL); // see AbstractAuthenticationProcessingFilter	
+			          	.loginPage(this.loginEndpoint) // for use outside of an embedded app since it involves a redirect
+			          	.failureUrl(this.authenticationFailureUrl); // see AbstractAuthenticationProcessingFilter	
 		
 		
 	}
