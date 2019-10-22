@@ -9,29 +9,18 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
-public class DefaultAuthorizationRedirectPathFilter implements Filter {
+public class DefaultAuthenticationFailureFilter implements Filter {
 	
 	/*
-	 * "success"
+	 * 
+	 * "authError"
+	 * 
+
+
+An error occurred during authentication.
 	 * 
 	 * 
-
-<!DOCTYPE html>
-<html>
-<body>
-<p>INSTALLATION SUCCESS</p>
-<a href="/info" >Protected resource</a>
-</body>
-</html>
-
-
-
-
-
-
-
-
-
+	 * 
 	 */
 
 	@Override

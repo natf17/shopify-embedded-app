@@ -9,29 +9,39 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
-public class DefaultAuthorizationRedirectPathFilter implements Filter {
+public class DefaultUserInfoFilter implements Filter {
 	
 	/*
-	 * "success"
+	 * 
+	 * "info"
 	 * 
 	 * 
 
+
+
 <!DOCTYPE html>
-<html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head lang="en">
+</head>
 <body>
-<p>INSTALLATION SUCCESS</p>
-<a href="/info" >Protected resource</a>
+<h1>Values for ShopifyApp [ProtectedResource]</h1>
+
+<p>
+apiKey: <span th:text='${#authentication.principal.attributes.get("shopify_client_api_key")}'>none found</span>
+<br>
+shopOrigin: <span th:text='${#authentication.principal.name}'>none found</span>
+<br>
+login for this session from embedded app?: <span th:text="${#session.getAttribute('SHOPIFY_EMBEDDED_APP') != null} ? ${#session.getAttribute('SHOPIFY_EMBEDDED_APP')} : 'false'">Unknown</span>
+<br>
+</p>
+
 </body>
 </html>
 
 
-
-
-
-
-
-
-
+	 * 
+	 * 
+	 * 
 	 */
 
 	@Override
@@ -52,5 +62,7 @@ public class DefaultAuthorizationRedirectPathFilter implements Filter {
 		// TODO Auto-generated method stub
 		
 	}
+	
+	
 
 }

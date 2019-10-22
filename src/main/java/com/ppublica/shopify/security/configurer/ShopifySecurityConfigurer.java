@@ -36,6 +36,9 @@ import com.ppublica.shopify.security.service.ShopifyBeansUtils;
  * 		- UninstallFilter
  * 		- DefaultInstallFilter
  * 		- DefaultAuthorizationRedirectPathFilter
+ * 		- DefaultLoginEndpointFilter
+ * 		- DefaultAuthenticationFailureFilter
+ * 		- DefaultUserInfoFilter
  * 
  */
 public class ShopifySecurityConfigurer<H extends HttpSecurityBuilder<H>>
