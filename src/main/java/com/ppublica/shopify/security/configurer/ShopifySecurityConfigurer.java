@@ -8,7 +8,10 @@ import org.springframework.security.config.annotation.web.HttpSecurityBuilder;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestRedirectFilter;
+import org.springframework.security.web.access.intercept.FilterSecurityInterceptor;
 import org.springframework.security.web.authentication.logout.LogoutFilter;
+import org.springframework.security.web.authentication.ui.DefaultLogoutPageGeneratingFilter;
+import org.springframework.security.web.session.ConcurrentSessionFilter;
 
 import com.ppublica.shopify.security.authentication.ShopifyVerificationStrategy;
 import com.ppublica.shopify.security.configuration.ShopifyPaths;
@@ -91,32 +94,32 @@ public class ShopifySecurityConfigurer<H extends HttpSecurityBuilder<H>>
 
 		//DefaultInstallFilter
 		if(!isCustomInstallPath) {
-			//
-			new DefaultInstallFilter(sP.getInstallPath(), menuLinks);
+			// bypass security...
+			http.addFilterBefore(new DefaultInstallFilter(sP.getInstallPath(), menuLinks), FilterSecurityInterceptor.class);
 		}
 		
 		//DefaultAuthorizationRedirectPathFilter
 		if(!isCustomAuthorizationRedirectPath) {
-			//
-			new DefaultAuthorizationRedirectPathFilter(sP.getAnyAuthorizationRedirectPath(), menuLinks);
+			// bypass security...
+			http.addFilterBefore(new DefaultAuthorizationRedirectPathFilter(sP.getAnyAuthorizationRedirectPath(), menuLinks), FilterSecurityInterceptor.class);
 		}
 		
 		//DefaultLoginEndpointFilter
 		if(!isCustomLoginEndpoint) {
-			//
-			new DefaultLoginEndpointFilter(sP.getLoginEndpoint(), sP.getInstallPath(), sP.getLogoutEndpoint());
+			// since it doesn't modify the Authentication...
+			http.addFilterAfter(new DefaultLoginEndpointFilter(sP.getLoginEndpoint(), sP.getInstallPath(), sP.getLogoutEndpoint()), ConcurrentSessionFilter.class);
 		}
 		
 		//DefaultAuthenticationFailureFilter
 		if(!isCustomAuthenticationFailurePage) {
 			//
-			new DefaultAuthenticationFailureFilter(sP.getAuthenticationFailureUri());
+			http.addFilterAfter(new DefaultAuthenticationFailureFilter(sP.getAuthenticationFailureUri()), DefaultLogoutPageGeneratingFilter.class);
 		}
 		
 		//DefaultUserInfoFilter
 		if(isUserInfoPageEnabled) {
-			//
-			new DefaultUserInfoFilter(sP.getUserInfoPagePath());
+			// implements own "security"
+			http.addFilterBefore(new DefaultUserInfoFilter(sP.getUserInfoPagePath()), FilterSecurityInterceptor.class);
 		}
 		
 	}

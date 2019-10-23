@@ -13,7 +13,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
 /*
@@ -24,6 +26,8 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
  * 	- apiKey: the api key for the app
  * 	- shopOrigin: the domain of the store that's currently logged in
  * 	- whether the initial login for the session was done from within an embedded app
+ * 
+ * If the request isn't authenticated, the request passes to the next filter.
  * 
  */
 public class DefaultUserInfoFilter implements Filter {
@@ -44,7 +48,7 @@ public class DefaultUserInfoFilter implements Filter {
 		HttpServletRequest req = (HttpServletRequest) request;
 		HttpServletResponse resp = (HttpServletResponse) response;
 		
-		if(isUserInfoRequest(req)) {
+		if(isUserInfoRequest(req) && isAuthenticated()) {
 			String bodyHtml = generateUserInfoPageHtml((HttpServletRequest)request);
 			resp.setContentType("text/html;charset=UTF-8");
 			resp.setContentLength(bodyHtml.getBytes(StandardCharsets.UTF_8).length);
@@ -121,6 +125,17 @@ public class DefaultUserInfoFilter implements Filter {
 	private HttpSession getHttpSessionForRequest(HttpServletRequest req) {
 		return req.getSession(false);
 		
+	}
+	
+	private boolean isAuthenticated() {
+		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+		
+		if(auth instanceof OAuth2AuthenticationToken) {
+			return true;
+		}
+		
+		return false;
+
 	}
 	
 	private boolean isUserInfoRequest(HttpServletRequest req) {
