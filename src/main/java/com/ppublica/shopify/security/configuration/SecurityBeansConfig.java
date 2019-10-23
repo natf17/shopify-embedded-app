@@ -67,10 +67,14 @@ public class SecurityBeansConfig {
 							  @Value("${ppublica.shopify.security.endpoints.logout:}") String logoutEndpoint,
 							  @Value("${ppublica.shopify.security.endpoints.authentication-failure:}") String authenticationFailureUri,
 							  @Value("${ppublica.shopify.security.endpoints.uninstall:}") String uninstallUri,
-							  @Value("${ppublica.shopify.security.endpoints.uninstall:false}") boolean enableDefaultInfoPage) {
+							  @Value("${ppublica.shopify.security.endpoints.enable-default-info-page:}") String enableDefaultInfoPage) {
 		
+		boolean enableDefaultInfo = false;
+		if(enableDefaultInfoPage != null) {
+			enableDefaultInfo = Boolean.parseBoolean(enableDefaultInfoPage);
+		}
 		return new ShopifyPaths(installPath, authorizationRedirectPath, loginEndpoint,
-								logoutEndpoint, authenticationFailureUri, uninstallUri, enableDefaultInfoPage);
+								logoutEndpoint, authenticationFailureUri, uninstallUri, enableDefaultInfo);
 		
 	}
 

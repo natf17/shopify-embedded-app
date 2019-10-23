@@ -113,7 +113,7 @@ public class ShopifySecurityConfigurerTests {
 	static class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 		@Override
 		protected void configure(HttpSecurity http) throws Exception {
-			// minimum requirements...
+			/* minimum requirements... if not using defults:
 			http.authorizeRequests()
 					.mvcMatchers(LOGIN_ENDPOINT).permitAll()
 					.mvcMatchers(ANY_INSTALL_PATH).permitAll()
@@ -123,6 +123,15 @@ public class ShopifySecurityConfigurerTests {
 					.anyRequest()
 						.requiresSecure().and()
 					.oauth2Login();
+			*/
+			
+			// minimum requirements with defaults:
+			http.authorizeRequests()
+					.anyRequest().authenticated().and()
+				.requiresChannel()
+					.anyRequest()
+						.requiresSecure().and()
+				.oauth2Login();
 		}
 	}
 	
