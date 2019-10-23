@@ -58,12 +58,11 @@ import com.ppublica.shopify.security.authentication.ShopifyVerificationStrategy;
 
  */
 public class ShopifyOriginFilter implements Filter {
-
 	private AntPathRequestMatcher mustComeFromShopifyMatcher;
 	private List<AntPathRequestMatcher> applicablePaths;
 	private ShopifyVerificationStrategy shopifyVerificationStrategy;
 	private AccessDeniedHandler accessDeniedHandler = new AccessDeniedHandlerImpl();
-	private String SHOPIFY_EMBEDDED_APP = "SHOPIFY_EMBEDDED_APP";
+	public static String SHOPIFY_EMBEDDED_APP = "SHOPIFY_EMBEDDED_APP";
 	
 	public ShopifyOriginFilter(ShopifyVerificationStrategy shopifyVerificationStrategy, String authorizationPath, String... maybeUris) {
 		this.mustComeFromShopifyMatcher = new AntPathRequestMatcher(authorizationPath);
