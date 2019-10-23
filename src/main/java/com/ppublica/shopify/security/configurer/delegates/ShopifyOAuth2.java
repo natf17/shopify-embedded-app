@@ -1,8 +1,11 @@
 package com.ppublica.shopify.security.configurer.delegates;
 
+import org.springframework.security.config.annotation.ObjectPostProcessor;
 import org.springframework.security.config.annotation.web.HttpSecurityBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.oauth2.client.OAuth2LoginConfigurer;
+import org.springframework.security.oauth2.client.web.OAuth2LoginAuthenticationFilter;
+import org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter;
 
 import com.ppublica.shopify.security.service.ShopifyBeansUtils;
 
@@ -42,6 +45,7 @@ public class ShopifyOAuth2 implements HttpSecurityBuilderConfigurerDelegate {
 		          	.and()
 		          		.userInfoEndpoint().userService(ShopifyBeansUtils.getUserService(http))
 		          	.and()
+		          		.withObjectPostProcessor(new OAuth2ContinueFilterChain())
 			          	.successHandler(ShopifyBeansUtils.getSuccessHandler(http))
 			          	.loginPage(this.loginEndpoint) // for use outside of an embedded app since it involves a redirect
 			          	.failureUrl(this.authenticationFailureUrl); // see AbstractAuthenticationFilterConfigurer and AbstractAuthenticationProcessingFilter	
@@ -49,6 +53,15 @@ public class ShopifyOAuth2 implements HttpSecurityBuilderConfigurerDelegate {
 		
 	}
 	
+	static class OAuth2ContinueFilterChain implements ObjectPostProcessor<AbstractAuthenticationProcessingFilter> {
+
+		@Override
+		public <O extends AbstractAuthenticationProcessingFilter> O postProcess(O object) {
+			object.setContinueChainBeforeSuccessfulAuthentication(true);
+			return object;
+		}
+		
+	}
 
 
 

@@ -21,6 +21,10 @@ import org.springframework.security.web.authentication.SavedRequestAwareAuthenti
  * Afterwards, however, it will forward to the the "authentication url" resource.
  * By default, the Spring Security filter chain will not be triggered for the forward.
  * 
+ * 
+ * UPDATE: since the OAuth2LoginAuthenticationFilter will continue with the chain after successful authentication,
+ * and onto the landing page, this handler does nothing.
+ * 
  */
 public class NoRedirectSuccessHandler implements AuthenticationSuccessHandler {
 	
@@ -41,9 +45,9 @@ public class NoRedirectSuccessHandler implements AuthenticationSuccessHandler {
 		
 		defaultHandler.onAuthenticationSuccess(request, response, authentication);
 		
-		RequestDispatcher rs = request.getRequestDispatcher(authorizationRedirectPath);
+		//RequestDispatcher rs = request.getRequestDispatcher(authorizationRedirectPath);
 
-		rs.forward(request, response);
+		//rs.forward(request, response);
 		
 	}
 
