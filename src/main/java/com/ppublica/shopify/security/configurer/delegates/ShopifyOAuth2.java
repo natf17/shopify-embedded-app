@@ -44,7 +44,7 @@ public class ShopifyOAuth2 implements HttpSecurityBuilderConfigurerDelegate {
 		          	.and()
 			          	.successHandler(ShopifyBeansUtils.getSuccessHandler(http))
 			          	.loginPage(this.loginEndpoint) // for use outside of an embedded app since it involves a redirect
-			          	.failureUrl(this.authenticationFailureUrl); // see AbstractAuthenticationProcessingFilter	
+			          	.failureUrl(this.authenticationFailureUrl); // see AbstractAuthenticationFilterConfigurer and AbstractAuthenticationProcessingFilter	
 		
 		
 	}

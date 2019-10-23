@@ -43,6 +43,7 @@ import com.ppublica.shopify.security.repository.TokenRepository;
  * ppublica.shopify.security.endpoints.logout=
  * ppublica.shopify.security.endpoints.authentication-failure=
  * ppublica.shopify.security.endpoints.uninstall=
+ * ppublica.shopify.security.endpoints.enable-default-info-page=
  * 
  * ppublica.shopify.security.cipher.password=
  * 
@@ -65,10 +66,11 @@ public class SecurityBeansConfig {
 							  @Value("${ppublica.shopify.security.endpoints.login:}") String loginEndpoint,
 							  @Value("${ppublica.shopify.security.endpoints.logout:}") String logoutEndpoint,
 							  @Value("${ppublica.shopify.security.endpoints.authentication-failure:}") String authenticationFailureUri,
-							  @Value("${ppublica.shopify.security.endpoints.uninstall:}") String uninstallUri) {
+							  @Value("${ppublica.shopify.security.endpoints.uninstall:}") String uninstallUri,
+							  @Value("${ppublica.shopify.security.endpoints.uninstall:false}") boolean enableDefaultInfoPage) {
 		
 		return new ShopifyPaths(installPath, authorizationRedirectPath, loginEndpoint,
-								logoutEndpoint, authenticationFailureUri, uninstallUri);
+								logoutEndpoint, authenticationFailureUri, uninstallUri, enableDefaultInfoPage);
 		
 	}
 

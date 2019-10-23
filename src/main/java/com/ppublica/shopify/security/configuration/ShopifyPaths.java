@@ -14,6 +14,7 @@ public class ShopifyPaths {
 	private String logoutEndpoint = "/logout";
 	private String authenticationFailureUri = "/auth/error";
 	private String uninstallUri = "/store/uninstall";
+	private String userInfoPagePath = "/info";
 	
 	private boolean isCustomInstallPath;
 	private boolean isCustomAuthorizationRedirectPath;
@@ -21,9 +22,10 @@ public class ShopifyPaths {
 	private boolean isCustomLogoutEndpoint;
 	private boolean isCustomAuthenticationFailureUri;
 	private boolean isCustomUninstallUri;
+	private boolean isUserInfoPageEnabled;
 	
 	public ShopifyPaths(String installPath, String authorizationRedirectPath, String loginEndpoint,
-						String logoutEndpoint, String authenticationFailureUri, String uninstallUri) {
+						String logoutEndpoint, String authenticationFailureUri, String uninstallUri, Boolean enableInfoPath) {
 		
 		if(installPath != null && !installPath.trim().isEmpty()) {
 			this.installPath = installPath;
@@ -55,6 +57,10 @@ public class ShopifyPaths {
 		if(uninstallUri != null && !uninstallUri.trim().isEmpty()) {
 			this.uninstallUri = uninstallUri;
 			this.isCustomUninstallUri = true;
+		}
+		
+		if(enableInfoPath != null && enableInfoPath == true) {
+			this.isUserInfoPageEnabled = true;
 		}
 		
 	}
@@ -114,6 +120,14 @@ public class ShopifyPaths {
 	
 	public boolean isCustomUninstallUri() {
 		return this.isCustomUninstallUri;
+	}
+	
+	public String getUserInfoPagePath() {
+		return this.userInfoPagePath;
+	}
+	
+	public boolean isUserInfoPageEnabled() {
+		return this.isUserInfoPageEnabled;
 	}
 	
 }

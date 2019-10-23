@@ -13,6 +13,11 @@ import org.springframework.security.web.authentication.logout.LogoutFilter;
 import com.ppublica.shopify.security.authentication.ShopifyVerificationStrategy;
 import com.ppublica.shopify.security.configuration.ShopifyPaths;
 import com.ppublica.shopify.security.configurer.delegates.HttpSecurityBuilderConfigurerDelegate;
+import com.ppublica.shopify.security.filters.DefaultAuthenticationFailureFilter;
+import com.ppublica.shopify.security.filters.DefaultAuthorizationRedirectPathFilter;
+import com.ppublica.shopify.security.filters.DefaultInstallFilter;
+import com.ppublica.shopify.security.filters.DefaultLoginEndpointFilter;
+import com.ppublica.shopify.security.filters.DefaultUserInfoFilter;
 import com.ppublica.shopify.security.filters.ShopifyExistingTokenFilter;
 import com.ppublica.shopify.security.filters.ShopifyOriginFilter;
 import com.ppublica.shopify.security.filters.UninstallFilter;
@@ -34,6 +39,7 @@ import com.ppublica.shopify.security.service.ShopifyBeansUtils;
  * 		- ShopifyOriginFilter
  * 		- ShopifyExistingTokenFilter
  * 		- UninstallFilter
+ * 
  * 		- DefaultInstallFilter
  * 		- DefaultAuthorizationRedirectPathFilter
  * 		- DefaultLoginEndpointFilter
@@ -75,6 +81,43 @@ public class ShopifySecurityConfigurer<H extends HttpSecurityBuilder<H>>
 		http.addFilterAfter(new ShopifyExistingTokenFilter(cS, sP.getInstallPath()), ShopifyOriginFilter.class);
 		http.addFilterBefore(new UninstallFilter(sP.getUninstallUri(), verStr, cS, ShopifyBeansUtils.getJacksonConverter(http)), OAuth2AuthorizationRequestRedirectFilter.class);
 		
+		Map<String, String> menuLinks = null;
+		boolean isCustomInstallPath = sP.isCustomInstallPath();
+		boolean isCustomAuthorizationRedirectPath = sP.isCustomAuthorizationRedirectPath();
+		boolean isCustomLoginEndpoint = sP.isCustomLoginEndpoint();
+		boolean isCustomAuthenticationFailurePage = sP.isCustomAuthenticationFailureUri();
+		boolean isUserInfoPageEnabled = sP.isUserInfoPageEnabled();
+
+
+		//DefaultInstallFilter
+		if(!isCustomInstallPath) {
+			//
+			new DefaultInstallFilter(sP.getInstallPath(), menuLinks);
+		}
+		
+		//DefaultAuthorizationRedirectPathFilter
+		if(!isCustomAuthorizationRedirectPath) {
+			//
+			new DefaultAuthorizationRedirectPathFilter(sP.getAnyAuthorizationRedirectPath(), menuLinks);
+		}
+		
+		//DefaultLoginEndpointFilter
+		if(!isCustomLoginEndpoint) {
+			//
+			new DefaultLoginEndpointFilter(sP.getLoginEndpoint(), sP.getInstallPath(), sP.getLogoutEndpoint());
+		}
+		
+		//DefaultAuthenticationFailureFilter
+		if(!isCustomAuthenticationFailurePage) {
+			//
+			new DefaultAuthenticationFailureFilter(sP.getAuthenticationFailureUri());
+		}
+		
+		//DefaultUserInfoFilter
+		if(isUserInfoPageEnabled) {
+			//
+			new DefaultUserInfoFilter(sP.getUserInfoPagePath());
+		}
 		
 	}
 

@@ -87,7 +87,6 @@ public class DefaultLoginEndpointFilter implements Filter {
 		StringBuilder sb = new StringBuilder();
 		
 		sb.append("<!DOCTYPE html>\n"
-				+ "<html lang=\"en\">\n"
 				+ "  <head lang=\"en\">\n"
 				+ "    <meta charset=\"UTF-8\">\n"
 				+ "    <title>Please enter a store</title>\n"
@@ -186,6 +185,9 @@ public class DefaultLoginEndpointFilter implements Filter {
 		return isEmbedded;
 	}
 	
+	/*
+	 * the query string is considered when determining match
+	 */
 	private boolean isLoginRequest(HttpServletRequest req) {
 		if (!"GET".equals(req.getMethod())) {
 			return false;
