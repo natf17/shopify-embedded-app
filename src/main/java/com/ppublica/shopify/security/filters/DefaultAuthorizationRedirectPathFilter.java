@@ -42,11 +42,14 @@ public class DefaultAuthorizationRedirectPathFilter implements Filter {
 	@Override
 	public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain)
 			throws IOException, ServletException {
-		
+		System.out.println("DefaultAuthorizationRedirectPathFilter invoked");
+
 		HttpServletRequest request = (HttpServletRequest) req;
 		HttpServletResponse response = (HttpServletResponse) res;
 		
 		if(isAuthorizationRedirectRequest(request)) {
+			System.out.println("DefaultAuthorizationRedirectPathFilter acting");
+
 			String bodyHtml = generateAuthorizationRedirectPageHtml((HttpServletRequest)request);
 			response.setContentType("text/html;charset=UTF-8");
 			response.setContentLength(bodyHtml.getBytes(StandardCharsets.UTF_8).length);

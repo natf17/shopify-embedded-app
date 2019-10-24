@@ -48,7 +48,7 @@ public class ShopifyExistingTokenFilter extends GenericFilterBean {
 	@Override
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
 			throws IOException, ServletException {
-		
+
 		HttpServletRequest req = (HttpServletRequest) request;
 		
 		if(!requestMatcher.matches(req)) {

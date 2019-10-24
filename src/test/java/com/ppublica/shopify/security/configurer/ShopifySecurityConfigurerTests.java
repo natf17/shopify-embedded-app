@@ -5,9 +5,11 @@ import javax.sql.DataSource;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrlPattern;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -37,6 +39,7 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import com.ppublica.shopify.AppConfig;
+import com.ppublica.shopify.HttpsRequestPostProcessor;
 import com.ppublica.shopify.TestDataSource;
 import com.ppublica.shopify.security.configuration.ShopifyPaths;
 import com.ppublica.shopify.security.web.ShopifyHttpSessionOAuth2AuthorizationRequestRepository;
@@ -47,10 +50,14 @@ import com.ppublica.shopify.security.web.ShopifyHttpSessionOAuth2AuthorizationRe
 @WebAppConfiguration
 public class ShopifySecurityConfigurerTests {
 	
-	private static String LOGIN_ENDPOINT = "/init";
-	private static String ANY_INSTALL_PATH = "/install/**";
+	private static String LOGIN_ENDPOINT;
+	private static String ANY_INSTALL_PATH;
 	private static String FAV_ICON = "/favicon.ico";
-	private static String INSTALL_PATH = "/install";
+	private static String INSTALL_PATH;
+	private static String AUTHORIZATION_REDIRECT_PATH;
+	private static String AUTHENTICATION_FAILURE_URI;
+	
+	private HttpsRequestPostProcessor httpsPostProcessor = new HttpsRequestPostProcessor();
 	
 	
 	@Autowired
@@ -78,6 +85,9 @@ public class ShopifySecurityConfigurerTests {
 		LOGIN_ENDPOINT = shopifyPaths.getLoginEndpoint();
 		ANY_INSTALL_PATH = shopifyPaths.getAnyInstallPath();
 		INSTALL_PATH = shopifyPaths.getInstallPath() + "/shopify";
+		AUTHORIZATION_REDIRECT_PATH = shopifyPaths.getAuthorizationRedirectPath();
+		AUTHENTICATION_FAILURE_URI = shopifyPaths.getAuthenticationFailureUri();
+		
 	}
 	
 	/*
@@ -97,14 +107,45 @@ public class ShopifySecurityConfigurerTests {
 	@Test
 	public void whenShopParamPresentThenJSRedirect() throws Exception {
 	
-		MvcResult result = this.mockMvc.perform(get(INSTALL_PATH + "?shop=test.myshopify.com").secure(true))
-					//.andExpect(content().string(containsString("var redirectFromParentPath = 'https://test.myshopify.com/admin/oauth/authorize?client_id=testId&redirect_uri=https://localhost/login/app/oauth2/code/shopify&scope=read_inventory,write_inventory,read_products,write_products&state=")))
-					//.andExpect(content().string(containsString("var redirectFromIFramePath = '/oauth/authorize?client_id=testId&redirect_uri=https://localhost/login/app/oauth2/code/shopify&scope=read_inventory,write_inventory,read_products,write_products&state=")))
+		this.mockMvc.perform(get(INSTALL_PATH + "?shop=test.myshopify.com").with(httpsPostProcessor))
+					.andExpect(content().string(containsString("var redirectFromParentPath = 'https://test.myshopify.com/admin/oauth/authorize?client_id=test-client-id&redirect_uri=https://localhost/login/app/oauth2/code/shopify&scope=read_inventory,write_inventory,read_products,write_products&state=")))
+					.andExpect(content().string(containsString("var redirectFromIFramePath = '/oauth/authorize?client_id=test-client-id&redirect_uri=https://localhost/login/app/oauth2/code/shopify&scope=read_inventory,write_inventory,read_products,write_products&state=")))
 					.andReturn();
-		
-		System.out.println(result.getResponse().getContentAsString());
 	}
 	
+	/*
+	 * The authorization endpoint MUST be invoked by Shopify ONLY
+	 * 
+	 * Since it's not from Shopify, ShopifyOriginFilter delegates to the AccessDeniedHandler.
+	 */
+	@Test
+	public void whenAuthEndpointThenFail() throws Exception {
+		this.mockMvc.perform(get(AUTHORIZATION_REDIRECT_PATH).with(httpsPostProcessor))
+					.andExpect(status().isForbidden());
+	}
+	
+	/*
+	 * Access some other protected resource.
+	 * Since we are not authenticated, authentication entry point 
+	 * should redirect to LOGIN_ENDPOINT
+	 */
+	@Test
+	public void whenProtectedResourceThenRedirect() throws Exception {
+		this.mockMvc.perform(get("/products").with(httpsPostProcessor))
+					.andExpect(status().is3xxRedirection())
+					.andExpect(redirectedUrlPattern("**" + LOGIN_ENDPOINT));
+	}
+	
+	/*
+	 * Access LOGIN_ENDPOINT
+	 * Should returen 200 even if we are not authenticated
+	 */
+	@Test
+	public void whenLoginThenOk() throws Exception {
+	
+		this.mockMvc.perform(get(LOGIN_ENDPOINT).with(httpsPostProcessor))
+					.andExpect(status().is2xxSuccessful());
+	}
 	
 	
 	
@@ -144,7 +185,6 @@ public class ShopifySecurityConfigurerTests {
 		
 		@Bean
 		public JdbcTemplate getJdbcTemplate() {
-			System.out.println("printing value:" + env.getProperty("ppublica.shopify.client.client_id"));
 			DataSource dataSource = new TestDataSource("shopifysecuritytest");
 			JdbcTemplate template = new JdbcTemplate(dataSource);
 			

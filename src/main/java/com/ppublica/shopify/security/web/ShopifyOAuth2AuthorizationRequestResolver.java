@@ -130,7 +130,8 @@ public class ShopifyOAuth2AuthorizationRequestResolver implements OAuth2Authoriz
 		}
 		
 		String redirectUriStr = this.expandRedirectUri(request, clientRegistration);
-
+System.out.println(redirectUriStr);
+		
 		Map<String, Object> additionalParameters = new HashMap<>();
 		additionalParameters.put(OAuth2ParameterNames.REGISTRATION_ID, clientRegistration.getRegistrationId());
 		additionalParameters.put(SHOPIFY_SHOP_PARAMETER_KEY_FOR_TOKEN, shopName);
