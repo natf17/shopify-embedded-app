@@ -1,6 +1,7 @@
 package com.ppublica.shopify.security.configurer;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -84,7 +85,7 @@ public class ShopifySecurityConfigurer<H extends HttpSecurityBuilder<H>>
 		http.addFilterAfter(new ShopifyExistingTokenFilter(cS, sP.getInstallPath()), ShopifyOriginFilter.class);
 		http.addFilterBefore(new UninstallFilter(sP.getUninstallUri(), verStr, cS, ShopifyBeansUtils.getJacksonConverter(http)), OAuth2AuthorizationRequestRedirectFilter.class);
 		
-		Map<String, String> menuLinks = null;
+		Map<String, String> menuLinks = new HashMap<>();
 		boolean isCustomInstallPath = sP.isCustomInstallPath();
 		boolean isCustomAuthorizationRedirectPath = sP.isCustomAuthorizationRedirectPath();
 		boolean isCustomLoginEndpoint = sP.isCustomLoginEndpoint();

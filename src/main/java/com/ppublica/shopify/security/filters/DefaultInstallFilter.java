@@ -107,7 +107,10 @@ public class DefaultInstallFilter implements Filter {
 	private String generateInstallPageHtml(HttpServletRequest req) {
 		
 		String parentAuthenticationUri = (String)req.getAttribute("PARENT_AUTHENTICATION_URI");
+		String parentString = parentAuthenticationUri != null ? ("'" + parentAuthenticationUri + "'") : parentAuthenticationUri;
 		String iFrameAuthenticationUri = (String)req.getAttribute("I_FRAME_AUTHENTICATION_URI");
+		String iFrameString = iFrameAuthenticationUri != null ? ("'" + iFrameAuthenticationUri + "'") : iFrameAuthenticationUri;
+
 		StringBuilder sb = new StringBuilder();
 		
 		sb.append("<!DOCTYPE html>\n"
@@ -115,8 +118,8 @@ public class DefaultInstallFilter implements Filter {
 				+ "    <meta charset=\"UTF-8\">\n"
 				+ "    <script src=\"https://cdn.shopify.com/s/assets/external/app.js\"></script>\n"
 				+ "    <script>\n"
-				+ "    	var redirectFromParentPath = '" + parentAuthenticationUri + "';\n"
-				+ "    	var redirectFromIFramePath = '" + iFrameAuthenticationUri + "';\n"
+				+ "    	var redirectFromParentPath = " +  parentString + ";\n"
+				+ "    	var redirectFromIFramePath = " + iFrameString + ";\n"
 				+ "    	// If the current window is the 'parent', change the URL by setting location.href parentRedirectUri\n"
 				+ "    	if (window.top == window.self) {\n"
 				+ "    		console.log(\"In parent: \" + redirectFromParentPath);\n"
