@@ -61,7 +61,6 @@ public class ShopifyAuthorizationCodeTokenResponseClient implements OAuth2Access
 	
 		restTemplate.setErrorHandler(new OAuth2ErrorResponseErrorHandler());
 		
-		
 		oAuth2AccessTokenResponseClient = new DefaultAuthorizationCodeTokenResponseClient();
 		oAuth2AccessTokenResponseClient.setRestOperations(restTemplate);
 		
@@ -73,10 +72,8 @@ public class ShopifyAuthorizationCodeTokenResponseClient implements OAuth2Access
 	
 	@Override
 	public OAuth2AccessTokenResponse getTokenResponse(OAuth2AuthorizationCodeGrantRequest authorizationGrantRequest) {
-System.out.println("In ShopifyAuthorizationCodeTokenResponseClient");
 		ClientRegistration currentRegistration = authorizationGrantRequest.getClientRegistration();
 		OAuth2AuthorizationExchange currentExchange = authorizationGrantRequest.getAuthorizationExchange();
-		
 		
 		String tokenUriTemplate = currentRegistration.getProviderDetails().getTokenUri();
 		
@@ -94,7 +91,6 @@ System.out.println("In ShopifyAuthorizationCodeTokenResponseClient");
 				.fromHttpUrl(tokenUriTemplate)
 				.buildAndExpand(uriVariables)
 				.toUriString();
-System.out.println("Building newClientRegistration: tokenUri=" + tokenUri);
 
 		ClientRegistration newClientRegistration = ClientRegistration.withRegistrationId(currentRegistration.getRegistrationId())
 	            .clientId(currentRegistration.getClientId())
@@ -109,10 +105,8 @@ System.out.println("Building newClientRegistration: tokenUri=" + tokenUri);
 	            .build();
 		
 		OAuth2AuthorizationCodeGrantRequest newGrantReq = new OAuth2AuthorizationCodeGrantRequest(newClientRegistration, currentExchange);
-System.out.println("asking for response");
 
 		OAuth2AccessTokenResponse resp = oAuth2AccessTokenResponseClient.getTokenResponse(newGrantReq);
-System.out.println("got response");
 
 		Map<String, Object> newAdditionalParameters = new HashMap<>();
 		

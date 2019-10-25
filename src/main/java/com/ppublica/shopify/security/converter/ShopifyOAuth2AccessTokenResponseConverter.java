@@ -40,7 +40,6 @@ public class ShopifyOAuth2AccessTokenResponseConverter implements Converter<Map<
 
 	@Override
 	public OAuth2AccessTokenResponse convert(Map<String, String> tokenResponseParameters) {
-System.out.println("In ShopifyOAuth2AccessTokenResponseConverter");
 		String accessToken = tokenResponseParameters.get(OAuth2ParameterNames.ACCESS_TOKEN);
 
 		OAuth2AccessToken.TokenType accessTokenType = null;

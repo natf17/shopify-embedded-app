@@ -34,6 +34,7 @@ import com.ppublica.shopify.security.configurer.delegates.ShopifyCsrf;
 import com.ppublica.shopify.security.configurer.delegates.ShopifyHeaders;
 import com.ppublica.shopify.security.configurer.delegates.ShopifyLogout;
 import com.ppublica.shopify.security.configurer.delegates.ShopifyOAuth2;
+import com.ppublica.shopify.security.configurer.delegates.ShopifySessionAuthenticationStrategyConfigurer;
 import com.ppublica.shopify.security.repository.TokenRepository;
 
 /*
@@ -199,5 +200,10 @@ public class SecurityBeansConfig {
 		return new ShopifyOAuth2(shopifyPaths.getAnyAuthorizationRedirectPath(), shopifyPaths.getLoginEndpoint(), shopifyPaths.getAuthenticationFailureUri());
 	}
 	
+	@Bean
+	public ShopifySessionAuthenticationStrategyConfigurer shopifySessionAuthenticationStrategyConfigurer() {
+		return new ShopifySessionAuthenticationStrategyConfigurer();
+	}
+		
 	
 }

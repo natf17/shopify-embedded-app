@@ -102,7 +102,7 @@ public class ShopifySecurityConfigurer<H extends HttpSecurityBuilder<H>>
 		//DefaultAuthorizationRedirectPathFilter
 		if(!isCustomAuthorizationRedirectPath) {
 			// bypass security...
-			http.addFilterBefore(new DefaultAuthorizationRedirectPathFilter(sP.getAnyAuthorizationRedirectPath(), menuLinks), FilterSecurityInterceptor.class);
+			http.addFilterBefore(new DefaultAuthorizationRedirectPathFilter(sP.getAuthorizationRedirectPath(), menuLinks), FilterSecurityInterceptor.class);
 		}
 		
 		//DefaultLoginEndpointFilter

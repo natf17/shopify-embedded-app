@@ -80,8 +80,6 @@ public class ShopifyVerificationStrategy {
 		String hmacValue = hmacValues[0];
 		
 		if(hmacValue.isEmpty()) {
-System.out.println("YES shopify request");
-
 			return false;
 		}
 		
@@ -93,7 +91,6 @@ System.out.println("YES shopify request");
 			return isShopifyQueryRequest(UriUtils.decode(request.getQueryString(), StandardCharsets.UTF_8), hmacValue, secret);
 
 		}
-System.out.println("YES shopify request");
 		return true;
 
 		

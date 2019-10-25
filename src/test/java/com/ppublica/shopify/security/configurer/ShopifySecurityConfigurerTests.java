@@ -9,17 +9,18 @@ import static org.hamcrest.CoreMatchers.not;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrlPattern;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -30,30 +31,32 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.env.Environment;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.mock.web.MockHttpServletRequest;
-import org.springframework.mock.web.MockHttpSession;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.crypto.encrypt.Encryptors;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
 import org.springframework.security.crypto.keygen.KeyGenerators;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.client.endpoint.OAuth2AccessTokenResponseClient;
+import org.springframework.security.oauth2.client.endpoint.OAuth2AuthorizationCodeGrantRequest;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
-import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
-import org.springframework.security.oauth2.client.web.AuthorizationRequestRepository;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
+import org.springframework.security.oauth2.core.endpoint.OAuth2AccessTokenResponse;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -61,6 +64,7 @@ import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.client.RestOperations;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -71,12 +75,12 @@ import com.ppublica.shopify.TestDataSource;
 import com.ppublica.shopify.security.authentication.CipherPassword;
 import com.ppublica.shopify.security.authentication.ShopifyVerificationStrategy;
 import com.ppublica.shopify.security.configuration.ShopifyPaths;
+import com.ppublica.shopify.security.converter.ShopifyOAuth2AccessTokenResponseConverter;
+import com.ppublica.shopify.security.service.ShopifyStore;
+import com.ppublica.shopify.security.web.ShopifyAuthorizationCodeTokenResponseClient;
 import com.ppublica.shopify.security.web.ShopifyHttpSessionOAuth2AuthorizationRequestRepository;
 import com.ppublica.shopify.security.web.ShopifyOAuth2AuthorizationRequestResolver;
 
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
-import okhttp3.mockwebserver.RecordedRequest;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration
@@ -86,11 +90,9 @@ public class ShopifySecurityConfigurerTests {
 	
 	// from ShopifyPaths bean, which is initialized with values from properties file
 	private String LOGIN_ENDPOINT;
-	private String ANY_INSTALL_PATH;
-	//private String FAV_ICON = "/favicon.ico";
+
 	private String INSTALL_PATH_TO_SHOPIFY;
 	private String AUTHORIZATION_REDIRECT_PATH;
-	private String AUTHENTICATION_FAILURE_URI;
 	
 	// from properties file
 	private String clientSecret;
@@ -112,14 +114,12 @@ public class ShopifySecurityConfigurerTests {
 	Filter springSecurityFilterChain;
 	
 	@Autowired
-	ClientRegistrationRepository clientRegistrationRepository;
+	OAuth2AccessTokenResponseClient<OAuth2AuthorizationCodeGrantRequest> accessTokenResponseClient;
 	
 	@Autowired
 	private ShopifyHttpSessionOAuth2AuthorizationRequestRepository authorizationRequestRepository;
 
-	MockWebServer server;
 	MockMvc mockMvc;
-	String serverURL;
 
 	@Before
 	public void setup() throws Exception {
@@ -129,30 +129,23 @@ public class ShopifySecurityConfigurerTests {
 				.build();
 		
 		LOGIN_ENDPOINT = shopifyPaths.getLoginEndpoint();
-		ANY_INSTALL_PATH = shopifyPaths.getAnyInstallPath();
 		INSTALL_PATH_TO_SHOPIFY = shopifyPaths.getInstallPath() + "/shopify";
 		AUTHORIZATION_REDIRECT_PATH = shopifyPaths.getAuthorizationRedirectPath();
-		AUTHENTICATION_FAILURE_URI = shopifyPaths.getAuthenticationFailureUri();
 		
 		clientSecret = env.getProperty("ppublica.shopify.security.client.client_secret");
 		clientId = env.getProperty("ppublica.shopify.security.client.client_id");
-		
-		this.server = new MockWebServer();
-		this.server.start();
-		this.serverURL = this.server.url("/admin/oauth/access_token/testStore").toString();	
-		
+
 		
 	}
 	
 	@After
 	public void cleanup() throws Exception {
-		this.server.shutdown();
 	}
 	
 	/*
 	 * Should redirect if the request doesn't come from Shopify and no shop parameter is included
 	 */
-	//@Test
+	@Test
 	public void redirectWhenRequestShopParamNotPresent() throws Exception {
 		this.mockMvc.perform(get(INSTALL_PATH_TO_SHOPIFY).secure(true))
 			.andExpect(redirectedUrlPattern("/**" + LOGIN_ENDPOINT))
@@ -163,7 +156,7 @@ public class ShopifySecurityConfigurerTests {
 	/*
 	 * Should provide redirection urls for JS if the request doesn't come from Shopify but a shop parameter is included
 	 */
-	//@Test
+	@Test
 	public void whenShopParamPresentThenJSRedirect() throws Exception {
 	
 		this.mockMvc.perform(get(INSTALL_PATH_TO_SHOPIFY + "?shop=test.myshopify.com").with(httpsPostProcessor))
@@ -177,7 +170,7 @@ public class ShopifySecurityConfigurerTests {
 	 * 
 	 * Since it's not from Shopify, ShopifyOriginFilter delegates to the AccessDeniedHandler.
 	 */
-	//@Test
+	@Test
 	public void whenAuthEndpointThenFail() throws Exception {
 		this.mockMvc.perform(get(AUTHORIZATION_REDIRECT_PATH).with(httpsPostProcessor))
 					.andExpect(status().isForbidden());
@@ -188,7 +181,7 @@ public class ShopifySecurityConfigurerTests {
 	 * Since we are not authenticated, authentication entry point 
 	 * should redirect to LOGIN_ENDPOINT
 	 */
-	//@Test
+	@Test
 	public void whenProtectedResourceThenRedirect() throws Exception {
 		this.mockMvc.perform(get("/products").with(httpsPostProcessor))
 					.andExpect(status().is3xxRedirection())
@@ -199,7 +192,7 @@ public class ShopifySecurityConfigurerTests {
 	 * Access LOGIN_ENDPOINT
 	 * Should return 200 even if we are not authenticated
 	 */
-	//@Test
+	@Test
 	public void whenLoginThenOk() throws Exception {
 	
 		this.mockMvc.perform(get(LOGIN_ENDPOINT).with(httpsPostProcessor))
@@ -246,7 +239,7 @@ public class ShopifySecurityConfigurerTests {
 	 * 		3. the user has been successfully authenticated with a OAuth2AuthenticationToken
 	 * 
 	 */
-	//@Test
+	@Test
 	public void whenStoreExistsAndRequestFromShopify_thenAuthenticateAndShowFirstPage() throws Exception {
 		// prepare request "from Shopify"
 		String queryNoHmac = "code=code123&shop=lmdev.myshopify.com&state=0.6784241404160823&timestamp=1337178173";
@@ -280,7 +273,7 @@ public class ShopifySecurityConfigurerTests {
 	 * 		2. the user was not authenticated (Anonymous)
 	 * 
 	 */
-	//@Test
+	@Test
 	public void whenStoreExistsAndRequestNotFromShopify_thenShowFirstPage() throws Exception {
 
 	
@@ -290,11 +283,11 @@ public class ShopifySecurityConfigurerTests {
 					.andExpect(content().string(containsString("var redirectFromIFramePath = '/oauth/authorize?client_id=test-client-id&redirect_uri=https://localhost/login/app/oauth2/code/shopify&scope=read_inventory,write_inventory,read_products,write_products&state=")))
 					.andReturn();
 		
-		Object authentication = result.getRequest().getSession().getAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);
+		Object securityContext = result.getRequest().getSession().getAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);
 
 		// The AnonymousAuthenticationToken is not stored in the session
 		// See HttpSessionSecurityContextRepository
-		Assert.assertNull(authentication);
+		Assert.assertNull(securityContext);
 	}
 	
 	/*
@@ -306,7 +299,7 @@ public class ShopifySecurityConfigurerTests {
 	 * 		2. user not authenticated
 	 * 
 	 */
-	//@Test
+	@Test
 	public void whenStoreDoesNotExistAndRequestFromShopify_thenRedirectToShopify() throws Exception {
 		// prepare request "from Shopify"
 		String queryNoHmac = "code=code123&shop=newstoretest.myshopify.com&state=0.6784241404160823&timestamp=1337178173";
@@ -321,13 +314,13 @@ public class ShopifySecurityConfigurerTests {
 					.andExpect(content().string(containsString("var redirectFromIFramePath = '/oauth/authorize?client_id=test-client-id&redirect_uri=https://localhost/login/app/oauth2/code/shopify&scope=read_inventory,write_inventory,read_products,write_products&state=")))
 					.andReturn();
 		
-		Object authentication = result.getRequest().getSession().getAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);
+		Object securityContext = result.getRequest().getSession().getAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);
 
 		/* The ShopifyOriginToken is removed...
 		*  ...and AnonymousAuthenticationToken is not stored in the session
 		*  See HttpSessionSecurityContextRepository
 		*/
-		Assert.assertNull(authentication);
+		Assert.assertNull(securityContext);
 	}
 	
 	/*
@@ -338,7 +331,7 @@ public class ShopifySecurityConfigurerTests {
 	 * 		1. redirect uris are printed
 	 * 
 	 */
-	//@Test
+	@Test
 	public void whenStoreDoesNotExistAndRequestNotFromShopify_thenRedirectToShopify() throws Exception {
 	
 		MvcResult result = this.mockMvc.perform(get(INSTALL_PATH_TO_SHOPIFY + "?shop=newstoretest.myshopify.com&timestamp=dsd&hmac=sdfasrf4324").with(httpsPostProcessor))
@@ -346,11 +339,11 @@ public class ShopifySecurityConfigurerTests {
 					.andExpect(content().string(containsString("var redirectFromIFramePath = '/oauth/authorize?client_id=test-client-id&redirect_uri=https://localhost/login/app/oauth2/code/shopify&scope=read_inventory,write_inventory,read_products,write_products&state=")))
 					.andReturn();
 		
-		Object authentication = result.getRequest().getSession().getAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);
+		Object securityContext = result.getRequest().getSession().getAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);
 
 		// The AnonymousAuthenticationToken is not stored in the session
 		// See HttpSessionSecurityContextRepository
-		Assert.assertNull(authentication);
+		Assert.assertNull(securityContext);
 	}
 	
 	
@@ -362,7 +355,7 @@ public class ShopifySecurityConfigurerTests {
 	 * 		1. redirect
 	 * 
 	 */
-	//@Test
+	@Test
 	public void whenNoValidShopParam_thenRedirect() throws Exception {
 	
 		this.mockMvc.perform(get(INSTALL_PATH_TO_SHOPIFY + "?timestamp=dsd&hmac=sdfasrf4324").secure(true).with(httpsPostProcessor))
@@ -385,9 +378,9 @@ public class ShopifySecurityConfigurerTests {
 	 * Test the second "step": Shopify calls the redirection uri
 	 * 
 	 * 	- In step 1, we redirected to Shopify for authorization
-	 * 	... In step 2, Shopify responds by sending the authorization code in the url
+	 * 	- In step 2, Shopify responds by sending the authorization code in the url. Our application
+	 * 	  must query the tokenUri and extract the response
 	 * 
-	 * We stop right when we are about to prepare a request to obtain the OAuth token from Shopify.
 	 * 
 	 * 
 	 */
@@ -397,30 +390,55 @@ public class ShopifySecurityConfigurerTests {
 	/* 
 	 * 
 	 * We check to make sure our application responded appropriately when Shopify sent the authorization
-	 * code by checking the object that's going to be used to request the token.
+	 * code. 
 	 * 
-	 * We do this by capturing the OAuth2AuthorizationCodeGrantRequest sent to 
-	 * OAuth2AccessTokenResponseClient<OAuth2AuthorizationCodeGrantRequest>, which would
-	 * then make the POST request for a token.
+	 * Given: 
+	 * 	- valid Shopify call to our authorizationUri
+	 * 	- OAuth2AuthorizationRequest was saved in the session in step 1
+	 * 	- Shopify returns a valid body when its tokenUri is invoked
 	 * 
 	 * Check:
 	 * 
-	 * 1. The OAuth2AccessTokenResponseClient mock was called
-	 * 2. The clientId of the ClientRegistration matches the one in TestConfig
-	 * 3. The state generated in @Before(AuthorizationRequest) is in OAuth2AuthorizationRequest
-	 * 4. The code passed by "Shopify" in the url is in OAuth2AuthorizationRequest
-	 * 5. The redirectUri in the OAuth2AuthorizationRequest 
+	 * 1. We landed at the default page, as generated by DefaultAuthorizationRedirectPathFilter
+	 * 2. There's a OAuth2AuthenticationToken in the session
+	 * 3. OAuth2AuthenticationToken has correct values:
+	 * 		OAuth2AuthenticationToken
+	 * 			- Collection<GrantedAuthority>: authorities returned by shopify
+	 * 			- name: store domain
+	 * 			- OAuth2User principal
+	 * 				- name: store domain
+	 * 				- 2 attributes:
+	 * 					- ShopifyStore.ACCESS_TOKEN_KEY = oauth token
+	 * 					- ShopifyStore.API_KEY = client id
 	 * 
-	 * If test is successful: the OAuth2AuthorizationCodeGrantRequest has all necessary, correct
-	 * information so that the accessTokenResponseClient can request the token from Shopify
 	 * 
 	 */
 	
+	@SuppressWarnings("unchecked")
 	@Test
-	public void whenShopifyJSRedirectsThenObtainAuthenticationCode() throws Exception {
-		/*
-		 * Prepare the request values that Shopify would send with the authorization code
+	@DirtiesContext
+	public void whenShopifyReturnsCodeThenObtainTokenAndProcess() throws Exception {
+		
+		/* Assume the server responds when it receives a request
+		 * 
+		 * {
+		 *     "access_token": \"access-token-1234",
+		 *     "scope": "read,write"
+		 * }
+		 * 
 		 */
+		HashMap<String,String> responseParams = new HashMap<>();
+		responseParams.put("access_token", "access-token-1234");
+		responseParams.put("scope", "read,write");
+
+		RestOperations mockRestOperations = mock(RestOperations.class);
+		doReturn(getResponseEntity(responseParams)).when(mockRestOperations).exchange(any(), any(Class.class));
+		
+		// Modify the ShopifyAuthorizationCodeTokenResponseClient bean to use the mock
+		ShopifyAuthorizationCodeTokenResponseClient shopifyAccessTokenResponseClient = (ShopifyAuthorizationCodeTokenResponseClient)accessTokenResponseClient;
+		shopifyAccessTokenResponseClient.setRestOperations(mockRestOperations);
+		
+		// Prepare the request values that Shopify would send with the authorization code
 		MockHttpServletRequest request = new MockHttpServletRequest("GET", "");
 		request.setServletPath("/login/app/oauth2/code/shopify");
 		String queryNoHmac = "code=code123&shop=testStore&state=state123&timestamp=1337178173";
@@ -434,58 +452,60 @@ public class ShopifySecurityConfigurerTests {
 		OAuth2AuthorizationRequest authorizationRequest = getTestOAuth2AuthorizationRequest("testStore", "state123");
 		this.authorizationRequestRepository.saveAuthorizationRequest(authorizationRequest, request);
 
-		/*
-		 * Extract the session object that contains the OAuth2AuthorizationRequest attribute...
-		 */
+		// Extract the session object that contains the OAuth2AuthorizationRequest attribute...
 		String attributeName = ShopifyHttpSessionOAuth2AuthorizationRequestRepository.DEFAULT_AUTHORIZATION_REQUEST_ATTR_NAME;
 		HttpSession session = request.getSession();
 		Object sessionAtrValue = session.getAttribute(attributeName);
 		
-		// The server responds when it receives a request at /admin/oauth/access_token/testStore
-		String accessTokenSuccessResponse = "{\n" +
-				"	\"access_token\": \"access-token-1234\",\n" +
-				"   \"scope\": \"read write\"\n" +
-				"}\n";
-		this.server.enqueue(jsonResponse(accessTokenSuccessResponse));
 		
-		// We landed at the landing page
+		// Assertions
 		
+		
+		// 1. We landed at the default authorization page
 		MvcResult result = this.mockMvc.perform(get(request.getServletPath() + fullQuery).sessionAttr(attributeName, sessionAtrValue).with(httpsPostProcessor))
 				.andExpect(content().string(containsString("Authentication/installation SUCCESS!")))
 				.andReturn();
 		
-		RecordedRequest recordedRequest = this.server.takeRequest();
-		String body = recordedRequest.getBody().readUtf8();
-		
-		Assert.assertEquals("/admin/oauth/access_token/testStore", recordedRequest.getPath());
-
-		Assert.assertTrue(body.contains("client_id="));
-		Assert.assertTrue(body.contains("client_secret="));
-		Assert.assertTrue(body.contains("code="));
-		
-		
-		/*
-		Object authentication = result.getRequest().getSession().getAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);
-
-		// The AnonymousAuthenticationToken is not stored in the session
-		// See HttpSessionSecurityContextRepository
-		Assert.assertNull(authentication);
+		// 2. There's a OAuth2AuthenticationToken in the session
+		Object securityContext = result.getRequest().getSession().getAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);
+		Assert.assertNotNull(securityContext);
+		Authentication authentication = ((SecurityContext)securityContext).getAuthentication();
 		Assert.assertTrue(authentication instanceof OAuth2AuthenticationToken);
 		
 		
-		*/
+		// 3. OAuth2AuthenticationToken has correct values
+		OAuth2AuthenticationToken token = (OAuth2AuthenticationToken)authentication;
+		Assert.assertEquals("shopify", token.getAuthorizedClientRegistrationId());
+		
+		Collection<GrantedAuthority> auths = token.getAuthorities();
+		Assert.assertEquals(2, auths.size());
+		
+		Assert.assertEquals("testStore", token.getName());
+		
+		OAuth2User principal = (OAuth2User)token.getPrincipal();
+		Assert.assertEquals("testStore", principal.getName());
+		Assert.assertEquals("access-token-1234", principal.getAttributes().get(ShopifyStore.ACCESS_TOKEN_KEY));
+		Assert.assertEquals(this.clientId, principal.getAttributes().get(ShopifyStore.API_KEY));
 				
 		
 	}
 	
+	private ResponseEntity<OAuth2AccessTokenResponse> getResponseEntity(Map<String,String> params) {
+		ShopifyOAuth2AccessTokenResponseConverter conv = new ShopifyOAuth2AccessTokenResponseConverter();
+		return ResponseEntity.ok(conv.convert(params));
+		
+	}
+	
 	/*
-	 * The ClientRegistration used must have the same client id and client secret and registration id as 
-	 * the bean in SecurityBeansConfig so ShopifyVerificationStrategy can "find" it
+	 * The ClientRegistration used must have the same client id, client secret, and registration id as 
+	 * the bean in SecurityBeansConfig so ShopifyVerificationStrategy can "find" it.
+	 * 
+	 * However, its token uri isn't used... OAuth2LoginAuthenticationFilter uses the ClientRegistration in
+	 * the ClientRegistrationRepository.
 	 */
 	private OAuth2AuthorizationRequest getTestOAuth2AuthorizationRequest(String shopName, String state) {
 		
 		// create the OAuth2AuthorizationRequest as ShopifyOAuth2AuthorizationRequestResolver would
-System.out.println(serverURL.substring(0, serverURL.length() - 10) + "/{shop}");
 		ClientRegistration cR =  ClientRegistration.withRegistrationId("shopify")
 				.clientId(this.clientId)
 				.clientSecret(this.clientSecret)
@@ -494,7 +514,7 @@ System.out.println(serverURL.substring(0, serverURL.length() - 10) + "/{shop}");
 				.redirectUriTemplate("{baseUrl}/login/app/oauth2/code/{registrationId}")
 				.scope("read", "write")
 				.authorizationUri("https://{shop}/admin/oauth/authorize")
-				.tokenUri(serverURL.substring(0, serverURL.length() - 10) + "/{shop}")
+				.tokenUri("not-used")
 				.clientName("client-1")
 				.build();
 		Map<String, Object> additionalParameters = new HashMap<>();
@@ -514,36 +534,8 @@ System.out.println(serverURL.substring(0, serverURL.length() - 10) + "/{shop}");
 		
 	}
 	
-	private MockResponse jsonResponse(String json) {
-		return new MockResponse()
-				.setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-				.setBody(json);
-	}
+	
 
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 	@EnableWebSecurity
 	static class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 		@Override
@@ -575,6 +567,11 @@ System.out.println(serverURL.substring(0, serverURL.length() - 10) + "/{shop}");
 	@Import(AppConfig.class)
 	static class WebMvcConfig implements WebMvcConfigurer {
 		
+		@Bean
+		TestDataSource testDataSource() {
+			return new TestDataSource("shopifysecuritytest");
+		}
+		
 		/*
 		 * |-------------------------------------------------STOREACCESSTOKENS-------------------------------------------------------|
 		 * |           																										         |
@@ -585,8 +582,8 @@ System.out.println(serverURL.substring(0, serverURL.length() - 10) + "/{shop}");
 		 * Note: the salt and tokenValue are generated dynamically.
 		 */
 		@Bean
-		public JdbcTemplate getJdbcTemplate(CipherPassword cP) {
-			DataSource dataSource = new TestDataSource("shopifysecuritytest");
+		public JdbcTemplate getJdbcTemplate(CipherPassword cP, TestDataSource tds) {
+			DataSource dataSource = tds;
 			JdbcTemplate template = new JdbcTemplate(dataSource);
 			
 			String sampleSalt = KeyGenerators.string().generateKey();

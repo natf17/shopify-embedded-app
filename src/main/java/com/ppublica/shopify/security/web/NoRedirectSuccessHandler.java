@@ -42,9 +42,7 @@ public class NoRedirectSuccessHandler implements AuthenticationSuccessHandler {
 	@Override
 	public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
 			Authentication authentication) throws IOException, ServletException {
-		System.out.println("NoRedirectSuccessHandler invoked");
 		defaultHandler.onAuthenticationSuccess(request, response, authentication);
-		
 		//RequestDispatcher rs = request.getRequestDispatcher(authorizationRedirectPath);
 
 		//rs.forward(request, response);

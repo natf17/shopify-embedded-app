@@ -13,6 +13,7 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+
 /*
  * "success"
  * 
@@ -42,13 +43,11 @@ public class DefaultAuthorizationRedirectPathFilter implements Filter {
 	@Override
 	public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain)
 			throws IOException, ServletException {
-		System.out.println("DefaultAuthorizationRedirectPathFilter invoked");
 
 		HttpServletRequest request = (HttpServletRequest) req;
 		HttpServletResponse response = (HttpServletResponse) res;
-		
+
 		if(isAuthorizationRedirectRequest(request)) {
-			System.out.println("DefaultAuthorizationRedirectPathFilter acting");
 
 			String bodyHtml = generateAuthorizationRedirectPageHtml((HttpServletRequest)request);
 			response.setContentType("text/html;charset=UTF-8");
