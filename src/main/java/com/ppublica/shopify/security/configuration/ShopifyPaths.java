@@ -24,6 +24,10 @@ public class ShopifyPaths {
 	private boolean isCustomUninstallUri;
 	private boolean isUserInfoPageEnabled;
 	
+	public ShopifyPaths() {
+		this(null,null,null,null,null,null,null);
+	}
+	
 	public ShopifyPaths(String installPath, String authorizationRedirectPath, String loginEndpoint,
 						String logoutEndpoint, String authenticationFailureUri, String uninstallUri, Boolean enableInfoPath) {
 		
