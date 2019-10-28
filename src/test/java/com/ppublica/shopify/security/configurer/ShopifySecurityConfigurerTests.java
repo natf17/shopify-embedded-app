@@ -540,6 +540,7 @@ public class ShopifySecurityConfigurerTests {
 	static class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 		@Override
 		protected void configure(HttpSecurity http) throws Exception {
+			System.out.println("sec config");
 			/* minimum requirements... if not using defults:
 			http.authorizeRequests()
 					.mvcMatchers(LOGIN_ENDPOINT).permitAll()

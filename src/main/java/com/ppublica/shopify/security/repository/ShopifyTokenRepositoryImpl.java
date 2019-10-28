@@ -6,16 +6,12 @@ import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
-import org.springframework.stereotype.Repository;
 
 import com.ppublica.shopify.security.service.EncryptedTokenAndSalt;
 
-
-@Repository
 public class ShopifyTokenRepositoryImpl implements TokenRepository {
 	
 	private static String SELECT_INFO_FOR_SHOP = "SELECT id, storeDomain, tokenType, tokenValue, salt, issuedAt, expiresAt, scopes FROM StoreAccessTokens WHERE storeDomain=?";
@@ -24,7 +20,6 @@ public class ShopifyTokenRepositoryImpl implements TokenRepository {
 	private static final String REMOVE_STORE = "DELETE FROM StoreAccessTokens WHERE storeDomain=?";
 	private JdbcTemplate jdbc;
 	
-	@Autowired
 	public void setJdbc(JdbcTemplate jdbc) {
 		this.jdbc = jdbc;
 	}

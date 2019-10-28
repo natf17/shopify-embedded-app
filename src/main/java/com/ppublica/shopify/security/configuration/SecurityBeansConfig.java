@@ -1,9 +1,9 @@
 package com.ppublica.shopify.security.configuration;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.endpoint.OAuth2AccessTokenResponseClient;
 import org.springframework.security.oauth2.client.endpoint.OAuth2AuthorizationCodeGrantRequest;
@@ -35,6 +35,7 @@ import com.ppublica.shopify.security.configurer.delegates.ShopifyHeaders;
 import com.ppublica.shopify.security.configurer.delegates.ShopifyLogout;
 import com.ppublica.shopify.security.configurer.delegates.ShopifyOAuth2;
 import com.ppublica.shopify.security.configurer.delegates.ShopifySessionAuthenticationStrategyConfigurer;
+import com.ppublica.shopify.security.repository.ShopifyTokenRepositoryImpl;
 import com.ppublica.shopify.security.repository.TokenRepository;
 
 /*
@@ -58,8 +59,14 @@ public class SecurityBeansConfig {
 	
 	public static final String SHOPIFY_REGISTRATION_ID = "shopify";
 	
-	@Autowired
-	private TokenRepository tokenRepository;
+	
+	@Bean
+	public TokenRepository getTokenRepository(JdbcTemplate jdbc) {
+		ShopifyTokenRepositoryImpl repo = new ShopifyTokenRepositoryImpl();
+		repo.setJdbc(jdbc);
+		
+		return repo;
+	}
 	
 	@Bean
 	public ShopifyPaths shopifyPaths(@Value("${ppublica.shopify.security.endpoints.install:}") String installPath,
@@ -134,8 +141,8 @@ public class SecurityBeansConfig {
     }
 	
 	@Bean
-	public TokenService tokenService(CipherPassword cipherPassword, ClientRegistrationRepository clientRegistrationRepository) {
-		return new TokenService(this.tokenRepository, cipherPassword, clientRegistrationRepository);
+	public TokenService tokenService(TokenRepository repo, CipherPassword cipherPassword, ClientRegistrationRepository clientRegistrationRepository) {
+		return new TokenService(repo, cipherPassword, clientRegistrationRepository);
 	}
 	
 	
