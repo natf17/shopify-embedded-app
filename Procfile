@@ -1,1 +1,0 @@
-web: java -jar target/shopify-embedded-app-spring-boot-0.0.1-SNAPSHOT.jar
