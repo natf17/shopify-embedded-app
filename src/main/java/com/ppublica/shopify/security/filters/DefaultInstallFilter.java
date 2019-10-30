@@ -18,7 +18,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 
 /*
- * "home"
  * 
  * This filter generates an HTML page with all the installation logic Shopify requires for an embedded app.
  * It uses 2 request attributes (see ShopifyRedirectStrategy) to populate 2 redirect uris. Which one is used
@@ -28,6 +27,11 @@ import org.springframework.security.oauth2.client.authentication.OAuth2Authentic
  * 
  */
 public class DefaultInstallFilter implements Filter {
+	
+	public static String PARENT_AUTHENTICATION_URI = "PARENT_AUTHENTICATION_URI";
+	
+	public static String I_FRAME_AUTHENTICATION_URI = "I_FRAME_AUTHENTICATION_URI";
+	
 	private Map<String, String> menuLinks;
 	
 	private String installPathShopify;
@@ -175,8 +179,10 @@ public class DefaultInstallFilter implements Filter {
 		} else {
 			sb.append("      <h1>WELCOME</h1>\n");
 			String link = null;
+			String key = null;
 			for(Map.Entry<String,String> menuEntry : menuLinks.entrySet()) {
-				link = menuLinks.get(menuEntry);
+				key = menuEntry.getKey();
+				link = menuLinks.get(key);
 				sb.append("      <a href=\"" + link + "\">" + menuEntry + "</a><br>\n");
 
 			}

@@ -19,13 +19,14 @@ import org.springframework.security.oauth2.client.authentication.OAuth2Authentic
 import org.springframework.security.web.csrf.CsrfToken;
 
 /*
- * "selectStore"
  * 
  * This filter returns a default login page with a text box to log in to a particular store. The form will
  * trigger a GET request: {installPath}/shopify?shop={store_domain}
  * 
  * If the user is logged in already, a logout button will be shown instead, but only if the request didn't come
  * from an embedded app.
+ * 
+ * This filter expects the CSRF token to be stored in a request attribute in HttpServletRequests
  * 
  */
 public class DefaultLoginEndpointFilter implements Filter {

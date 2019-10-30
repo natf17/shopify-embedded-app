@@ -20,8 +20,6 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 
 /*
  * 
- * "info"
- * 
  * This filter responds to the userInfoPath it's provided and displays some useful information about the app:
  * 	- apiKey: the api key for the app
  * 	- shopOrigin: the domain of the store that's currently logged in
@@ -91,7 +89,12 @@ public class DefaultUserInfoFilter implements Filter {
 		OAuth2User store = getAuthenticationPrincipalForRequest(req);
 		String apiKey = (String)store.getAttributes().get("shopify_client_api_key");
 		String shopOrigin = (String)store.getName();
-		boolean isLoginFromEmbedded = getHttpSessionForRequest(req).getAttribute("SHOPIFY_EMBEDDED_APP") != null ? true : false;
+		HttpSession session = getHttpSessionForRequest(req);
+		boolean isLoginFromEmbedded = false;
+		
+		if(session != null) {
+			isLoginFromEmbedded = session.getAttribute("SHOPIFY_EMBEDDED_APP") != null ? true : false;
+		}
 
 		StringBuilder sb = new StringBuilder();
 		

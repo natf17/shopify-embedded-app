@@ -1,5 +1,8 @@
 package com.ppublica.shopify.security.configuration;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 /* 
  * 
  */
@@ -23,13 +26,23 @@ public class ShopifyPaths {
 	private boolean isCustomAuthenticationFailureUri;
 	private boolean isCustomUninstallUri;
 	private boolean isUserInfoPageEnabled;
+	private Map<String,String> menuLinks;
 	
 	public ShopifyPaths() {
 		this(null,null,null,null,null,null,null);
 	}
 	
 	public ShopifyPaths(String installPath, String authorizationRedirectPath, String loginEndpoint,
-						String logoutEndpoint, String authenticationFailureUri, String uninstallUri, Boolean enableInfoPath) {
+			String logoutEndpoint, String authenticationFailureUri, String uninstallUri, Boolean enableInfoPath) {
+
+		this(installPath, authorizationRedirectPath, loginEndpoint, logoutEndpoint,
+				authenticationFailureUri, uninstallUri, enableInfoPath, null);
+		
+	}
+	
+	public ShopifyPaths(String installPath, String authorizationRedirectPath, String loginEndpoint,
+						String logoutEndpoint, String authenticationFailureUri, String uninstallUri, Boolean enableInfoPath,
+						String menuLink) {
 		
 		if(installPath != null && !installPath.trim().isEmpty()) {
 			this.installPath = installPath;
@@ -67,6 +80,10 @@ public class ShopifyPaths {
 			this.isUserInfoPageEnabled = true;
 		}
 		
+		menuLinks = new LinkedHashMap<>();
+		if(menuLink != null && !menuLink.trim().isEmpty()) {
+			menuLinks.putAll(processMenuLinks(menuLink));
+		}
 	}
 	
 	
@@ -132,6 +149,31 @@ public class ShopifyPaths {
 	
 	public boolean isUserInfoPageEnabled() {
 		return this.isUserInfoPageEnabled;
+	}
+	/*
+	 * "key1:val1,key2:val2"
+	 */
+	protected LinkedHashMap<String, String> processMenuLinks(String source) {
+		LinkedHashMap<String, String> menuLinks = new LinkedHashMap<>();
+		
+		String[] pieces = source.trim().split(",");
+		
+		String keyVal = "";
+		String[] keyValPieces = {};
+		for(String piece : pieces) {
+			keyVal = piece.trim();
+			keyValPieces = keyVal.split(":");
+			
+			//expects 2 pieces
+			if(keyValPieces.length != 2) {
+				throw new RuntimeException("Error parsing menu links");
+			}
+			
+			menuLinks.put(keyValPieces[0], keyValPieces[1]);
+			
+		}
+		
+		return menuLinks;
 	}
 	
 }

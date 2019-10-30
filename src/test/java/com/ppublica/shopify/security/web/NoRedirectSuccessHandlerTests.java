@@ -4,8 +4,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-
 
 import org.mockito.ArgumentMatchers;
 
@@ -29,13 +27,11 @@ public class NoRedirectSuccessHandlerTests {
 		
 		doReturn(rd).when(req).getRequestDispatcher(ArgumentMatchers.any());
 		
-		NoRedirectSuccessHandler handler = new NoRedirectSuccessHandler("/login/app/oauth2/code");
+		NoRedirectSuccessHandler handler = new NoRedirectSuccessHandler();
 		
 		handler.onAuthenticationSuccess(req, resp, auth);
 		
 		verify(resp, never()).sendRedirect(ArgumentMatchers.any());
-		verify(req, times(1)).getRequestDispatcher("/login/app/oauth2/code");
-		verify(rd, times(1)).forward(req, resp);
 		
 	}
 

@@ -99,55 +99,6 @@ public class TokenServiceTests {
 		Assert.assertFalse(resultEt.getEncryptedToken().isEmpty());
 		Assert.assertFalse(resultEt.getSalt().isEmpty());
 		
-		/*
-		// create the TokenService
-		TokenRepository repo = mock(TokenRepository.class);
-		ClientRegistrationRepository cR = mock(ClientRegistrationRepository.class);
-		ClientRegistrationRepository cR = mock(ClientRegistrationRepository.class);
-
-		CipherPassword cp = new CipherPassword("password");
-		
-		TokenService tS = new TokenService(repo, cp, cR);
-		
-		
-		// configure OAuth2AuthenticationToken
-		OAuth2AuthenticationToken authentication = mock(OAuth2AuthenticationToken.class);
-		ShopifyStore store = new ShopifyStore("testStore.myshopify.com", "oauth-token", "client-api-key", authorities);
-		when(authentication.getPrincipal()).thenReturn(store);
-		
-		//configure OAuth2AuthorizedClient
-		OAuth2AuthorizedClient client = mock(OAuth2AuthorizedClient.class);
-		OAuth2AccessToken accessToken = mock(OAuth2AccessToken.class);
-		Set<String> scopes = new HashSet<>(Arrays.asList("read", "write"));
-
-		when(accessToken.getScopes()).thenReturn(scopes);
-		when(accessToken.getTokenValue()).thenReturn("oauth-token");
-
-		when(client.getAccessToken()).thenReturn(accessToken);
-		
-				
-		ArgumentCaptor<String> shopName = ArgumentCaptor.forClass(String.class);
-		ArgumentCaptor<Set> scopeSet = ArgumentCaptor.forClass(Set.class);
-		
-		ArgumentCaptor<EncryptedTokenAndSalt> et = ArgumentCaptor.forClass(EncryptedTokenAndSalt.class);
-		
-		
-		// invoke method
-		tS.saveNewStore(client, authentication);
-		
-		
-		// assertions
-		verify(repo, times(1)).saveNewStore(shopName.capture(), scopeSet.capture(), et.capture());
-		
-		Assert.assertEquals("testStore.myshopify.com", shopName.getValue());
-		Assert.assertTrue(scopeSet.getValue().contains("read"));
-		Assert.assertTrue(scopeSet.getValue().contains("write"));
-		
-		EncryptedTokenAndSalt resultEt = et.getValue();
-		Assert.assertFalse(resultEt.getEncryptedToken().isEmpty());
-		Assert.assertFalse(resultEt.getSalt().isEmpty());
-	*/
-		
 	}
 	
 	@Test

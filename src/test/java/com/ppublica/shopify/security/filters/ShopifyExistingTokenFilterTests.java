@@ -1,12 +1,8 @@
 package com.ppublica.shopify.security.filters;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -18,8 +14,6 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.springframework.http.converter.HttpMessageConverter;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.core.Authentication;
@@ -33,8 +27,6 @@ import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
 
 import com.ppublica.shopify.security.authentication.ShopifyOriginToken;
-import com.ppublica.shopify.security.authentication.ShopifyVerificationStrategy;
-import com.ppublica.shopify.security.configurer.ShopifySecurityConfigurer;
 
 public class ShopifyExistingTokenFilterTests {
 	
@@ -134,9 +126,6 @@ public class ShopifyExistingTokenFilterTests {
 		Authentication token = SecurityContextHolder.getContext().getAuthentication();
 		
 		Assert.assertTrue(token instanceof OAuth2AuthenticationToken);
-
-		OAuth2AuthenticationToken oauthToken = (OAuth2AuthenticationToken)token;
-		//oauthToken.get
 	
 	
 	}
@@ -144,13 +133,48 @@ public class ShopifyExistingTokenFilterTests {
 	// if Authentication is ShopifyOriginToken, and if there's a shop param in req, but store doesn't exist, clear authentication, continue
 	@Test
 	public void doFilterWhenAuthenticationCorrectTypeAndStoreDoesntExistThenClearAuthAndContinue() throws Exception {
+		ShopifyExistingTokenFilter filter = new ShopifyExistingTokenFilter(clientService, loginEndpoint);
 		
+		MockHttpServletRequest request = new MockHttpServletRequest("GET", "/install/shopify");
+		request.setServletPath("/install/shopify");
+		request.addParameter("shop", "new-store");
+		MockHttpServletResponse response = new MockHttpServletResponse();
+		
+		ShopifyOriginToken auth = mock(ShopifyOriginToken.class);
+		
+		SecurityContextHolder.getContext().setAuthentication(auth);
+		FilterChain chain = mock(FilterChain.class);
+		filter.doFilter(request, response, chain);
+		
+		verify(chain).doFilter(any(HttpServletRequest.class), any(HttpServletResponse.class));
+		
+		Authentication token = SecurityContextHolder.getContext().getAuthentication();
+		
+		Assert.assertNull(token);
 	}
 	
 	// if Authentication is ShopifyOriginToken, and if there's no shop param in req, even if store exists, clear authentication, continue
 	@Test
 	public void doFilterWhenAuthenticationCorrectTypeAndNoShhopParamInRequestThenClearAndContinue() throws Exception {
+		ShopifyExistingTokenFilter filter = new ShopifyExistingTokenFilter(clientService, loginEndpoint);
 		
+		MockHttpServletRequest request = new MockHttpServletRequest("GET", "/install/shopify");
+		request.setServletPath("/install/shopify");
+
+		MockHttpServletResponse response = new MockHttpServletResponse();
+		
+		ShopifyOriginToken auth = mock(ShopifyOriginToken.class);
+		
+		SecurityContextHolder.getContext().setAuthentication(auth);
+		FilterChain chain = mock(FilterChain.class);
+		filter.doFilter(request, response, chain);
+		
+		verify(chain).doFilter(any(HttpServletRequest.class), any(HttpServletResponse.class));
+		
+		Authentication token = SecurityContextHolder.getContext().getAuthentication();
+		
+		Assert.assertNull(token);
+	
 	}
 
 	

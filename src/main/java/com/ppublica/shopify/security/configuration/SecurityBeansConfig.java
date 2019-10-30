@@ -46,6 +46,7 @@ import com.ppublica.shopify.security.repository.TokenRepository;
  * ppublica.shopify.security.endpoints.authentication-failure=
  * ppublica.shopify.security.endpoints.uninstall=
  * ppublica.shopify.security.endpoints.enable-default-info-page=
+ * ppublica.shopify.security.endpoints.menu-link=
  * 
  * ppublica.shopify.security.cipher.password=
  * 
@@ -75,7 +76,8 @@ public class SecurityBeansConfig {
 							  @Value("${ppublica.shopify.security.endpoints.logout:}") String logoutEndpoint,
 							  @Value("${ppublica.shopify.security.endpoints.authentication-failure:}") String authenticationFailureUri,
 							  @Value("${ppublica.shopify.security.endpoints.uninstall:}") String uninstallUri,
-							  @Value("${ppublica.shopify.security.endpoints.enable-default-info-page:}") String enableDefaultInfoPage) {
+							  @Value("${ppublica.shopify.security.endpoints.enable-default-info-page:}") String enableDefaultInfoPage,
+							  @Value("${ppublica.shopify.security.endpoints.menu-link:}") String menuLink) {
 		
 		boolean enableDefaultInfo = false;
 		if(enableDefaultInfoPage != null) {
@@ -109,8 +111,8 @@ public class SecurityBeansConfig {
 	
 	
 	@Bean
-	public AuthenticationSuccessHandler successHandler(ShopifyPaths shopifyPaths) {
-		return new NoRedirectSuccessHandler(shopifyPaths.getAuthorizationRedirectPath());
+	public AuthenticationSuccessHandler successHandler() {
+		return new NoRedirectSuccessHandler();
 	}
 	
 	

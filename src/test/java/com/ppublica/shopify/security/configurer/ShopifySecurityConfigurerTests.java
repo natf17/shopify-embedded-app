@@ -49,6 +49,7 @@ import org.springframework.security.oauth2.client.authentication.OAuth2Authentic
 import org.springframework.security.oauth2.client.endpoint.OAuth2AccessTokenResponseClient;
 import org.springframework.security.oauth2.client.endpoint.OAuth2AuthorizationCodeGrantRequest;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
+import org.springframework.security.oauth2.client.web.HttpSessionOAuth2AuthorizationRequestRepository;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AccessTokenResponse;
@@ -271,6 +272,7 @@ public class ShopifySecurityConfigurerTests {
 	 * Expect: 
 	 * 		1. redirect uris are printed
 	 * 		2. the user was not authenticated (Anonymous)
+	 * 		3. the OAuth2AuthorizationRequest was added 
 	 * 
 	 */
 	@Test
@@ -283,11 +285,14 @@ public class ShopifySecurityConfigurerTests {
 					.andExpect(content().string(containsString("var redirectFromIFramePath = '/oauth/authorize?client_id=test-client-id&redirect_uri=https://localhost/login/app/oauth2/code/shopify&scope=read_inventory,write_inventory,read_products,write_products&state=")))
 					.andReturn();
 		
-		Object securityContext = result.getRequest().getSession().getAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);
+		HttpSession session = result.getRequest().getSession();
+		Object securityContext = session.getAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);
 
 		// The AnonymousAuthenticationToken is not stored in the session
 		// See HttpSessionSecurityContextRepository
 		Assert.assertNull(securityContext);
+		
+		Assert.assertNotNull(session.getAttribute(HttpSessionOAuth2AuthorizationRequestRepository.class.getName() +  ".AUTHORIZATION_REQUEST"));
 	}
 	
 	/*
@@ -297,6 +302,7 @@ public class ShopifySecurityConfigurerTests {
 	 * Expect:
 	 * 		1. redirect uris are printed
 	 * 		2. user not authenticated
+	 * 		3. the OAuth2AuthorizationRequest was added 
 	 * 
 	 */
 	@Test
@@ -314,13 +320,17 @@ public class ShopifySecurityConfigurerTests {
 					.andExpect(content().string(containsString("var redirectFromIFramePath = '/oauth/authorize?client_id=test-client-id&redirect_uri=https://localhost/login/app/oauth2/code/shopify&scope=read_inventory,write_inventory,read_products,write_products&state=")))
 					.andReturn();
 		
-		Object securityContext = result.getRequest().getSession().getAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);
+		HttpSession session = result.getRequest().getSession();
+		Object securityContext = session.getAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);
 
 		/* The ShopifyOriginToken is removed...
 		*  ...and AnonymousAuthenticationToken is not stored in the session
 		*  See HttpSessionSecurityContextRepository
 		*/
 		Assert.assertNull(securityContext);
+		
+		Assert.assertNotNull(session.getAttribute(HttpSessionOAuth2AuthorizationRequestRepository.class.getName() +  ".AUTHORIZATION_REQUEST"));
+
 	}
 	
 	/*

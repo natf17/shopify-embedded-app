@@ -15,9 +15,8 @@ import javax.servlet.http.HttpServletResponse;
 
 
 /*
- * "success"
  * 
- * This filter generates an HTML page that is seen successful completion of OAuth2 authorization with
+ * This filter generates an HTML page that is seen after successful completion of OAuth2 authorization with
  * Shopify.
  * 
  * Therefore, this filter is typically invoked after initial installation in the embedded app, or after
@@ -118,9 +117,11 @@ public class DefaultAuthorizationRedirectPathFilter implements Filter {
 	private String generateMenuLinks() {
 		StringBuilder sb = new StringBuilder();
 		String link = null;
+		String key = null;
 		for(Map.Entry<String,String> menuEntry : menuLinks.entrySet()) {
-			link = menuLinks.get(menuEntry);
-			sb.append("    <a href=\"" + link + "\">" + menuEntry + "</a><br>\n");
+			key = menuEntry.getKey();
+			link = menuLinks.get(key);
+			sb.append("      <a href=\"" + link + "\">" + menuEntry + "</a><br>\n");
 
 		}
 		
@@ -134,7 +135,6 @@ public class DefaultAuthorizationRedirectPathFilter implements Filter {
 		if (!"GET".equals(req.getMethod())) {
 			return false;
 		}
-		
 		String uri = req.getRequestURI();
 		
 		int pathParamIndex = uri.indexOf(';');
