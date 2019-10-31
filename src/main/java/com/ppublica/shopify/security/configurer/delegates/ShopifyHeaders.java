@@ -11,9 +11,14 @@ import org.springframework.security.config.annotation.web.configurers.HeadersCon
  */
 public class ShopifyHeaders implements HttpSecurityBuilderConfigurerDelegate {
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public void applyShopifyConfig(HttpSecurityBuilder<?> http) {
+		
+		
+	}
+	@SuppressWarnings("unchecked")
+	@Override
+	public void applyShopifyInit(HttpSecurityBuilder<?> http) {
 		HeadersConfigurer<?> configurer = new HeadersConfigurer<>();		
 		//Class<? extends SecurityConfigurer<DefaultSecurityFilterChain, HttpSecurity>> clazz = (Class<? extends SecurityConfigurer<DefaultSecurityFilterChain, HttpSecurity>>) configurer.getClass();		
 		
@@ -22,14 +27,8 @@ public class ShopifyHeaders implements HttpSecurityBuilderConfigurerDelegate {
 		if (configurer == null) {
 			throw new RuntimeException("HeadersConfigurer is required");
 		}
-		
+		System.out.println("Calling disable");
 		configurer.frameOptions().disable();
-		
-	}
-
-	@Override
-	public void applyShopifyInit(HttpSecurityBuilder<?> http) {
-		
 	}
 
 }

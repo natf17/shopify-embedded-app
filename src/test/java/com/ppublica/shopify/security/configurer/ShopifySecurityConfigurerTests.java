@@ -238,6 +238,7 @@ public class ShopifySecurityConfigurerTests {
 	 * 		1. the default page is returned
 	 * 		2. redirect uris are not printed
 	 * 		3. the user has been successfully authenticated with a OAuth2AuthenticationToken
+	 * 		4. The "X-Frame-Options" header is null
 	 * 
 	 */
 	@Test
@@ -260,7 +261,7 @@ public class ShopifySecurityConfigurerTests {
 		
 		Object authentication = result.getRequest().getSession().getAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);
 		Assert.assertTrue(((SecurityContext)authentication).getAuthentication().getClass().isAssignableFrom(OAuth2AuthenticationToken.class));
-		
+		Assert.assertNull(result.getResponse().getHeaderValue("X-Frame-Options"));
 		
 	}
 	
