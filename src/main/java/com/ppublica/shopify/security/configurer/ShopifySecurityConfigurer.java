@@ -55,11 +55,15 @@ public class ShopifySecurityConfigurer<H extends HttpSecurityBuilder<H>>
 	extends AbstractHttpConfigurer<ShopifySecurityConfigurer<H>, H> {
 
 	private final List<HttpSecurityBuilderConfigurerDelegate> shopifyConfigurers = new ArrayList<>();
+	
+	protected Map<String, HttpSecurityBuilderConfigurerDelegate> getBuilderDelegates(H http) {
+		return ShopifyBeansUtils.getBuilderDelegates(http);
+	}
 
 	
 	@Override
 	public void init(H http) {
-		Map<String, HttpSecurityBuilderConfigurerDelegate> dels = ShopifyBeansUtils.getBuilderDelegates(http);
+		Map<String, HttpSecurityBuilderConfigurerDelegate> dels = getBuilderDelegates(http);
 		
 		shopifyConfigurers.addAll(dels.values());
 		

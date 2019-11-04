@@ -4,7 +4,14 @@ import org.springframework.security.config.annotation.ObjectPostProcessor;
 import org.springframework.security.config.annotation.web.HttpSecurityBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.oauth2.client.OAuth2LoginConfigurer;
+import org.springframework.security.oauth2.client.endpoint.OAuth2AccessTokenResponseClient;
+import org.springframework.security.oauth2.client.endpoint.OAuth2AuthorizationCodeGrantRequest;
+import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
+import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
+import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 
 import com.ppublica.shopify.security.service.ShopifyBeansUtils;
 
@@ -36,22 +43,39 @@ public class ShopifyOAuth2 implements HttpSecurityBuilderConfigurerDelegate {
 			throw new RuntimeException("OAuth2LoginConfigurer is required");
 		}
 		configurer.authorizationEndpoint()
-						.authorizationRequestResolver(ShopifyBeansUtils.getRequestResolver(http))
+						.authorizationRequestResolver(getRequestResolver(http))
 					.and()
 		          		.redirectionEndpoint().baseUri(this.anyAuthorizationRedirectPath) // same as filterProcessesUrl
 		          	.and()
-		          		.tokenEndpoint().accessTokenResponseClient(ShopifyBeansUtils.getAccessTokenResponseClient(http)) // allows for seamless unit testing
+		          		.tokenEndpoint().accessTokenResponseClient(getAccessTokenResponseClient(http)) // allows for seamless unit testing
 		          	.and()
-		          		.userInfoEndpoint().userService(ShopifyBeansUtils.getUserService(http))
+		          		.userInfoEndpoint().userService(getUserService(http))
 		          	.and()
-		          		.withObjectPostProcessor(new OAuth2ContinueFilterChain())
-			          	.successHandler(ShopifyBeansUtils.getSuccessHandler(http))
+		          		.withObjectPostProcessor(new OAuth2ContinueFilterChainProcessor())
+			          	.successHandler(getSuccessHandler(http))
 			          	.loginPage(this.loginEndpoint) // for use outside of an embedded app since it involves a redirect
 			          	.failureUrl(this.authenticationFailureUrl); // see AbstractAuthenticationFilterConfigurer and AbstractAuthenticationProcessingFilter	
 		
 	}
 	
-	static class OAuth2ContinueFilterChain implements ObjectPostProcessor<AbstractAuthenticationProcessingFilter> {
+	protected AuthenticationSuccessHandler getSuccessHandler(HttpSecurityBuilder<?> http) {
+		return ShopifyBeansUtils.getSuccessHandler(http);
+	}
+	
+	protected OAuth2UserService<OAuth2UserRequest, OAuth2User> getUserService(HttpSecurityBuilder<?> http) {
+		return ShopifyBeansUtils.getUserService(http);
+	}
+
+	
+	protected OAuth2AuthorizationRequestResolver getRequestResolver(HttpSecurityBuilder<?> http) {
+		return ShopifyBeansUtils.getRequestResolver(http);
+	}
+	
+	protected OAuth2AccessTokenResponseClient<OAuth2AuthorizationCodeGrantRequest> getAccessTokenResponseClient(HttpSecurityBuilder<?> http) {
+		return ShopifyBeansUtils.getAccessTokenResponseClient(http);
+	}
+	
+	static class OAuth2ContinueFilterChainProcessor implements ObjectPostProcessor<AbstractAuthenticationProcessingFilter> {
 
 		@Override
 		public <O extends AbstractAuthenticationProcessingFilter> O postProcess(O object) {

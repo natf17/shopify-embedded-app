@@ -294,6 +294,8 @@ public class ShopifySecurityConfigurerTests {
 		Assert.assertNull(securityContext);
 		
 		Assert.assertNotNull(session.getAttribute(HttpSessionOAuth2AuthorizationRequestRepository.class.getName() +  ".AUTHORIZATION_REQUEST"));
+		Assert.assertNull(result.getResponse().getHeaderValue("X-Frame-Options"));
+
 	}
 	
 	/*
@@ -331,7 +333,8 @@ public class ShopifySecurityConfigurerTests {
 		Assert.assertNull(securityContext);
 		
 		Assert.assertNotNull(session.getAttribute(HttpSessionOAuth2AuthorizationRequestRepository.class.getName() +  ".AUTHORIZATION_REQUEST"));
-
+		Assert.assertNull(result.getResponse().getHeaderValue("X-Frame-Options"));
+	
 	}
 	
 	/*
@@ -355,6 +358,8 @@ public class ShopifySecurityConfigurerTests {
 		// The AnonymousAuthenticationToken is not stored in the session
 		// See HttpSessionSecurityContextRepository
 		Assert.assertNull(securityContext);
+		Assert.assertNull(result.getResponse().getHeaderValue("X-Frame-Options"));
+
 	}
 	
 	
@@ -497,7 +502,7 @@ public class ShopifySecurityConfigurerTests {
 		Assert.assertEquals("testStore", principal.getName());
 		Assert.assertEquals("access-token-1234", principal.getAttributes().get(ShopifyStore.ACCESS_TOKEN_KEY));
 		Assert.assertEquals(this.clientId, principal.getAttributes().get(ShopifyStore.API_KEY));
-				
+			
 		
 	}
 	

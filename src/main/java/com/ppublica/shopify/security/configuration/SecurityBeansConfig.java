@@ -54,6 +54,30 @@ import com.ppublica.shopify.security.repository.TokenRepository;
  * ppublica.shopify.security.client.client_secret=
  * ppublica.shopify.security.client.scope=
  * 
+ * 
+ * Beans:
+ * 
+ * TokenRepository
+ * ShopifyPaths
+ * CipherPassword
+ * OAuth2UserService<OAuth2UserRequest, OAuth2User>
+ * OAuth2AccessTokenResponseClient<OAuth2AuthorizationCodeGrantRequest>
+ * AuthenticationSuccessHandler
+ * ClientRegistration
+ * ClientRegistrationRepository
+ * TokenService 
+ * OAuth2AuthorizedClientService
+ * ShopifyHttpSessionOAuth2AuthorizationRequestRepository
+ * OAuth2AuthorizationRequestResolver
+ * ShopifyVerificationStrategy
+ * CsrfTokenRepository
+ * ShopifyHeaders
+ * ShopifyChannelSecurity
+ * ShopifyCsrf
+ * ShopifyLogout
+ * ShopifyOAuth2
+ * ShopifySessionAuthenticationStrategyConfigurer
+ * 
  */
 @Configuration
 public class SecurityBeansConfig {
@@ -195,8 +219,8 @@ public class SecurityBeansConfig {
 	}
 	
 	@Bean
-	public ShopifyCsrf shopifyCsrf(ShopifyPaths shopifyPaths) {
-		return new ShopifyCsrf(shopifyPaths.getUninstallUri());
+	public ShopifyCsrf shopifyCsrf(ShopifyPaths shopifyPaths, CsrfTokenRepository csrfTokenRepo) {
+		return new ShopifyCsrf(shopifyPaths.getUninstallUri(), csrfTokenRepo);
 	}
 	
 	@Bean

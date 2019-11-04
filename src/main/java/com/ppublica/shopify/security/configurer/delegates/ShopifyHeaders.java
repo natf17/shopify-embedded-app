@@ -19,15 +19,12 @@ public class ShopifyHeaders implements HttpSecurityBuilderConfigurerDelegate {
 	@SuppressWarnings("unchecked")
 	@Override
 	public void applyShopifyInit(HttpSecurityBuilder<?> http) {
-		HeadersConfigurer<?> configurer = new HeadersConfigurer<>();		
-		//Class<? extends SecurityConfigurer<DefaultSecurityFilterChain, HttpSecurity>> clazz = (Class<? extends SecurityConfigurer<DefaultSecurityFilterChain, HttpSecurity>>) configurer.getClass();		
-		
+		HeadersConfigurer<?> configurer = new HeadersConfigurer<>();				
 		configurer = http.getConfigurer(configurer.getClass());
 		
 		if (configurer == null) {
 			throw new RuntimeException("HeadersConfigurer is required");
 		}
-		System.out.println("Calling disable");
 		configurer.frameOptions().disable();
 	}
 

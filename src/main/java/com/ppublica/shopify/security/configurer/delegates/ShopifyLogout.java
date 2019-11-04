@@ -20,9 +20,14 @@ public class ShopifyLogout implements HttpSecurityBuilderConfigurerDelegate {
 		this.logoutEndpoint = logoutEndpoint;
 	}
 	
-	@SuppressWarnings("unchecked")
 	@Override
 	public void applyShopifyConfig(HttpSecurityBuilder<?> http) {
+		
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public void applyShopifyInit(HttpSecurityBuilder<?> http) {
 		LogoutConfigurer<HttpSecurity> configurer = new LogoutConfigurer<HttpSecurity>();		
 		
 		configurer = http.getConfigurer(configurer.getClass());
@@ -31,12 +36,8 @@ public class ShopifyLogout implements HttpSecurityBuilderConfigurerDelegate {
 			throw new RuntimeException("LogoutConfigurer is required");
 		}
 		
-		configurer.logoutUrl(this.loginEndpoint)
-      			  .logoutSuccessUrl(this.logoutEndpoint);
-	}
-
-	@Override
-	public void applyShopifyInit(HttpSecurityBuilder<?> http) {
+		configurer.logoutUrl(this.logoutEndpoint)
+      			  .logoutSuccessUrl(this.loginEndpoint);
 		
 	}
 
