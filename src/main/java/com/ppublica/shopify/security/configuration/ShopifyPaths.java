@@ -29,20 +29,12 @@ public class ShopifyPaths {
 	private Map<String,String> menuLinks;
 	
 	public ShopifyPaths() {
-		this(null,null,null,null,null,null,null);
-	}
-	
-	public ShopifyPaths(String installPath, String authorizationRedirectPath, String loginEndpoint,
-			String logoutEndpoint, String authenticationFailureUri, String uninstallUri, Boolean enableInfoPath) {
-
-		this(installPath, authorizationRedirectPath, loginEndpoint, logoutEndpoint,
-				authenticationFailureUri, uninstallUri, enableInfoPath, null);
-		
+		this(null,null,null,null,null,null,null, null);
 	}
 	
 	public ShopifyPaths(String installPath, String authorizationRedirectPath, String loginEndpoint,
 						String logoutEndpoint, String authenticationFailureUri, String uninstallUri, Boolean enableInfoPath,
-						String menuLink) {
+						String menuLinks) {
 		
 		if(installPath != null && !installPath.trim().isEmpty()) {
 			this.installPath = installPath;
@@ -80,9 +72,9 @@ public class ShopifyPaths {
 			this.isUserInfoPageEnabled = true;
 		}
 		
-		menuLinks = new LinkedHashMap<>();
-		if(menuLink != null && !menuLink.trim().isEmpty()) {
-			menuLinks.putAll(processMenuLinks(menuLink));
+		this.menuLinks = new LinkedHashMap<>();
+		if(menuLinks != null && !menuLinks.trim().isEmpty()) {
+			this.menuLinks.putAll(processMenuLinks(menuLinks));
 		}
 	}
 	
@@ -173,7 +165,7 @@ public class ShopifyPaths {
 				throw new RuntimeException("Error parsing menu links");
 			}
 			
-			menuLinks.put(keyValPieces[0], keyValPieces[1]);
+			menuLinks.put(keyValPieces[0], keyValPieces[1].trim());
 			
 		}
 		

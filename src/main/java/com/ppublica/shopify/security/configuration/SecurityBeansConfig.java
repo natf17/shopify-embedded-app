@@ -50,20 +50,24 @@ import com.ppublica.shopify.security.repository.TokenRepository;
  * ppublica.shopify.security.endpoints.enable-default-info-page=
  * ppublica.shopify.security.endpoints.menu-link=
  * 
- * ppublica.shopify.security.cipher.password=
+ * ppublica.shopify.security.cipher.password= **required**
  * 
- * ppublica.shopify.security.client.client_id=
- * ppublica.shopify.security.client.client_secret=
- * ppublica.shopify.security.client.scope=
+ * ppublica.shopify.security.client.client_id= **required**
+ * ppublica.shopify.security.client.client_secret= **required**
+ * ppublica.shopify.security.client.scope= **required**
  * 
  * 
- * Beans:
+ * Requires the following beans to be in the ApplicationContext:
+ * JdbcTemplate
+ * 
+ * Beans created:
  * 
  * TokenRepository
  * ShopifyPaths
  * CipherPassword
  * OAuth2UserService<OAuth2UserRequest, OAuth2User>
  * OAuth2AccessTokenResponseClient<OAuth2AuthorizationCodeGrantRequest>
+ * AuthorizationSuccessPageStrategy
  * AuthenticationSuccessHandler
  * ClientRegistration
  * ClientRegistrationRepository
@@ -78,7 +82,6 @@ import com.ppublica.shopify.security.repository.TokenRepository;
  * ShopifyCsrf
  * ShopifyLogout
  * ShopifyOAuth2
- * ShopifySessionAuthenticationStrategyConfigurer
  * 
  */
 @Configuration
@@ -110,7 +113,7 @@ public class SecurityBeansConfig {
 			enableDefaultInfo = Boolean.parseBoolean(enableDefaultInfoPage);
 		}
 		return new ShopifyPaths(installPath, authorizationRedirectPath, loginEndpoint,
-								logoutEndpoint, authenticationFailureUri, uninstallUri, enableDefaultInfo);
+								logoutEndpoint, authenticationFailureUri, uninstallUri, enableDefaultInfo, menuLink);
 		
 	}
 
@@ -118,7 +121,7 @@ public class SecurityBeansConfig {
 	@Bean
 	public CipherPassword cipherPassword(@Value("${ppublica.shopify.security.cipher.password:#{null}}") String password) {
 		if(password == null) {
-			throw new RuntimeException("Cipher password is required!");
+			throw new RuntimeException("Cipher password is required! Set the property ppublica.shopify.security.cipher.password");
 		}
 		return new CipherPassword(password);
 	}
@@ -159,7 +162,18 @@ public class SecurityBeansConfig {
 			 @Value("${ppublica.shopify.security.client.scope:#{null}}")String scope,
 			 ShopifyPaths shopifyPaths) {
 		
-
+		if(clientId == null) {
+			throw new RuntimeException("Client id is required! Set the property ppublica.shopify.security.client.client_id");
+		}
+		
+		if(clientSecret == null) {
+			throw new RuntimeException("Client secret is required! Set the property ppublica.shopify.security.client.client_secret");
+		}
+		
+		if(scope == null) {
+			throw new RuntimeException("Scope is required! Set the property publica.shopify.security.client.scope");
+		}
+		
         return ClientRegistration.withRegistrationId(SHOPIFY_REGISTRATION_ID)
             .clientId(clientId)
             .clientSecret(clientSecret)
