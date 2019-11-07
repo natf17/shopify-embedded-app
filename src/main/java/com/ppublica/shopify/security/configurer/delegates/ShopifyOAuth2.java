@@ -1,6 +1,5 @@
 package com.ppublica.shopify.security.configurer.delegates;
 
-import org.springframework.security.config.annotation.ObjectPostProcessor;
 import org.springframework.security.config.annotation.web.HttpSecurityBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.oauth2.client.OAuth2LoginConfigurer;
@@ -10,7 +9,6 @@ import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
 import org.springframework.security.oauth2.core.user.OAuth2User;
-import org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 
 import com.ppublica.shopify.security.service.ShopifyBeansUtils;
@@ -54,7 +52,6 @@ public class ShopifyOAuth2 implements HttpSecurityBuilderConfigurerDelegate {
 		          	.and()
 		          		.userInfoEndpoint().userService(getUserService(http))
 		          	.and()
-		          		.withObjectPostProcessor(new OAuth2ContinueFilterChainProcessor())
 			          	.successHandler(getSuccessHandler(http))
 			          	.loginPage(this.loginEndpoint) // for use outside of an embedded app since it involves a redirect
 			          	.failureUrl(this.authenticationFailureUrl); // see AbstractAuthenticationFilterConfigurer and AbstractAuthenticationProcessingFilter	
@@ -78,16 +75,6 @@ public class ShopifyOAuth2 implements HttpSecurityBuilderConfigurerDelegate {
 		return ShopifyBeansUtils.getAccessTokenResponseClient(http);
 	}
 	
-	static class OAuth2ContinueFilterChainProcessor implements ObjectPostProcessor<AbstractAuthenticationProcessingFilter> {
-
-		@Override
-		public <O extends AbstractAuthenticationProcessingFilter> O postProcess(O object) {
-			object.setContinueChainBeforeSuccessfulAuthentication(true);
-			return object;
-		}
-		
-	}
-
-
+	
 
 }

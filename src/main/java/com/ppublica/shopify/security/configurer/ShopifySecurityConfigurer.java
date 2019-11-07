@@ -18,7 +18,6 @@ import com.ppublica.shopify.security.authentication.ShopifyVerificationStrategy;
 import com.ppublica.shopify.security.configuration.ShopifyPaths;
 import com.ppublica.shopify.security.configurer.delegates.HttpSecurityBuilderConfigurerDelegate;
 import com.ppublica.shopify.security.filters.DefaultAuthenticationFailureFilter;
-import com.ppublica.shopify.security.filters.DefaultAuthorizationRedirectPathFilter;
 import com.ppublica.shopify.security.filters.DefaultInstallFilter;
 import com.ppublica.shopify.security.filters.DefaultLoginEndpointFilter;
 import com.ppublica.shopify.security.filters.DefaultUserInfoFilter;
@@ -29,9 +28,12 @@ import com.ppublica.shopify.security.service.ShopifyBeansUtils;
 
 /*
  * By default, the WebSecurityConfigurerAdapter will look in spring.factories for AbstractHttpConfigurers to apply, where
- * it should find ShopifySecurityConfigurer. This configurer will be applied before all others (ex. configurers applied in 
- * the overridden configure(Http) method), and therefore its init() and configure() methods will be invoked before those of
- * other configurers.
+ * it should find ShopifySecurityConfigurer. This configurer's init() and configure() methods will be invoked in the 
+ * following order:
+ * 		1. configurers WebSecurityConfigurerAdapter adds by default
+ * 		2. ShopifySecurityConfigurer
+ * 		3. configurers added in overridden configure(HttpSecurity) method
+ * 
  * 
  * init():
  * - Find HttpSecurityBuilderConfigurerDelegate beans
@@ -45,7 +47,6 @@ import com.ppublica.shopify.security.service.ShopifyBeansUtils;
  * 		- UninstallFilter
  * 
  * 		- DefaultInstallFilter
- * 		- DefaultAuthorizationRedirectPathFilter
  * 		- DefaultLoginEndpointFilter
  * 		- DefaultAuthenticationFailureFilter
  * 		- DefaultUserInfoFilter
@@ -91,7 +92,6 @@ public class ShopifySecurityConfigurer<H extends HttpSecurityBuilder<H>>
 		
 		Map<String, String> menuLinks = new HashMap<>();
 		boolean isCustomInstallPath = sP.isCustomInstallPath();
-		boolean isCustomAuthorizationRedirectPath = sP.isCustomAuthorizationRedirectPath();
 		boolean isCustomLoginEndpoint = sP.isCustomLoginEndpoint();
 		boolean isCustomAuthenticationFailurePage = sP.isCustomAuthenticationFailureUri();
 		boolean isUserInfoPageEnabled = sP.isUserInfoPageEnabled();
@@ -101,12 +101,6 @@ public class ShopifySecurityConfigurer<H extends HttpSecurityBuilder<H>>
 		if(!isCustomInstallPath) {
 			// bypass security...
 			http.addFilterBefore(new DefaultInstallFilter(sP.getInstallPath(), menuLinks), FilterSecurityInterceptor.class);
-		}
-		
-		//DefaultAuthorizationRedirectPathFilter
-		if(!isCustomAuthorizationRedirectPath) {
-			// bypass security...
-			http.addFilterBefore(new DefaultAuthorizationRedirectPathFilter(sP.getAuthorizationRedirectPath(), menuLinks), FilterSecurityInterceptor.class);
 		}
 		
 		//DefaultLoginEndpointFilter

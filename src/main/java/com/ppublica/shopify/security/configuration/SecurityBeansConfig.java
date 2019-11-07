@@ -23,6 +23,9 @@ import org.springframework.security.web.csrf.CsrfTokenRepository;
 import com.ppublica.shopify.security.service.DefaultShopifyUserService;
 import com.ppublica.shopify.security.service.ShopifyOAuth2AuthorizedClientService;
 import com.ppublica.shopify.security.service.TokenService;
+import com.ppublica.shopify.security.web.AuthorizationSuccessPageStrategy;
+import com.ppublica.shopify.security.web.ForwardAuthorizationSuccessPageStrategy;
+import com.ppublica.shopify.security.web.GenerateDefaultAuthorizationPageStrategy;
 import com.ppublica.shopify.security.web.NoRedirectSuccessHandler;
 import com.ppublica.shopify.security.web.ShopifyAuthorizationCodeTokenResponseClient;
 import com.ppublica.shopify.security.web.ShopifyHttpSessionOAuth2AuthorizationRequestRepository;
@@ -34,7 +37,6 @@ import com.ppublica.shopify.security.configurer.delegates.ShopifyCsrf;
 import com.ppublica.shopify.security.configurer.delegates.ShopifyHeaders;
 import com.ppublica.shopify.security.configurer.delegates.ShopifyLogout;
 import com.ppublica.shopify.security.configurer.delegates.ShopifyOAuth2;
-import com.ppublica.shopify.security.configurer.delegates.ShopifySessionAuthenticationStrategyConfigurer;
 import com.ppublica.shopify.security.repository.ShopifyTokenRepositoryImpl;
 import com.ppublica.shopify.security.repository.TokenRepository;
 
@@ -133,10 +135,21 @@ public class SecurityBeansConfig {
 		return new ShopifyAuthorizationCodeTokenResponseClient();
 	}
 	
+	@Bean
+	public AuthorizationSuccessPageStrategy authorizationPageStrategy(ShopifyPaths path) {
+		boolean isCustomAuthorizationRedirectPath = path.isCustomAuthorizationRedirectPath();
+
+		if(isCustomAuthorizationRedirectPath) {
+			return new ForwardAuthorizationSuccessPageStrategy(path.getAuthorizationRedirectPath());
+		} else {
+			return new GenerateDefaultAuthorizationPageStrategy(path.getMenuLinks());
+		}
+	}
+	
 	
 	@Bean
-	public AuthenticationSuccessHandler successHandler() {
-		return new NoRedirectSuccessHandler();
+	public AuthenticationSuccessHandler successHandler(AuthorizationSuccessPageStrategy authorizationPageStrategy) {
+		return new NoRedirectSuccessHandler(authorizationPageStrategy);
 	}
 	
 	
@@ -231,11 +244,6 @@ public class SecurityBeansConfig {
 	@Bean
 	public ShopifyOAuth2 shopifyOAuth2(ShopifyPaths shopifyPaths) {
 		return new ShopifyOAuth2(shopifyPaths.getAnyAuthorizationRedirectPath(), shopifyPaths.getLoginEndpoint(), shopifyPaths.getAuthenticationFailureUri());
-	}
-	
-	@Bean
-	public ShopifySessionAuthenticationStrategyConfigurer shopifySessionAuthenticationStrategyConfigurer() {
-		return new ShopifySessionAuthenticationStrategyConfigurer();
 	}
 		
 	

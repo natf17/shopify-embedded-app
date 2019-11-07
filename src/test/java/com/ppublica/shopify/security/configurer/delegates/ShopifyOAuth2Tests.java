@@ -40,7 +40,6 @@ import org.springframework.security.oauth2.core.endpoint.OAuth2AccessTokenRespon
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.oauth2.core.user.OAuth2User;
-import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
@@ -275,8 +274,7 @@ public class ShopifyOAuth2Tests {
 	@EnableWebSecurity
 	static class ApplyCsrfSecurityConfig extends WebSecurityConfigurerAdapter {
 		private final ShopifyOAuth2 conf = new ShopifyOAuth2("/login/app/oauth2/code/*", "/init", "/auth/error");
-		@Autowired
-		AuthenticationFailureHandler failureHandler;
+		
 		// disable defaults to prevent configurer in spring.factories from being applied
 		public ApplyCsrfSecurityConfig() {
 			super(true);
@@ -314,17 +312,13 @@ public class ShopifyOAuth2Tests {
 			
 			http.authorizeRequests()
 					.anyRequest().permitAll().and()
-				.oauth2Login().failureHandler(failureHandler).and()
+				.oauth2Login().and()
 				.requiresChannel();
 		}
 		
 		/*
 		 * Beans picked up by ShopifyBeansUtils
-		 */		
-		@Bean
-		public AuthenticationFailureHandler failureHandler() {
-			return mock(AuthenticationFailureHandler.class);
-		}
+		 */
 		
 		@Bean
 		public ClientRegistrationRepository testRepo() {

@@ -150,6 +150,10 @@ public class ShopifyPaths {
 	public boolean isUserInfoPageEnabled() {
 		return this.isUserInfoPageEnabled;
 	}
+	
+	public Map<String, String> getMenuLinks() {
+		return this.menuLinks;
+	}
 	/*
 	 * "key1:val1,key2:val2"
 	 */
