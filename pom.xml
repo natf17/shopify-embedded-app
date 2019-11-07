@@ -21,21 +21,21 @@
 		<dependency>
        		<groupId>org.springframework.security</groupId>
         	<artifactId>spring-security-web</artifactId>
-        	<version>5.1.6.RELEASE</version> 
+        	<version>5.2.0.RELEASE</version> 
         	<scope>compile</scope>
    	   	</dependency>
    	   	
     	<dependency>
         	<groupId>org.springframework.security</groupId>
         	<artifactId>spring-security-config</artifactId>
-            <version>5.1.6.RELEASE</version>   
+            <version>5.2.0.RELEASE</version>   
             <scope>compile</scope>
     	</dependency>
 		
 		<dependency>
     		<groupId>org.springframework</groupId>
     		<artifactId>spring-webmvc</artifactId>
-    		<version>5.1.9.RELEASE</version>
+    		<version>5.2.0.RELEASE</version>
     		<scope>compile</scope>
 		</dependency>
 		
@@ -44,13 +44,13 @@
 			<artifactId>spring-jdbc</artifactId>
 			<scope>compile</scope>
 			<optional>true</optional>
-			<version>5.1.9.RELEASE</version>
+			<version>5.2.0.RELEASE</version>
 		</dependency>
 		
 		<dependency>
     		<groupId>org.springframework.security</groupId>
     		<artifactId>spring-security-oauth2-client</artifactId>
-    		<version>5.1.6.RELEASE</version>
+    		<version>5.2.0.RELEASE</version>
     		<scope>compile</scope>
 		</dependency>
 		
@@ -89,7 +89,7 @@
 		<dependency>
 		    <groupId>org.springframework</groupId>
 		    <artifactId>spring-test</artifactId>
-		    <version>5.1.9.RELEASE</version>
+		    <version>5.2.0.RELEASE</version>
 		    <scope>test</scope>
 		</dependency>
 		<dependency>
@@ -107,7 +107,7 @@
 		<dependency>
 		    <groupId>org.springframework.security</groupId>
 		    <artifactId>spring-security-test</artifactId>
-		    <version>5.1.6.RELEASE</version>
+		    <version>5.2.0.RELEASE</version>
 		    <scope>test</scope>
 		</dependency>
 		<dependency>

@@ -42,7 +42,7 @@ public class ShopifyExistingTokenFilterTests {
 	            .clientAuthenticationMethod(ClientAuthenticationMethod.POST)
 	            .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
 	            .redirectUriTemplate("{baseUrl}/login/app/oauth2/code/{registrationId}")
-	            .scope("read_products write_products")
+	            .scope("read_products", "write_products")
 	            .authorizationUri("https://{shop}/admin/oauth/authorize")
 	            .tokenUri("https://{shop}/admin/oauth/access_token")
 	            .clientName("Shopify")

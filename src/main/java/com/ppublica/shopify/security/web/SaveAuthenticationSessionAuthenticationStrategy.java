@@ -13,7 +13,7 @@ import org.springframework.security.web.authentication.session.SessionAuthentica
  * OAuth2LoginAuthenticationFilter/AbstractAuthenticationProcessingFilter, the successfulAuthentication()
  * method is invoked AFTER continuing with the filter chain. However, this means that the Authentication
  * is also saved after invoking the rest of the filters, which means that an AnonymousAuthenticationToken
- * would still be the Authentication object when the request reacjes FilterSecurityInterceptor.
+ * would still be the Authentication object when the request reaches FilterSecurityInterceptor.
  * 
  * We need to save the Authentication BEFORE continuing, and this SessionAuthenticationStrategy 
  * implementation does that.

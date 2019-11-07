@@ -29,11 +29,12 @@ public class ShopifyHttpSessionOAuth2AuthorizationRequestRepository {
 	public static final String DEFAULT_AUTHORIZATION_REQUEST_ATTR_NAME =
 			HttpSessionOAuth2AuthorizationRequestRepository.class.getName() +  ".AUTHORIZATION_REQUEST";
 	
+	public static final String REGISTRATION_ID_URI_VARIABLE_NAME = ShopifyOAuth2AuthorizationRequestResolver.REGISTRATION_ID_URI_VARIABLE_NAME;
 	private AntPathRequestMatcher installPathRequestMatcher;
 
 	public ShopifyHttpSessionOAuth2AuthorizationRequestRepository(String installPath) {
 		this.installPathRequestMatcher = new AntPathRequestMatcher(
-				installPath + "/{registrationId}");
+				installPath + "/{" + REGISTRATION_ID_URI_VARIABLE_NAME + "}");
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -93,8 +94,7 @@ public class ShopifyHttpSessionOAuth2AuthorizationRequestRepository {
 		String registrationId;
 		
 		if (this.installPathRequestMatcher.matches(request)) {
-			registrationId = this.installPathRequestMatcher
-					.extractUriTemplateVariables(request).get("registrationId");
+			registrationId = this.installPathRequestMatcher.matcher(request).getVariables().get(REGISTRATION_ID_URI_VARIABLE_NAME);
 		} else {
 			registrationId = null;
 		}

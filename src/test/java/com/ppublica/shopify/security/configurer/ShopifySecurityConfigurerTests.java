@@ -70,11 +70,11 @@ import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-import com.ppublica.shopify.AppConfig;
 import com.ppublica.shopify.HttpsRequestPostProcessor;
 import com.ppublica.shopify.TestDataSource;
 import com.ppublica.shopify.security.authentication.CipherPassword;
 import com.ppublica.shopify.security.authentication.ShopifyVerificationStrategy;
+import com.ppublica.shopify.security.configuration.SecurityBeansConfig;
 import com.ppublica.shopify.security.configuration.ShopifyPaths;
 import com.ppublica.shopify.security.converter.ShopifyOAuth2AccessTokenResponseConverter;
 import com.ppublica.shopify.security.service.ShopifyStore;
@@ -537,6 +537,9 @@ public class ShopifySecurityConfigurerTests {
 		additionalParameters.put(OAuth2ParameterNames.REGISTRATION_ID, cR.getRegistrationId());
 		additionalParameters.put(ShopifyOAuth2AuthorizationRequestResolver.SHOPIFY_SHOP_PARAMETER_KEY_FOR_TOKEN, shopName);
 		
+		Map<String, Object> attributes = new HashMap<>();
+		attributes.put(OAuth2ParameterNames.REGISTRATION_ID, "shopify");
+		
 		OAuth2AuthorizationRequest authorizationRequest = OAuth2AuthorizationRequest.authorizationCode()
 				.clientId(cR.getClientId())
 				.authorizationUri("https://" + shopName + "/admin/oauth/authorize")
@@ -544,6 +547,7 @@ public class ShopifySecurityConfigurerTests {
 				.scopes(cR.getScopes())
 				.state(state)
 				.additionalParameters(additionalParameters)
+				.attributes(attributes)
 				.build();
 		
 		return authorizationRequest;
@@ -572,16 +576,14 @@ public class ShopifySecurityConfigurerTests {
 			// minimum requirements with defaults:
 			http.authorizeRequests()
 					.anyRequest().authenticated().and()
-				.requiresChannel()
-					.anyRequest()
-						.requiresSecure().and()
+				.requiresChannel().and()
 				.oauth2Login();
 		}
 	}
 	
 	@EnableWebMvc
 	@Configuration
-	@Import(AppConfig.class)
+	@Import(SecurityBeansConfig.class)
 	static class WebMvcConfig implements WebMvcConfigurer {
 		
 		@Bean

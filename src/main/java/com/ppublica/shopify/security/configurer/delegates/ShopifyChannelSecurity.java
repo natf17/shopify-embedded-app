@@ -28,9 +28,8 @@ public class ShopifyChannelSecurity implements HttpSecurityBuilderConfigurerDele
 	}
 
 	@Override
-	public void applyShopifyInit(HttpSecurityBuilder<?> http) {
+	public void applyShopifyInit(HttpSecurityBuilder<?> http) { }
 		
 		
-	}
 
 }

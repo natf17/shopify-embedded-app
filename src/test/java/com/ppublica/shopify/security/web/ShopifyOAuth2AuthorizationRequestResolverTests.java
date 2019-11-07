@@ -42,7 +42,7 @@ public class ShopifyOAuth2AuthorizationRequestResolverTests {
 	            .clientAuthenticationMethod(ClientAuthenticationMethod.POST)
 	            .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
 	            .redirectUriTemplate("{baseUrl}/login/app/oauth2/code/{registrationId}")
-	            .scope("read_products write_products")
+	            .scope("read_products", "write_products")
 	            .authorizationUri("https://{shop}/admin/oauth/authorize")
 	            .tokenUri("https://{shop}/admin/oauth/access_token")
 	            .clientName("Shopify")
@@ -152,9 +152,9 @@ public class ShopifyOAuth2AuthorizationRequestResolverTests {
 		Assert.assertEquals("https://testStore.myshopify.com/admin/oauth/authorize", foundReq.getAuthorizationUri());		
 		Assert.assertEquals("https://ppublica.com/login/app/oauth2/code/shopify", foundReq.getRedirectUri());
 		
-		Assert.assertEquals(2, foundReq.getAdditionalParameters().size());
+		Assert.assertEquals(1, foundReq.getAdditionalParameters().size());
 
-		Assert.assertEquals("shopify", foundReq.getAdditionalParameters().get(OAuth2ParameterNames.REGISTRATION_ID));
+		Assert.assertEquals("shopify", foundReq.getAttribute(OAuth2ParameterNames.REGISTRATION_ID));
 		Assert.assertEquals("testStore.myshopify.com", foundReq.getAdditionalParameters().get(ShopifyOAuth2AuthorizationRequestResolver.SHOPIFY_SHOP_PARAMETER_KEY_FOR_TOKEN));
 		
 	}

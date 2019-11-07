@@ -15,6 +15,9 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 
 import com.ppublica.shopify.security.service.ShopifyBeansUtils;
 
+/*
+ * To override, explicitly configure the OAuth2LoginConfigurer in HttpSecurity's configure().
+ */
 public class ShopifyOAuth2 implements HttpSecurityBuilderConfigurerDelegate {
 	
 	private String anyAuthorizationRedirectPath;

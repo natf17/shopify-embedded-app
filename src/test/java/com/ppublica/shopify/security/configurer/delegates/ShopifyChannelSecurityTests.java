@@ -106,9 +106,7 @@ public class ShopifyChannelSecurityTests {
 			
 			http.authorizeRequests()
 					.anyRequest().authenticated().and()
-				.requiresChannel()
-					.anyRequest()
-						.requiresInsecure();
+				.requiresChannel();
 		}
 	}
 
