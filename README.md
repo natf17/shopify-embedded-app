@@ -1,4 +1,4 @@
-# In Progress: This project replaces the shopify-spring-boot-embedded-app project, as it aims to be entirely decoupled from the importing project.
+# In Progress: This project replaces the shopify-spring-boot-embedded-app project.
 
 This application enables any Spring web application with Spring Security to become a Shopify app and use Shopify's default OAuth offline access token.
 
@@ -28,18 +28,35 @@ ppublica.shopify.security.client.scope=scope1,scope2,...
 ppublica.shopify.security.cipher.password=your-password
 ```
 
-## Preparing your Application
-Make sure:
+## Packaging the project
+Since the project is not in Maven's Central Repository, you're going to have to configure the way your application looks for dependencies.
 
-1. The jar is in your classpath.
-2. Your Spring/Spring Boot application can find the beans in the jar.
+1. Do `git clone` or download this project from Github.
+2. From its root directory, deploy the project into a folder. The following snippet deploys it to the folder /Users/ppublica/Desktop/maven-local-repo:
+```
+mvn deploy -DaltDeploymentRepository=any.id::default::file:///Users/ppublica/Desktop/maven-local-repo 
+```
+3. Move the maven-local-repo folder into a root folder in your project's base directory
+4. In your project's pom.xml, add the following under <project>:
+```
+<repositories>
+    <repository>
+	    <id>project.local</id>
+	    <name>maven-local-repo</name>
+	    <url>file:${project.basedir}/maven-local-repo</url>
+	</repository>
+</repositories>
+```
+
+## Preparing your Application
+1. Make sure your Spring/Spring Boot application can find the beans in the jar.
 ```
 @ComponentScan(basePackages = {"com.ppublica.shopify"})
 ```
-3. Make sure the following beans are in the `ApplicationContext`:
+2. Make sure the following beans are in the `ApplicationContext`:
 	- `MappingJackson2HttpMessageConverter`
 	- `JdbcTemplate`
-4. Add the following to your `WebSecurityConfigurerAdapter`:
+3. Add the following to your `WebSecurityConfigurerAdapter`:
 ```
 @EnableWebSecurity
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
@@ -47,14 +64,12 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 	protected void configure(HttpSecurity http) throws Exception {
 		http.authorizeRequests()
 				.anyRequest().authenticated().and()
-			.requiresChannel()
-				.anyRequest()
-					.requiresSecure().and()
+			.requiresChannel().and()
 			.oauth2Login();
 	}
 }
 ```
-5. Your database is expected to have the following schema:
+4. Your database is expected to have the following schema:
 ```
 |---------------------------STOREACCESSTOKENS-------------------------------|
 |                                                                           |
@@ -63,9 +78,9 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 |---------------------------------------------------------------------------|
 ```
 
-6. Make sure you use HTTPS to comply with Shopify's security requirements. 
+5. Make sure you use HTTPS to comply with Shopify's security requirements. 
 
-7. Make sure your app is running and is live at the hostname you specified.
+6. Make sure your app is running and is live at the hostname you specified.
 
 
 ## Result
