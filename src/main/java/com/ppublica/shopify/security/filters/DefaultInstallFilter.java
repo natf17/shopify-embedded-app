@@ -17,14 +17,17 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 
-/*
- * 
- * This filter generates an HTML page with all the installation logic Shopify requires for an embedded app.
- * It uses 2 request attributes (see ShopifyRedirectStrategy) to populate 2 redirect uris. Which one is used
+/**
+ * A filter that generates an HTML page with all the installation logic Shopify requires for an embedded app.
+ * It uses 2 request attributes (set by ShopifyRedirectStrategy) to populate 2 redirect uris. Which one is used
  * is determined via Javascript - it'll determine if it is being rendered in an embedded app or not.
  * 
- * Paths to {installPath}/shopify will match this filter.
+ * <p>Paths to {installPath}/shopify will match this filter.</p>
  * 
+ * @author N F
+ * @see com.ppublica.shopify.security.configuration.ShopifyPaths
+ * @see com.ppublica.shopify.security.configurer.ShopifySecurityConfigurer
+ * @see com.ppublica.shopify.security.web.ShopifyRedirectStrategy
  */
 public class DefaultInstallFilter implements Filter {
 	
@@ -36,7 +39,12 @@ public class DefaultInstallFilter implements Filter {
 	
 	private String installPathShopify;
 
-	
+	/**
+	 * Construct a DefaultInstallFilter
+	 * 
+	 * @param installPath The install path, not ending in "/shopify"
+	 * @param menuLinks The links to display if this page is accessed while authenticated
+	 */
 	public DefaultInstallFilter(String installPath, Map<String, String> menuLinks) {
 		this.installPathShopify = installPath + "/shopify";
 		this.menuLinks = menuLinks;
@@ -44,7 +52,17 @@ public class DefaultInstallFilter implements Filter {
 	
 	
 	
-
+	/**
+	 * Generate the install page HTML. It will force a redirect to Shopify to initiate the OAuth authorization 
+	 * flow if the request is not authenticated. If the request is authenticated, a series of links are displayed 
+	 * as provided in Map&lt;String, String&gt;menuLinks.
+	 * 
+	 * @param req The request
+	 * @param res The response
+	 * @param chain The security filter chain	
+	 * @throws IOException If unable to write request
+	 * @throws ServletException When invoking the chain
+	 */
 	@Override
 	public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain)
 			throws IOException, ServletException {

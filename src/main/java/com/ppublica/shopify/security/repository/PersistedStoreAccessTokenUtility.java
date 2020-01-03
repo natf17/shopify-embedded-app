@@ -11,24 +11,24 @@ import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import com.ppublica.shopify.security.service.DecryptedTokenAndSalt;
 import com.ppublica.shopify.security.service.EncryptedTokenAndSalt;
 
+
+/**
+ * A utility class with methods to transform service objects (OAuth2AuthorizedClient, OAuth2AuthenticationToken, 
+ * EncryptedTokenAndSalt) to repository/entity objects (PersistedStoreAccessToken), and vice versa.
+ * 
+ * @author N F
+ * @see com.ppublica.shopify.security.service.TokenService
+ */
 public class PersistedStoreAccessTokenUtility {
-	
-	/*
-	 * OAuth2AuthorizedClient:
-	 * 		- ClientRegistration
-	 * 		- principalName (should be name of OAuth2User - store domain)
-	 * 		- OAuth2AccessToken
-	 * 			- tokenType
-	 * 			- tokenValue
-	 * 			- issuedAt
-	 * 			- expiresAt
-	 * 			- scopes (Set<String>)
-	 * 		- OAuth2RefreshToken
+
+	/**
+	 * Create a PersistedStoreAccessToken from OAuth2AuthorizedClient, OAuth2AuthenticationToken, and 
+	 * EncryptedTokenAndSalt.
 	 * 
-	 * OAuth2AuthenticationToken:
-	 * 		- OAuth2User (loaded from DefaultShopifyUserService)
-	 * 		- authorities (GrantedAuthority)
-	 * 		- registrationId (from clientRegistation)
+	 * @param authorizedClient The OAuth2AuthorizedClient with a ClientRegistration, principalName, and OAuth2AccessToken
+	 * @param principal The OAuth2AuthenticationToken with a OAuth2User, authorities, and registrationId from ClientRegistation
+	 * @param encryptedToken The encrypted token
+	 * @return The PersistedStoreAccessToken to store in the database
 	 */
 	public PersistedStoreAccessToken fromAuthenticationObjectsToPersistedStoreAccessToken(OAuth2AuthorizedClient authorizedClient, OAuth2AuthenticationToken principal, EncryptedTokenAndSalt encryptedToken) {
 
@@ -56,7 +56,15 @@ public class PersistedStoreAccessTokenUtility {
 	}
 	
 	
-	
+	/**
+	 * Creates a fully populated OAuth2AuthorizedClient from PersistedStoreAccessToken, DecryptedTokenAndSalt, 
+	 * and ClientRegistration.
+	 *  
+	 * @param storeAccessToken The PersistedStoreAccessToken
+	 * @param decryptedTokenAndSalt The raw OAuth token
+	 * @param cR The ClientRegistration
+	 * @return A fully populated OAuth2AuthorizedClient
+	 */
 	public OAuth2AuthorizedClient fromPersistedStoreAccessTokenToOAuth2AuthorizedClient(PersistedStoreAccessToken storeAccessToken, DecryptedTokenAndSalt decryptedTokenAndSalt, ClientRegistration cR) {
 		String store_domain = storeAccessToken.getStoreDomain();
 		if(store_domain == null || store_domain.isEmpty()) {

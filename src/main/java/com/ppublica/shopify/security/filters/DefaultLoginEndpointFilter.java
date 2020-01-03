@@ -18,16 +18,18 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.web.csrf.CsrfToken;
 
-/*
- * 
- * This filter returns a default login page with a text box to log in to a particular store. The form will
- * trigger a GET request: {installPath}/shopify?shop={store_domain}
- * 
- * If the user is logged in already, a logout button will be shown instead, but only if the request didn't come
+
+/**
+ * This filter generates a default login page with a text box to log in to a particular store. The form will
+ * trigger a GET request to "/install/shopify?shop={store_domain}. If the user is logged in already, a logout 
+ * button will be shown instead, but only if the request didn't come from an embedded app.
  * from an embedded app.
  * 
- * This filter expects the CSRF token to be stored in a request attribute in HttpServletRequests
+ * <p>Note: This filter expects the CSRF token to be stored in a request attribute in HttpServletRequest</p>
  * 
+ * @author N F
+ * @see com.ppublica.shopify.security.configuration.ShopifyPaths
+ * @see com.ppublica.shopify.security.configurer.ShopifySecurityConfigurer
  */
 public class DefaultLoginEndpointFilter implements Filter {
 	
@@ -43,6 +45,15 @@ public class DefaultLoginEndpointFilter implements Filter {
 		this.loginEnpoint = loginEnpoint;
 	}
 
+	/**
+	 * Generate a login form. A form is only shown if the request is unauthenticated.
+	 * 
+	 * @param req The request
+	 * @param res The response
+	 * @param chain The security filter chain	
+	 * @throws IOException If unable to write request
+	 * @throws ServletException When invoking the chain 
+	 */
 	@Override
 	public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain)
 			throws IOException, ServletException {

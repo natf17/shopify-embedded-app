@@ -19,32 +19,34 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import com.ppublica.shopify.security.converter.ShopifyOAuth2AccessTokenResponseConverter;
 
-/*
- * This implementation of OAuth2AccessTokenResponseClient<OAuth2AuthorizationCodeGrantRequest>
- * extends the default DefaultAuthorizationCodeTokenResponseClient. It's invoked by the 
- * default OAuth2LoginAuthenticationProvider.
+/**
+ * An implementation of OAuth2AccessTokenResponseClient that decorates DefaultAuthorizationCodeTokenResponseClient.
+ * It's invoked by OAuth2LoginAuthenticationProvider to obtain a OAuth2AccessTokenResponse.
  * 
- * When OAuth2LoginAuthenticationProvider asks ShopifyAuthorizationCodeTokenResponseClient for a token response,
+ * <p>When OAuth2LoginAuthenticationProvider asks ShopifyAuthorizationCodeTokenResponseClient for a token response,
  * this class (DefaultAuthorizationCodeTokenResponseClient does the work) delegates to its converters: 
- * OAuth2AccessTokenResponseHttpMessageConverter and FormHttpMessageConverter.
+ * OAuth2AccessTokenResponseHttpMessageConverter and FormHttpMessageConverter.</p>
  * 
  * 
- * This class has 3 main functions:
+ * <p>This class has 3 main functions:</p>
+ * <ul>
+ * <li>It customizes the composite DefaultAuthorizationCodeTokenResponseClient by setting a custom 
+ * Converter&lt;Map&lt;String, String&gt;, OAuth2AccessTokenResponse&gt; on the OAuth2AccessTokenResponseHttpMessageConverter. 
+ * The custom converter is ShopifyOAuth2AccessTokenResponseConverter.</li>
  * 
- * It customizes the composite DefaultAuthorizationCodeTokenResponseClient by setting a custom 
- * Converter<Map<String, String>, OAuth2AccessTokenResponse> on the OAuth2AccessTokenResponseHttpMessageConverter. 
- * The custom converter is ShopifyOAuth2AccessTokenResponseConverter.
  * 
- * 
- * It expects to find an additional parameter in the OAuth2AuthorizationRequest: the shop name.
+ * <li>It expects to find an additional parameter in the OAuth2AuthorizationRequest: the shop name.
  * Since in Shopify every store has a unique tokenUri, this class uses the shop name to generate the store-specific
- * tokenUri, which it uses to create a new "store-specific ClientRegistration."
+ * tokenUri, which it uses to create a new "store-specific ClientRegistration."</li>
  * 
  * 
- * AFTER OBTAINING THE RESPONSE, it intercepts the default response client's OAuth2AccessTokenResponse, instead returning 
+ * <li> AFTER OBTAINING THE RESPONSE, it intercepts the default response client's OAuth2AccessTokenResponse, instead returning 
  * a new OAuth2AccessTokenResponse that contains the shop name as an additional parameter, since it'll be needed later 
- * (OAuth2UserService needs it).
+ * (OAuth2UserService needs it).</li>
+ * </ul>
  * 
+ * @see DefaultAuthorizationCodeTokenResponseClient
+ * @see org.springframework.security.oauth2.client.authentication.OAuth2LoginAuthenticationProvider
  * 
  */
 public class ShopifyAuthorizationCodeTokenResponseClient implements OAuth2AccessTokenResponseClient<OAuth2AuthorizationCodeGrantRequest> {

@@ -9,22 +9,35 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.security.core.Authentication;
 
-/*
- * 
- * This strategy generates an HTML page that is seen after successful completion of OAuth2 authorization with
- * Shopify.
- * 
- * Therefore, this strategy is invoked after initial installation in the embedded app, or after
- * authenticating from outside the embedded app.
+/**
+ * An implementation of AuthorizationSuccessPageStrategy that  generates an HTML page that is seen after successful 
+ * completion of OAuth2 authorization with Shopify. Therefore, this strategy is invoked after initial installation 
+ * in the embedded app, or after authenticating from outside the embedded app.
  *
+ * @author N F
+ * @see com.ppublica.shopify.security.configuration.ShopifyPaths
+ * @see com.ppublica.shopify.security.configuration.SecurityBeansConfig 
  */
 public class GenerateDefaultAuthorizationPageStrategy implements AuthorizationSuccessPageStrategy {
 
 	private Map<String, String> menuLinks;
 
+	/**
+	 * Construct the GenerateDefaultAuthorizationPageStrategy
+	 * 
+	 * @param menuLinks The links to display
+	 */
 	public GenerateDefaultAuthorizationPageStrategy(Map<String,String> menuLinks) {
 		this.menuLinks = menuLinks;
 	}
+	/**
+	 * Generate the authorization success page HTML.
+	 * 
+	 * @param request The HttpServletRequest
+	 * @param response The HttpServletResponse
+	 * @param authentication The Authentication (OAuth2AuthenticationToken)
+	 * @throws IOException Error writing the response
+	 */
 	@Override
 	public void handleAuthorizationPage(HttpServletRequest request, HttpServletResponse response,
 			Authentication authentication) throws IOException {

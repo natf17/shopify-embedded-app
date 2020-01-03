@@ -15,18 +15,15 @@ import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.util.StringUtils;
 
 
-/*
+/**
+ * A custom converter to process the Shopify token response. Although identical to OAuth2AccessTokenResponseConverter, 
+ * this converter does not fail if "token_type" is not provided. It defaults to "bearer". It also processes the 
+ * scope string Shopify sends back, since it's delimited by "," and not " ".
  * 
- * This converter is identical to the OAuth2AccessTokenResponseConverter provided in OAuth2AccessTokenResponseHttpMessageConverter.
- * This converter is also used to read the response from Shopify. However, the main difference is that this converter will not fail 
- * if "token_type" is not provided. It defaults to "bearer".
+ * <p>Also, since Shopify doesn't send back any expiration info, the default is that it'll expire in 1 year</p>
  * 
- * This converter is necessary because the default converter expects 
- * 	- a "token_type" parameter in the response along with the token, but Shopify does not send it
- * 	- the scope string to be delimited by " ", but Shopify delimits the scopes with "," 
- * 
- * Also, since Shopify doesn't send back any expiration info, the default is that it'll expire in 1 year
- * 
+ * @author N F
+ * @see org.springframework.security.oauth2.core.http.converter.OAuth2AccessTokenResponseHttpMessageConverter
  */
 public class ShopifyOAuth2AccessTokenResponseConverter implements Converter<Map<String, String>, OAuth2AccessTokenResponse>{
 	private long expiresInSeconds = 31536000L;

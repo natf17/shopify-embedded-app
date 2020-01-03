@@ -14,13 +14,16 @@ import com.ppublica.shopify.security.repository.PersistedStoreAccessToken;
 import com.ppublica.shopify.security.repository.PersistedStoreAccessTokenUtility;
 import com.ppublica.shopify.security.repository.TokenRepository;
 
-/*
- * Used by:
+/**
+ * Provides methods to interact with the TokenRepository to get, save, update, or delete a store.
  * 
- * ShopifyOAuth2AuthorizedClientService
+ * @see ShopifyOAuth2AuthorizedClientService
  */
 public class TokenService {
 	
+	/**
+	 * The parameter name that holds the shop domain in a request to the "installation" path.
+	 */
 	public static final String SHOP_ATTRIBUTE_NAME = "shop";
 	
 	private TokenRepository tokenRepository;
@@ -28,6 +31,13 @@ public class TokenService {
 	private ClientRegistrationRepository clientRepository;
 	private PersistedStoreAccessTokenUtility persistedAccessTokenUtility = new PersistedStoreAccessTokenUtility();
 	
+	/**
+	 * Build a new TokenService.
+	 * 
+	 * @param tokenRepository The TokenRepository
+	 * @param cipherPassword The CipherPassword
+	 * @param clientRepository The ClientRegistrationRepository
+	 */
 	public TokenService(TokenRepository tokenRepository, CipherPassword cipherPassword, ClientRegistrationRepository clientRepository) {
 		this.tokenRepository = tokenRepository;
 		this.cipherPassword = cipherPassword;
@@ -35,12 +45,13 @@ public class TokenService {
 
 	}
 	
-	/*
-	 * Expects an OAuth2AuthorizedClient with a raw token to create an encrypted token to persist.
+	
+	/**
+	 * Save a new store. It uses an OAuth2AuthorizedClient with a raw token to create an encrypted token 
+	 * to persist.
 	 * 
-	 * It uses the OAuth2AuthorizedClient, OAuth2AuthenticationToken, and EncryptedTokenAndSalt to
-	 * save the store.
-	 * 
+	 * @param authorizedClient The OAuth2AuthorizedClient with credentials.
+	 * @param principal The OAuth2AuthenticationToken that contains the user info
 	 */
 	public void saveNewStore(OAuth2AuthorizedClient authorizedClient, OAuth2AuthenticationToken principal) {
 		EncryptedTokenAndSalt encryptedTokenAndSalt = getTokenAndSalt(authorizedClient);
@@ -51,9 +62,15 @@ public class TokenService {
 		
 	}
 	
-	// returns true if a store with this name exists, regardless of validity of stored credentials
-	public boolean doesStoreExist(String storeDomain) {
-		PersistedStoreAccessToken token = this.tokenRepository.findTokenForStore(storeDomain);
+	
+	/**
+	 * Checks for the existence of a store that matches the provided storeDomain String.
+	 * 
+	 * @param shopDomain The full shop domain
+	 * @return true if store exists, false otherwise
+	 */
+	public boolean doesStoreExist(String shopDomain) {
+		PersistedStoreAccessToken token = this.tokenRepository.findTokenForStore(shopDomain);
 		
 		if(token != null) {
 			return true;
@@ -62,10 +79,17 @@ public class TokenService {
 		return false;
 	}
 
-	// will return an existing, valid store
-	public OAuth2AuthorizedClient getStore(String storeDomain) {
+
+	/**
+	 * Returns a OAuth2AuthorizedClient if and only if it finds a store that matches the shopDomain.
+	 * If there's a problem decrypting the token for the store, null is returned.
+	 * 
+	 * @param shopDomain The full shop domain
+	 * @return The OAuth2AuthorizedClient representing the store, or null
+	 */
+	public OAuth2AuthorizedClient getStore(String shopDomain) {
 		
-		PersistedStoreAccessToken ets = this.tokenRepository.findTokenForStore(storeDomain);
+		PersistedStoreAccessToken ets = this.tokenRepository.findTokenForStore(shopDomain);
 		
 		if(ets == null) {
 			return null;
@@ -93,9 +117,12 @@ public class TokenService {
 	}
 	
 	
-	
-	
-	
+	/**
+	 * Updates the store info for an an existing store. 
+	 * 
+	 * @param authorizedClient The OAuth2AuthorizedClient with credentials.
+	 * @param principal The OAuth2AuthenticationToken that contains the user info
+	 */
 	public void updateStore(OAuth2AuthorizedClient authorizedClient, OAuth2AuthenticationToken principal) {
 		
 		EncryptedTokenAndSalt encryptedTokenAndSalt = getTokenAndSalt(authorizedClient);
@@ -107,11 +134,17 @@ public class TokenService {
 
 	}
 	
-	public void uninstallStore(String storeDomain) {
-		if(storeDomain != null && !storeDomain.isEmpty()) {
-			this.tokenRepository.uninstallStore(storeDomain);
+	/**
+	 * Calls TokenRepository to uninstall the store that matches the shopDomain.
+	 * 
+	 * @param shopDomain The full domain of the store to be uninstalled
+	 */
+	public void uninstallStore(String shopDomain) {
+		if(shopDomain != null && !shopDomain.isEmpty()) {
+			this.tokenRepository.uninstallStore(shopDomain);
 		}
 	}
+	
 	
 	public void setPersistedStoreAccessTokenUtility(PersistedStoreAccessTokenUtility customPersistedAccessTokenUtility) {
 		this.persistedAccessTokenUtility = customPersistedAccessTokenUtility;

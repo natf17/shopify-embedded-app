@@ -10,6 +10,13 @@ import javax.servlet.http.HttpServletResponse;
 import org.springframework.security.core.Authentication;
 
 
+/**
+ * An implementation of AuthorizationSuccessPageStrategy that forwards to the configured uri.
+ * 
+ * @author N F
+ * @see com.ppublica.shopify.security.configuration.ShopifyPaths
+ * @see com.ppublica.shopify.security.configuration.SecurityBeansConfig
+ */
 public class ForwardAuthorizationSuccessPageStrategy implements AuthorizationSuccessPageStrategy {
 
 	private String forwardUri;
@@ -17,6 +24,16 @@ public class ForwardAuthorizationSuccessPageStrategy implements AuthorizationSuc
 	public ForwardAuthorizationSuccessPageStrategy(String forwardUri) {
 		this.forwardUri = forwardUri;
 	}
+	
+	/**
+	 * Forward to a uri.
+	 * 
+	 * @param request The HttpServletRequest
+	 * @param response The HttpServletResponse
+	 * @param authentication The Authentication (OAuth2AuthenticationToken)
+	 * @throws IOException When forwarding
+	 * @throws ServletException When forwarding
+	 */
 	@Override
 	public void handleAuthorizationPage(HttpServletRequest request, HttpServletResponse response,
 			Authentication authentication) throws IOException, ServletException {

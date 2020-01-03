@@ -6,7 +6,13 @@ import java.util.Map;
 /* 
  * 
  */
-
+/**
+ * Contains all the default Shopify OAuth-related paths, and keeps track of whether or not a custom path has been
+ * provided.
+ * 
+ * @author N F
+ *
+ */
 public class ShopifyPaths {
 	
 	private String installPath = "/install";
@@ -28,10 +34,29 @@ public class ShopifyPaths {
 	private boolean isUserInfoPageEnabled;
 	private Map<String,String> menuLinks;
 	
+	/**
+	 * Create a ShopifyPaths with the default paths.
+	 * 
+	 */
 	public ShopifyPaths() {
 		this(null,null,null,null,null,null,null, null);
 	}
 	
+	/**
+	 * Build a ShopifyPaths object with custom paths. If any of the strings is neither null nor empty, it will 
+	 * be immediately considered as a custom path. This allows for a default path to be used as a custom path. 
+	 * For example, although "/install" is the default install path, setting it directly will make this path a 
+	 * custom path.
+	 *  
+	 * @param installPath Path to install the app with Shopify
+	 * @param authorizationRedirectPath Path Shopify redirects to with the auth code
+	 * @param loginEndpoint Path to select a store to log into
+	 * @param logoutEndpoint Path to log out
+	 * @param authenticationFailureUri Path that handles OAuth failure
+	 * @param uninstallUri Path Shopify calls to uninstall
+	 * @param enableInfoPath Whether to create an app info page
+	 * @param menuLinks A string with a map of labels and links
+	 */
 	public ShopifyPaths(String installPath, String authorizationRedirectPath, String loginEndpoint,
 						String logoutEndpoint, String authenticationFailureUri, String uninstallUri, Boolean enableInfoPath,
 						String menuLinks) {
@@ -148,6 +173,13 @@ public class ShopifyPaths {
 	}
 	/*
 	 * "key1:val1,key2:val2"
+	 */
+	
+	/**
+	 * Process a string with the pattern "key1:val1,key2:val2" as a map.
+	 * 
+	 * @param source The string
+	 * @return The contents of the string in a a Map
 	 */
 	protected LinkedHashMap<String, String> processMenuLinks(String source) {
 		LinkedHashMap<String, String> menuLinks = new LinkedHashMap<>();

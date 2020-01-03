@@ -5,22 +5,28 @@ import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 
-/*
- * Invoked by OAuth2LoginAuthenticationFilter indirectly when it invokes 
- * AuthenticatedPrincipalOAuth2AuthorizedClientRepository to save the OAuth2AuthorizedClient.
- * It's also invoked by ShopifyExistingFilter to see if, in an embedded app, the shop has already installed this app
+
+/**
  * 
- * It replaces the default InMemoryOAuth2AuthorizedClientService (see OAuth2ClientConfigurerUtils)
+ * An implementation of OAuth2AuthorizedClientService that uses the custom TokenService to save the store in a database 
+ * (instead of in memory), or to update the store credentials if this store has already been "installed".
  * 
- * This client service uses the custom tokenService to save the store in a database (instead of in memory),
- * or to update the store credentials if this store has already been "installed".
- *
+ * <p>It's invoked by OAuth2LoginAuthenticationFilter indirectly when it invokes 
+ * AuthenticatedPrincipalOAuth2AuthorizedClientRepository to save the OAuth2AuthorizedClient. It's also invoked by 
+ * ShopifyExistingTokenFilter to see if, in an embedded app, the shop has already installed this app. It is 
+ * found by OAuth2ClientConfigurerUtils.</p>
  * 
- * When building the OAuth2LoginFilter, OAuth2ClientConfigurerUtils finds this bean.
+ * <p>This class replaces the default InMemoryOAuth2AuthorizedClientService. OAuth2ClientConfigurerUtils finds this bean when
+ * building the OAuth2LoginFilter.</p>
  * 
- * Note: Updating store credentials will only happen when ShopifyOAuth2AuthorizedClientService is called.
- * In an embedded app, it is only called once: when installing. 
- * Afterwards, log in directly from the browser to call it.
+ * <p>Note: Updating store credentials will only happen when ShopifyOAuth2AuthorizedClientService is called.
+ * In an embedded app, it is only called once: when installing. Afterwards, log in directly from the browser to 
+ * call it.</p>
+ * 
+ * @author N F
+ * @see org.springframework.security.oauth2.client.web.AuthenticatedPrincipalOAuth2AuthorizedClientRepository
+ * @see org.springframework.security.oauth2.client.web.OAuth2LoginAuthenticationFilter
+ * @see com.ppublica.shopify.security.filters.ShopifyExistingTokenFilter
  * 
  */
 public class ShopifyOAuth2AuthorizedClientService implements OAuth2AuthorizedClientService {
@@ -31,10 +37,15 @@ public class ShopifyOAuth2AuthorizedClientService implements OAuth2AuthorizedCli
 		this.tokenService = tokenService;
 	}
 	
-	/*
-	 * Used by ShopifyExistingFilter to create an OAuth2AuthenticationToken
-	 */
 
+	/**
+	 * Load the store that matches the provided principalName. ShopifyExistingFilter calls this method to
+	 * create an OAuth2AuthenticationToken.
+	 * 
+	 * @param clientRegistrationId The registration id (e.g. "shopify")
+	 * @param principalName The full Shopify shop domain
+	 * @return The OAuth2AuthorizedClient or null if store not found
+	 */
 	@SuppressWarnings("unchecked")
 	@Override
 	public <T extends OAuth2AuthorizedClient> T loadAuthorizedClient(String clientRegistrationId,
@@ -49,10 +60,13 @@ public class ShopifyOAuth2AuthorizedClientService implements OAuth2AuthorizedCli
 		return null;
 	}
 
-	/*
-	 * Called by OAuth2LoginAuthenticationFilter upon successful authentication
+
+	/**
+	 * Decides whether it should update the database or add the new store based on whether or not this store
+	 * exists already. OAuth2LoginAuthenticationFilter calls this methods upon successful authentication.
 	 * 
-	 * Decides whether or not it should update the DB or add the new store
+	 * @param authorizedClient The authenticated OAuth2AuthorizedClient
+	 * @param principal The OAuth2AuthenticationToken
 	 */
 	@Override
 	public void saveAuthorizedClient(OAuth2AuthorizedClient authorizedClient, Authentication principal) {
@@ -76,8 +90,12 @@ public class ShopifyOAuth2AuthorizedClientService implements OAuth2AuthorizedCli
 	
 	}
 
-	/*
-	 * Permanently delete the store... uninstall
+	
+	/**
+	 * Permanently delete/uninstall the store that matches the shop domain/principalName.
+	 * 
+	 * @param clientRegistrationId The registration id (e.g. "shopify")
+	 * @param principalName The full shop domain
 	 */
 	@Override
 	public void removeAuthorizedClient(String clientRegistrationId, String principalName) {

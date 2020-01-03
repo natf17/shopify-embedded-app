@@ -14,17 +14,18 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 
-/*
- * 
+/**
  * This filter generates an HTML page that is seen after successful completion of OAuth2 authorization with
- * Shopify.
- * 
- * Therefore, this filter is typically invoked after initial installation in the embedded app, or after
+ * Shopify. Therefore, this filter is typically invoked after initial installation in the embedded app, or after
  * authenticating from outside the embedded app.
  * 
- * The current PROBLEM is that NoRedirectSuccessHandler forwards to the path, bypassing the filter
+ * <p>The current PROBLEM is that NoRedirectSuccessHandler forwards to the path, bypassing the filter.
  * Possible solution: have the NoRedirectSuccessHandler write the response! But only if it's using the default.
- * If not, it should still forward, because the importing project would have provided a landing page.
+ * If not, it should still forward, because the importing project would have provided a landing page.</p>
+ * 
+ * @author N F
+ * @see com.ppublica.shopify.security.configuration.ShopifyPaths
+ * @see com.ppublica.shopify.security.configurer.ShopifySecurityConfigurer
  * 
  */
 public class DefaultAuthorizationRedirectPathFilter implements Filter {
@@ -32,13 +33,27 @@ public class DefaultAuthorizationRedirectPathFilter implements Filter {
 	Map<String, String> menuLinks;
 	private String authorizationRedirectPath;
 	
+	/**
+	 * Construct the DefaultAuthorizationRedirectPathFilter
+	 * 
+	 * @param authorizationRedirectPath The authorization redirect path
+	 * @param menuLinks The links to display
+	 */
 	public DefaultAuthorizationRedirectPathFilter(String authorizationRedirectPath, Map<String, String> menuLinks) {
 		this.authorizationRedirectPath = authorizationRedirectPath;
 		this.menuLinks = menuLinks;
 	}
 	
 
-
+	/**
+	 * Generate the successful authorization page.
+	 * 
+	 * @param req The request
+	 * @param res The response
+	 * @param chain The security filter chain	
+	 * @throws IOException If unable to write request
+	 * @throws ServletException When invoking the chain
+	 */
 	@Override
 	public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain)
 			throws IOException, ServletException {
@@ -64,8 +79,8 @@ public class DefaultAuthorizationRedirectPathFilter implements Filter {
 	/*
 	 * Returns:
 	 * 
-		<!DOCTYPE html>
-		<head lang="en">
+	 	<!DOCTYPE html>
+	 	<head lang="en">
 		  <meta charset="UTF-8"/>
   		  <title>Success!</title>
 		</head>

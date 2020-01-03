@@ -12,13 +12,13 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-/*
+/**
+ * A filter that generates the page shown whenever an error occurs during authentication. THe user is redirected 
+ * to this uri, and this filter processes it.
  * 
- * Whenever an error occurs during authentication, the user will be redirected to this uri.
- * 
- * It generates an HTML page for requests that match the path:
- * {authenticationFailurePath}
- * 
+ * @author N F
+ * @see com.ppublica.shopify.security.configuration.ShopifyPaths
+ * @see com.ppublica.shopify.security.configurer.ShopifySecurityConfigurer
  */
 public class DefaultAuthenticationFailureFilter implements Filter {
 	
@@ -28,7 +28,15 @@ public class DefaultAuthenticationFailureFilter implements Filter {
 		this.authenticationFailurePath = authenticationFailurePath;
 	}
 
-
+	/**
+	 * Generate the authentication failure page.
+	 * 
+	 * @param req The request
+	 * @param res The response
+	 * @param chain The security filter chain	
+	 * @throws IOException If unable to write request
+	 * @throws ServletException When invoking the chain
+	 */
 	@Override
 	public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain)
 			throws IOException, ServletException {

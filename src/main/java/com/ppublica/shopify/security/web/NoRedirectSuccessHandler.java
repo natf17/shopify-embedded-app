@@ -10,17 +10,12 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
 
-/*
+
+/**
+ * This handler prevents redirection after successful authentication, and instead calls the default
+ * AuthorizationSuccessPageStrategy.
  * 
- * After successful authentication, the OAuth2LoginAuthenticationFilter will continue with the chain
- * and onto the landing page. This handler does nothing but delegate to SavedRequestAwareAuthenticationSuccessHandler,
- * which has been configured NOT TO REDIRECT.
- * 
- * 
- * After successful authentication, OAuth2LoginAuthenticationFilter will cede control to this success handler.
- * This handler 
- * 		- delegates to SavedRequestAwareAuthenticationSuccessHandler, which has been configured not to redirect
- * 		- has AuthorizationSuccessPageStrategy handle the page-generation or forward logic
+ * @author N F
  * 
  */
 public class NoRedirectSuccessHandler implements AuthenticationSuccessHandler {

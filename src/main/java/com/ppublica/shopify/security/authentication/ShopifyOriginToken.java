@@ -5,18 +5,16 @@ import java.util.Collection;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 
-/*
- * Set by ShopifyExistingTokenFilter
+
+/**
+ * The presence of this token indicates that the request came from Shopify. It's a short-lived Authentication 
+ * object; it never exists past ShopifyExistingTokenFilter. 
  * 
- * The presence of this token indicates that the request came from Shopify. 
- * It never exists past the ShopifyExistingTokenFilter.
- * 
+ * @author N F
+ * @see com.ppublica.shopify.security.filters.ShopifyExistingTokenFilter
  */
 public class ShopifyOriginToken implements Authentication {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 6956977021883422793L;
 	
 
@@ -45,6 +43,9 @@ public class ShopifyOriginToken implements Authentication {
 		return null;
 	}
 
+	/**
+	 * @return false
+	 */
 	@Override
 	public boolean isAuthenticated() {
 		return false;

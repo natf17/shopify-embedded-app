@@ -4,6 +4,11 @@ import java.util.Set;
 
 import com.ppublica.shopify.security.service.EncryptedTokenAndSalt;
 
+/**
+ * A representation of a row in the database that stores Shopify-administered OAuth tokens.
+ * @author N F
+ * @see ShopifyTokenRepositoryImpl
+ */
 public class PersistedStoreAccessToken {
 	private Long id;
 	private EncryptedTokenAndSalt tokenAndSalt;

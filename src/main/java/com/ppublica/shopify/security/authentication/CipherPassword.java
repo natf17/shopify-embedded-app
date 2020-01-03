@@ -1,7 +1,11 @@
 package com.ppublica.shopify.security.authentication;
 
-/*
- * This class holds a password loaded from a properties file for subsequent dynamic encryptor creation. 
+
+/**
+ * Holds a password loaded from a properties file for subsequent dynamic encryptor creation.
+ * 
+ * @author N F
+ *
  */
 public class CipherPassword {
 	private final String password;

@@ -40,49 +40,62 @@ import com.ppublica.shopify.security.configurer.delegates.ShopifyOAuth2;
 import com.ppublica.shopify.security.repository.ShopifyTokenRepositoryImpl;
 import com.ppublica.shopify.security.repository.TokenRepository;
 
-/*
- * ppublica.shopify.security.endpoints.install=
- * ppublica.shopify.security.endpoints.authorization-redirect=
- * ppublica.shopify.security.endpoints.login=
- * ppublica.shopify.security.endpoints.logout=
- * ppublica.shopify.security.endpoints.authentication-failure=
- * ppublica.shopify.security.endpoints.uninstall=
- * ppublica.shopify.security.endpoints.enable-default-info-page=
- * ppublica.shopify.security.endpoints.menu-link=
+
+/**
+ * A configuration class that adds all Shopify-security related beans. 
  * 
- * ppublica.shopify.security.cipher.password= **required**
- * 
- * ppublica.shopify.security.client.client_id= **required**
- * ppublica.shopify.security.client.client_secret= **required**
- * ppublica.shopify.security.client.scope= **required**
+ * <p>Requires the following beans to be in the ApplicationContext:</p>
+ * <ul>
+ * 	<li>JdbcTemplate</li>
+ * </ul>
  * 
  * 
- * Requires the following beans to be in the ApplicationContext:
- * JdbcTemplate
  * 
- * Beans created:
+ * <p>Beans created:</p>
+ * <ul>
+ * 	<li>TokenRepository</li>
+ * 	<li>ShopifyPaths</li>
+ * 	<li>CipherPassword</li>
+ * 	<li>OAuth2UserService&lt;OAuth2UserRequest, OAuth2User&gt;</li>
+ * 	<li>OAuth2AccessTokenResponseClient&lt;OAuth2AuthorizationCodeGrantRequest&gt;</li>
+ * 	<li>AuthorizationSuccessPageStrategy</li>
+ * 	<li>AuthenticationSuccessHandler</li>
+ * 	<li>ClientRegistration</li>
+ * 	<li>ClientRegistrationRepository</li>
+ * 	<li>TokenService</li>
+ * 	<li>OAuth2AuthorizedClientService</li>
+ * 	<li>ShopifyHttpSessionOAuth2AuthorizationRequestRepository</li>
+ * 	<li>OAuth2AuthorizationRequestResolver</li>
+ * 	<li>ShopifyVerificationStrategy</li>
+ * 	<li>CsrfTokenRepository</li>
+ * 	<li>ShopifyHeaders</li>
+ * 	<li>ShopifyChannelSecurity</li>
+ * 	<li>ShopifyCsrf</li>
+ * 	<li>ShopifyLogout</li>
+ * 	<li>ShopifyOAuth2</li>
+ * </ul>
  * 
- * TokenRepository
- * ShopifyPaths
- * CipherPassword
- * OAuth2UserService<OAuth2UserRequest, OAuth2User>
- * OAuth2AccessTokenResponseClient<OAuth2AuthorizationCodeGrantRequest>
- * AuthorizationSuccessPageStrategy
- * AuthenticationSuccessHandler
- * ClientRegistration
- * ClientRegistrationRepository
- * TokenService 
- * OAuth2AuthorizedClientService
- * ShopifyHttpSessionOAuth2AuthorizationRequestRepository
- * OAuth2AuthorizationRequestResolver
- * ShopifyVerificationStrategy
- * CsrfTokenRepository
- * ShopifyHeaders
- * ShopifyChannelSecurity
- * ShopifyCsrf
- * ShopifyLogout
- * ShopifyOAuth2
+ * <p>The following properties are searched to populate several objects:</p>
  * 
+ * <ul>
+ * 	<li>ppublica.shopify.security.endpoints.install=</li>
+ * 	<li>ppublica.shopify.security.endpoints.authorization-redirect=</li>
+ * 	<li>ppublica.shopify.security.endpoints.login=</li>
+ * 	<li>ppublica.shopify.security.endpoints.logout=</li>
+ * 	<li>ppublica.shopify.security.endpoints.authentication-failure=</li>
+ * 	<li>ppublica.shopify.security.endpoints.uninstall=</li>
+ * 	<li>ppublica.shopify.security.endpoints.enable-default-info-page=</li>
+ * 	<li>ppublica.shopify.security.endpoints.menu-link=</li>
+ * 
+ * 	<li>ppublica.shopify.security.cipher.password= **required**</li>
+ * 
+ * 	<li>ppublica.shopify.security.client.client_id= **required**</li>
+ * 	<li>ppublica.shopify.security.client.client_secret= **required**</li>
+ * 	<li>ppublica.shopify.security.client.scope= **required**</li>
+ * </ul>
+ * 
+ * @author N F
+ *
  */
 @Configuration
 public class SecurityBeansConfig {

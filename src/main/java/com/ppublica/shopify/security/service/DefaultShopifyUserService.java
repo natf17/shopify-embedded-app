@@ -13,25 +13,34 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 
 import com.ppublica.shopify.security.web.ShopifyOAuth2AuthorizationRequestResolver;
 
-/*
- * Replaces DefaultOAuth2UserService.
+
+/**
+ * An implementation of OAuth2UserService that builds a ShopifyStore. This class is called by OAuth2LoginAuthenticationProvider 
+ * when creating the OAuth2LoginAuthenticationToken. It replaces DefaultOAuth2UserService.
  * 
- * This class is called by OAuth2LoginAuthenticationProvider when creating the OAuth2LoginAuthenticationToken.
+ * <p>Since the default OAuth2LoginAuthenticationProvider sets the OAuth2User as the principal, this class 
+ * instantiates a ShopifyStore that contains:</p>
+ * <ol>
+ * 	<li>the full shop domain as the "name" of the principal</li>
+ * 	<li>the api key as an additional attribute</li>
+ * 	<li>the the access token as an additional attribute</li>
+ * </ol>
  * 
- * Since the default OAuth2LoginAuthenticationProvider sets the OAuth2User as the principal,
- * this class instantiates a ShopifyStore that contains:
- * 	1. the shop name as the "name' of the principal
- * 	2. the api key as an additional attribute
- * 	3. the the access token as an additional attribute
- * 
- * Note: the OAuth2UserRequest has the shop parameter because our custom ShopifyAuthorizationCodeTokenResponseClient
- * stored it in the OAuth2AccessTokenResponse, which was used to create the OAuth2UserRequest.
+ * @author N F
+ * @see org.springframework.security.oauth2.client.authentication.OAuth2LoginAuthenticationProvider
  * 
  */
-
 public class DefaultShopifyUserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
 	
 	
+	/**
+	 * Build a ShopifyStore using the given OAuth2UserRequest. It expects the OAuth2UserRequest to have the full
+	 * shop domain as an additional attribute, with the key value 
+	 * ShopifyOAuth2AuthorizationRequestResolver.SHOPIFY_SHOP_PARAMETER_KEY_FOR_TOKEN. ShopifyAuthorizationCodeTokenResponseClient
+	 * should have stored it there.
+	 * 
+	 * @see com.ppublica.shopify.security.web.ShopifyAuthorizationCodeTokenResponseClient
+	 */
 	@Override
 	public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
 		Object shopName = userRequest.getAdditionalParameters().get(ShopifyOAuth2AuthorizationRequestResolver.SHOPIFY_SHOP_PARAMETER_KEY_FOR_TOKEN);

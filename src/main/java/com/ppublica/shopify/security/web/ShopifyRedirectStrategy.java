@@ -11,11 +11,14 @@ import org.springframework.security.web.DefaultRedirectStrategy;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.util.UriComponentsBuilder;
 
-/*
- * Decorates the default DefaultRedirectStrategy, and is invoked by ShopifyOAuth2AuthorizationRequestResolver.
- * 
+/**
+ * A class that decorates the DefaultRedirectStrategy that ShopifyOAuth2AuthorizationRequestResolver invokes.
  * Instead of redirecting, it saves 2 authorization redirection URIs as request attributes. This allows for
- * "redirecting" from an iFrame in an embedded app setting.
+ * "redirecting" from an iFrame when running in an embedded app.
+ * 
+ * @author N F
+ * @see ShopifyOAuth2AuthorizationRequestResolver
+ * @see DefaultRedirectStrategy
  */
 public class ShopifyRedirectStrategy extends DefaultRedirectStrategy {
 	public final String I_FRAME_REDIRECT_URI = "/oauth/authorize";
@@ -27,6 +30,13 @@ public class ShopifyRedirectStrategy extends DefaultRedirectStrategy {
 	private final String PARENT_AUTHENTICATION_URI_KEY = "PARENT_AUTHENTICATION_URI";
 	
 
+	/**
+	 * Generates 2 authentication uris to authenticate with Shopify, as required. 
+	 * These are saved as request attributes under "I_FRAME_AUTHENTICATION_URI" and "PARENT_AUTHENTICATION_URI".
+	 * 
+	 * @param request the HttpServletRequest where the uris will be saved
+	 * @param authorizationRequest the OAuth2AuthorizationRequest that contains the authorizationUri
+	 */
 	public void saveRedirectAuthenticationUris(HttpServletRequest request, OAuth2AuthorizationRequest authorizationRequest) {
 		
 		// "template" already properly filled in with shop name
@@ -66,6 +76,14 @@ public class ShopifyRedirectStrategy extends DefaultRedirectStrategy {
 
 	}
 	
+	/**
+	 * Concatenates strings into one String, where each piece is separated by a ",".
+	 * 
+	 * For example, given a List that with elements "a", "b", and "c", this method will return "a,b,c".  
+	 * 
+	 * @param pieces the List&lt;String&gt; of pieces
+	 * @return the pieces as a String
+	 */
 	public static String concatenateListIntoCommaString(List<String> pieces) {
 		StringBuilder builder = new StringBuilder();
 		

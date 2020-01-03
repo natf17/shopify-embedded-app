@@ -1,4 +1,4 @@
-# In Progress: This project replaces the shopify-spring-boot-embedded-app project.
+# In Progress: This project replaces the shopify-spring-boot-embedded-app project. It will soon be available in the Maven Central Repository.
 
 This application enables any Spring web application with Spring Security to become a Shopify app and use Shopify's default OAuth offline access token.
 
@@ -51,7 +51,7 @@ mvn deploy -DaltDeploymentRepository=any.id::default::file:///Users/ppublica/Des
 ## Preparing your Application
 1. Make sure your Spring/Spring Boot application can find the beans in the jar.
 ```
-@ComponentScan(basePackages = {"com.ppublica.shopify"})
+@ComponentScan(basePackages = {"com.ppublica.shopify.security"})
 ```
 2. Make sure the following beans are in the `ApplicationContext`:
 	- `MappingJackson2HttpMessageConverter`

@@ -12,6 +12,11 @@ import org.springframework.jdbc.core.RowMapper;
 
 import com.ppublica.shopify.security.service.EncryptedTokenAndSalt;
 
+/**
+ * An implementation of TokenRepository that persists to a SQL database.
+ * @author N F
+ *
+ */
 public class ShopifyTokenRepositoryImpl implements TokenRepository {
 	
 	private static String SELECT_INFO_FOR_SHOP = "SELECT id, storeDomain, tokenType, tokenValue, salt, issuedAt, expiresAt, scopes FROM StoreAccessTokens WHERE storeDomain=?";
@@ -39,6 +44,13 @@ public class ShopifyTokenRepositoryImpl implements TokenRepository {
 		return token;
 	}
 	
+	/**
+	 * An implementation of RowMapper that instantiates a PersistedStoreAccessToken from the data returned from
+	 * a database call for a store's OAuth token.
+	 * 
+	 * @author N F
+	 *
+	 */
 	static class PersistedStoreAccessTokenMapper implements RowMapper<PersistedStoreAccessToken> {
 
 		@Override

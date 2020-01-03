@@ -18,28 +18,44 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
-/*
- * 
+/**
  * This filter responds to the userInfoPath it's provided and displays some useful information about the app:
- * 	- apiKey: the api key for the app
- * 	- shopOrigin: the domain of the store that's currently logged in
- * 	- whether the initial login for the session was done from within an embedded app
- * 
+ * <ul>
+ * <li>apiKey: the api key for the app</li>
+ * <li>shopOrigin: the domain of the store that's currently logged in</li>
+ * <li>whether the initial login for the session was done from within an embedded app</li>
+ * </ul>
  * If the request isn't authenticated, the request passes to the next filter.
  * 
+ * @author N F
+ * @see com.ppublica.shopify.security.configuration.ShopifyPaths
+ * @see com.ppublica.shopify.security.configurer.ShopifySecurityConfigurer
  */
 public class DefaultUserInfoFilter implements Filter {
 	
 	
 	private String userInfoPathShopify;
 
-	
+	/**
+	 * Construct a DefaultUserInfoFilter
+	 * 
+	 * @param userInfoPathShopify The path to access the info page
+	 */
 	public DefaultUserInfoFilter(String userInfoPathShopify) {
 		this.userInfoPathShopify = userInfoPathShopify;
 	}
 	
 
-
+	/**
+	 * If the request matches this filter and is authenticated, produce an info page.
+	 * 
+	 * @param request The request
+	 * @param response The response
+	 * @param chain The security filter chain
+	 * 
+	 * @throws IOException If unable to write request
+	 * @throws ServletException When invoking the chain
+	 */
 	@Override
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
 			throws IOException, ServletException {

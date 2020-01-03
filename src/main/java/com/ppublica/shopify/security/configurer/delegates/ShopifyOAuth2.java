@@ -13,8 +13,11 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 
 import com.ppublica.shopify.security.service.ShopifyBeansUtils;
 
-/*
- * To override, explicitly configure the OAuth2LoginConfigurer in HttpSecurity's configure().
+
+/**
+ * Apply all the configuration related to the OAuth2 "handshake" with Shopify, as defined in OAuth2LoginConfigurer.
+ * @author N F
+ *
  */
 public class ShopifyOAuth2 implements HttpSecurityBuilderConfigurerDelegate {
 	
@@ -22,6 +25,14 @@ public class ShopifyOAuth2 implements HttpSecurityBuilderConfigurerDelegate {
 	private String loginEndpoint;
 	private String authenticationFailureUrl;
 	
+	
+	/**
+	 * Construct the ShopifyOAuth2
+	 * 
+	 * @param anyAuthorizationRedirectPath The authorization redirect wildcard path
+	 * @param loginEndpoint The login uri
+	 * @param authenticationFailureUrl The uri of the OAuth2 error "page"
+	 */
 	public ShopifyOAuth2(String anyAuthorizationRedirectPath, String loginEndpoint, String authenticationFailureUrl) {
 		this.anyAuthorizationRedirectPath = anyAuthorizationRedirectPath;
 		this.loginEndpoint = loginEndpoint;
@@ -33,6 +44,15 @@ public class ShopifyOAuth2 implements HttpSecurityBuilderConfigurerDelegate {
 		
 	}
 
+	/**
+	 * Configure the OAuth2LoginConfigurer. Set the custom OAuth2AuthorizationRequestResolver, the base uri 
+	 * on the Redirection Endpoint, a custom OAuth2AccessTokenResponseClient on the Token Endpoint, a custom 
+	 * OAuth2UserService on the UserInfo Endpoint, an AuthenticationSuccessHandler, the login page, and the failure
+	 * uri. The objects are obtained from ShopifyBeansUtils.
+	 *  
+	 * @param http The HttpSecurityBuilder
+	 * 
+	 */
 	@SuppressWarnings("unchecked")
 	@Override
 	public void applyShopifyInit(HttpSecurityBuilder<?> http) {

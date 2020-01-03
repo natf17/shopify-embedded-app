@@ -22,6 +22,23 @@ import com.ppublica.shopify.security.web.NoRedirectSuccessHandler;
 import com.ppublica.shopify.security.web.ShopifyAuthorizationCodeTokenResponseClient;
 import com.ppublica.shopify.security.web.ShopifyOAuth2AuthorizationRequestResolver;
 
+/**
+ * A facade for extracting beans from the HttpSecurityBuilder's ApplicationContext. The following beans are 
+ * expected to exist:
+ * <ul>
+ * 	<li>ShopifyOAuth2AuthorizationRequestResolver</li>
+ * 	<li>ShopifyAuthorizationCodeTokenResponseClient</li>
+ * 	<li>DefaultShopifyUserService</li>
+ * 	<li>NoRedirectSuccessHandler</li>
+ * 	<li>ShopifyVerificationStrategy</li>
+ * 	<li>ShopifyOAuth2AuthorizedClientService</li>
+ * 	<li>MappingJackson2HttpMessageConverter</li>
+ * 	<li>ShopifyPaths</li>
+ * 	<li>Multiple HttpSecurityBuilderConfigurerDelegate</li>
+ * </ul>
+ * @author N F
+ * @see com.ppublica.shopify.security.configurer.ShopifySecurityConfigurer
+ */
 public class ShopifyBeansUtils {
 	
 	public static OAuth2AuthorizationRequestResolver getRequestResolver(HttpSecurityBuilder<?> http) {

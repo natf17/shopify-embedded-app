@@ -26,42 +26,46 @@ import com.ppublica.shopify.security.filters.ShopifyOriginFilter;
 import com.ppublica.shopify.security.filters.UninstallFilter;
 import com.ppublica.shopify.security.service.ShopifyBeansUtils;
 
-/*
- * By default, the WebSecurityConfigurerAdapter will look in spring.factories for AbstractHttpConfigurers to apply, where
+
+/**
+ * The main configurer that WebSecurityConfigurerAdapter finds and applies to HttoSecurity to connfigure it for 
+ * OAuth2 authorization with Shopify.
+ * 
+ * <p>By default, the WebSecurityConfigurerAdapter will look in spring.factories for AbstractHttpConfigurers to apply, where
  * it should find ShopifySecurityConfigurer. This configurer's init() and configure() methods will be invoked in the 
- * following order:
- * 		1. configurers WebSecurityConfigurerAdapter adds by default
- * 		2. ShopifySecurityConfigurer
- * 		3. configurers added in overridden configure(HttpSecurity) method
+ * following order:</p>
+ * 
+ * <ol>
+ * <li>configurers WebSecurityConfigurerAdapter adds by default</li>
+ * <li>ShopifySecurityConfigurer</li>
+ * <li>configurers added in overridden configure(HttpSecurity) method</li>
+ * </ol>
  * 
  * 
- * init():
- * - Find HttpSecurityBuilderConfigurerDelegate beans
- * - Allow each to initialize HttpSecurityBuilder
- * 
- * configure():
- * - Allow each HttpSecurityBuilderConfigurerDelegate to configure HttpSecurityBuilder
- * - Add the following filters, each configured based on beans retrieved from the context:
- * 		- ShopifyOriginFilter
- * 		- ShopifyExistingTokenFilter
- * 		- UninstallFilter
- * 
- * 		- DefaultInstallFilter
- * 		- DefaultLoginEndpointFilter
- * 		- DefaultAuthenticationFailureFilter
- * 		- DefaultUserInfoFilter
- * 
+ * @author N F
+ * @see com.ppublica.shopify.security.service.ShopifyBeansUtils
+ *
  */
 public class ShopifySecurityConfigurer<H extends HttpSecurityBuilder<H>>
 	extends AbstractHttpConfigurer<ShopifySecurityConfigurer<H>, H> {
 
 	private final List<HttpSecurityBuilderConfigurerDelegate> shopifyConfigurers = new ArrayList<>();
 	
+	/**
+	 * Get all HttpSecurityBuilderConfigurerDelegate from ShopifyBeansUtils.
+	 * 
+	 * @param http The HttpSecurity
+	 * @return a Map of HttpSecurityBuilderConfigurerDelegates
+	 */
 	protected Map<String, HttpSecurityBuilderConfigurerDelegate> getBuilderDelegates(H http) {
 		return ShopifyBeansUtils.getBuilderDelegates(http);
 	}
 
-	
+	/**
+	 * Obtain all HttpSecurityBuilderConfigurerDelegate beans and allow each to initialize HttpSecurityBuilder
+	 * 
+	 * @param http The HttpSecurity
+	 */
 	@Override
 	public void init(H http) {
 		Map<String, HttpSecurityBuilderConfigurerDelegate> dels = getBuilderDelegates(http);
@@ -74,7 +78,22 @@ public class ShopifySecurityConfigurer<H extends HttpSecurityBuilder<H>>
 		
 	}
 
-	
+	/**
+	 * Allow each HttpSecurityBuilderConfigurerDelegate to configure HttpSecurityBuilder/HttpSecurity.
+	 * Add the following filters, each configured based on beans retrieved from the context:
+	 * <ul>
+	 * 	<li>ShopifyOriginFilter</li>
+	 * 	<li>ShopifyExistingTokenFilter</li>
+	 * 	<li>UninstallFilter</li>
+	 * 
+	 *	<li>DefaultInstallFilter</li>
+	 *	<li>DefaultLoginEndpointFilter</li>
+	 * 	<li>DefaultAuthenticationFailureFilter</li>
+	 * 	<li>DefaultUserInfoFilter</li>
+	 * </ul>
+	 * 
+	 * @param http The HttpSecurity
+	 */
 	@Override
 	public void configure(H http) {
 		

@@ -23,18 +23,17 @@ import org.springframework.web.util.UriUtils;
 
 import com.ppublica.shopify.security.web.ShopifyHttpSessionOAuth2AuthorizationRequestRepository;
 
-/*
- * This class is invoked by ShopifyOriginFilter and UninstallFilter.
- * It uses ClientRegistrationRepository and ShopifyHttpSessionOAuth2AuthorizationRequestRepository.
+
+/**
+ * Provides methods for determining if a request came from Shopify. It needs access to 
+ * ShopifyHttpSessionOAuth2AuthorizationRequestRepository to verify the nonce in the "state" request parameter for 
+ * the "whitelisted redirection url". ClientRegistrationRepository is used to obtain the secret to check the HMAC.
  * 
- * This class ensures a request came from Shopify by checking for a valid HMAC parameter.
  * 
- * But for the "whitelisted redirection url", it is also necessary that it provide a nonce in the "state" parameter.
- * Since this is a redirection url, the OAuth2AuthorizationRequest should have already been saved in the HttpSession.
- * See ShopifyHttpSessionOAuth2AuthorizationRequestRepository.
- * 
- * This class also provides the logic to verify that an uninstall request came from Shopify by inspecting certain request headers.
- * 
+ * @author N F
+ * @see com.ppublica.shopify.security.web.ShopifyHttpSessionOAuth2AuthorizationRequestRepository
+ * @see com.ppublica.shopify.security.filters.ShopifyOriginFilter
+ * @see com.ppublica.shopify.security.filters.UninstallFilter
  */
 public class ShopifyVerificationStrategy {
 	public static final String NONCE_PARAMETER = OAuth2ParameterNames.STATE;
@@ -45,23 +44,28 @@ public class ShopifyVerificationStrategy {
 	private ShopifyHttpSessionOAuth2AuthorizationRequestRepository authReqRepository;
 	private ClientRegistrationRepository clientRegistrationRepository;
 	
-	
+	/**
+	 * Create a new ShopifyVerificationStrategy
+	 * 
+	 * @param clientRegistrationRepository The ClientRegistrationRepository
+	 * @param authReqRepository The ShopifyHttpSessionOAuth2AuthorizationRequestRepository
+	 */
 	public ShopifyVerificationStrategy(ClientRegistrationRepository clientRegistrationRepository, ShopifyHttpSessionOAuth2AuthorizationRequestRepository authReqRepository) {
 		this.clientRegistrationRepository = clientRegistrationRepository;
 		this.authReqRepository = authReqRepository;
 
 	}
 	
-	/*
-	 * Perform HMAC verification as directed by Shopify:
+	
+	/**
+	 * Perform HMAC verification as directed by Shopify. It obtains the hmac parameter from the query string, and 
+	 * the client secret to check the HMAC via the overloaded equivalent of this method.
 	 * 
-	 * 1. Obtains the hmac parameter from the query string
-	 * 2. Obtains the client secret using the HttpServletRequest
-	 * 3. Passes the query string, hmac, and secret to overloaded method.
+	 * <p>This method checks in case the query string has been URL encoded. Tomcat by default decodes request 
+	 * parameters, so hmac is expected to be url decoded.</p>
 	 * 
-	 * This method checks in case the query string has been URL encoded
-	 * 
-	 * Tomcat by default decodes request parameters, so hmac is expected to be url decoded
+	 * @param request The HttpServletRequest
+	 * @return true if HMAC is valid, false otherwise
 	 */
 	public boolean isShopifyRequest(HttpServletRequest request) {
 		Map<String,String[]> requestParameters = this.getRequestParameters(request);
@@ -92,8 +96,6 @@ public class ShopifyVerificationStrategy {
 
 		}
 		return true;
-
-		
 
 		
 	}
@@ -138,15 +140,16 @@ public class ShopifyVerificationStrategy {
 	}
 
 	
-	/*
+	/**
 	 * This method makes sure there is an OAuth2AuthorizationRequest in the HttpSession
 	 * that matches the nonce that was provided in this request.
 	 * 
 	 * This ensures that the nonce sent by the server (Shopify) matches the one 
-	 * previously sent by the client (us)
+	 * previously sent by the client (us).
 	 * 
+	 * @param request The HttpServletRequest
+	 * @return true if the nonce is valid, false otherwise
 	 */
-	
 	public boolean hasValidNonce(HttpServletRequest request) {
 		String nonce = request.getParameter(NONCE_PARAMETER);
 		
@@ -200,6 +203,36 @@ public class ShopifyVerificationStrategy {
 	 * 
 	 */
 	
+	/**
+	 * This method returns the client secret that matches this request. The client secret is obtained via 2 
+	 * methods:
+	 * 
+	 * ShopifyHttpSessionOAuth2AuthorizationRequestRepository looks for a OAuth2AuthorizationRequest for the 
+	 * current request. 
+	 * 
+	 * <p>Method 1: no OAuth2AuthorizationRequest</p>
+	 * 	<ul>
+	 * 		<li>Use ShopifyHttpSessionOAuth2AuthorizationRequestRepository to extract the registrationId from 
+	 * 			the request path</li>
+	 * 		<li>Delegate to getClientSecretByRegistrationId(...) to search the ClientRegistrationRepository to get the 
+	 * 		  ClientRegistration that matches the registrationId and obtain the client secret</li>
+	 * </ul>
+	 * 
+	 * <p>Method 2: OAuth2AuthorizationRequest found</p>
+	 * 	<ul>
+	 * 		<li>Obtain the clientId from the OAuth2AuthorizationRequest</li>
+	 * 		<li>Search the ClientRegistrationRepository to get the ClientRegistration that matches the clientId
+	 * 			 and obtain the client secret</li>
+	 * 	</ul>
+	 * 
+	 * <p>Requests to the installation path (e.g. "/install/**") would use method 1 because no 
+	 * OAuth2AuthorizationRequest exists yet. ShopifyOriginFilter is before 
+	 * OAuth2AuthorizationRequestRedirectFilter. However, a request to the authorization redirect uri (e.g. 
+	 * "/login/app/oauth2/code/**") would use method 2 because an OAuth2AuthorizationRequest has already been saved
+	 * 
+	 * @param req The HttpServletRequest
+	 * @return The client secret, RuntimeException of client secret not found
+	 */
 	public String getClientSecret(HttpServletRequest req) {
 		
 		OAuth2AuthorizationRequest authReq = authReqRepository.getAnAuthorizationRequest(req);
@@ -245,9 +278,13 @@ public class ShopifyVerificationStrategy {
 		
 	}
 	
-	/*
+
+	/**
 	 * Finds the client secret associated with the ClientRegistration with the given id by searching
-	 * the ClientRegistrationRepository
+	 * the ClientRegistrationRepository.
+	 * 
+	 * @param registrationId The registration id
+	 * @return The client secret, null if not found
 	 */
 	public String getClientSecretByRegistrationId(String registrationId) {
 		ClientRegistration reg = clientRegistrationRepository.findByRegistrationId(registrationId);
@@ -259,16 +296,26 @@ public class ShopifyVerificationStrategy {
 		return reg.getClientSecret();
 	}
 	
-	/*
-	 * Allows swapping the request parameter map for unit tests 
+
+	/**
+	 * Obtain the request parameters from the HttpServletRequest object. Useful when swapping the request parameter 
+	 * map for unit tests.
+	 * 
+	 * @param req The HttpServletRequest
+	 * @return A map of parameters
 	 */
 	protected Map<String,String[]> getRequestParameters(HttpServletRequest req) {
 		return req.getParameterMap();
 
 	}
 	
-	/*
-	 * Hashes the message using the secret
+	
+	/**
+	 * Hashes the message using the secret.
+	 * 
+	 * @param secret The secret
+	 * @param message The message
+	 * @return The hashed message
 	 */
 	public static String hash(String secret, String message) {
 		
@@ -290,8 +337,12 @@ public class ShopifyVerificationStrategy {
 		return hash;
 	}
 	
-	/*
-	 * Returns the body of HttpServletRequest as a String
+	
+	/**
+	 * Read the body of the request and return as a String.
+	 * 
+	 * @param req The HttpServletRequest
+	 * @return The body as a String
 	 */
 	public String getBody(HttpServletRequest req) {
 		InputStream in = null;
@@ -307,9 +358,14 @@ public class ShopifyVerificationStrategy {
 		return body;
 	}
 	
-	/*
-	 * Uses a secret to hash the body.
-	 * The result is then base64-encoded to compare to the base64-encoded hmac
+	
+	/**
+	 * Uses a secret to hash the body. The result is then base64-encoded to compare to the base64-encoded hmac.
+	 * 
+	 * @param body The request body
+	 * @param hmac The hmac
+	 * @param secret The secret
+	 * @return true if the request has a valid hmac, false otherwise
 	 */
 	public boolean isShopifyHeaderRequest(String body, String hmac, String secret) {
 		
@@ -323,12 +379,14 @@ public class ShopifyVerificationStrategy {
 		return encodedValue.equals(hmac);
 	}
 	
-	/*
-	 * Uninstalling the app (see UninstallFilter):
+	
+	/**
+	 * Checks that the request has the  X-Shopify-Hmac-SHA256 header and a correct hmac in the body.
+	 * This method is used when verifying a request to uninstall an app.
 	 * 
-	 * 	1. Makes sure the request has the X-Shopify-Hmac-SHA256 header
-	 * 	2. Delegates to isShopifyHeaderRequest(...,...,...) to confirm the hash of the body
-	 * 	   matches the hmac.
+	 * @param request The HttpServletRequest
+	 * @param registrationId The registration id
+	 * @return true if the hmac is valid, false otherwise
 	 */
 	public boolean isHeaderShopifyRequest(HttpServletRequest request, String registrationId) {
 		String hmacValue = request.getHeader(HMAC_HEADER);
