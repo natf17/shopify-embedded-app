@@ -5,11 +5,11 @@
 
 	<groupId>com.ppublica.shopify</groupId>
 	<artifactId>shopify-embedded-app</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>1.0.0-RELEASE</version>
 	<packaging>jar</packaging>
 
 	<name>shopify-embedded-app</name>
-	<description>A Spring Security application that runs as an embedded Shopify app</description>
+	<description>Spring Security configuration for an application to run as an embedded Shopify app</description>
 
 
 	<properties>
@@ -135,4 +135,17 @@
 	      </plugins>
 	    </pluginManagement>
 	</build>
+	<licenses>
+		<license>
+	    	<name>The Apache License, Version 2.0</name>
+	    	<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+	  	</license>
+	</licenses>
+	<developers>
+		<developer>
+	      <name>Nathanael Farciert</name>
+	      <email>natfar.dev@gmail.com</email>
+	      <organizationUrl>http://ppublica.com</organizationUrl>
+	    </developer>
+	</developers>
 </project>
