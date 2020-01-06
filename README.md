@@ -3,6 +3,8 @@
 This application enables any Spring web application with Spring Security to become a Shopify app and use Shopify's default OAuth offline access token.
 
 # Running the App
+- Uses Spring Security 5.2.0.RELEASE
+
 ## Obtaining Information for Your Shopify App
 Once you have a development store, create a private app.
 
