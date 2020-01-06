@@ -17,6 +17,12 @@
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 	</properties>
 
+	<scm>
+		<connection>scm:git:https://github.com/natf17/shopify-embedded-app</connection>
+		<developerConnection>scm:git:https://github.com/natf17/shopify-embedded-app</developerConnection>
+		<url>https://github.com/natf17/shopify-embedded-app</url>
+	</scm>
+	
 	<dependencies>
 		<dependency>
        		<groupId>org.springframework.security</groupId>
@@ -132,6 +138,19 @@
 		          <target>1.8</target>
 		      </configuration>
 	        </plugin>
+	        <plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<version>3.1.1</version>
+				<configuration>
+					<outputDirectory>${project.build.directory}/target/apidocs</outputDirectory>
+					<verbose>true</verbose>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+			</plugin>
 	      </plugins>
 	    </pluginManagement>
 	</build>
