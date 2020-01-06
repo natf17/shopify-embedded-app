@@ -10,7 +10,7 @@
 
 	<name>shopify-embedded-app</name>
 	<description>Spring Security configuration for an application to run as an embedded Shopify app</description>
-
+	<url>https://github.com/natf17/shopify-embedded-app</url>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
