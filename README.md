@@ -1,9 +1,12 @@
-# In Progress: This project replaces the shopify-spring-boot-embedded-app project. It will soon be available in the Maven Central Repository.
+# This project replaces the shopify-spring-boot-embedded-app project
 
 This application enables any Spring web application with Spring Security to become a Shopify app and use Shopify's default OAuth offline access token.
 
 # Running the App
+
 - Uses Spring Security 5.2.0.RELEASE
+
+If you're using the Spring Boot security starter, this translates to version 2.2.X.
 
 ## Obtaining Information for Your Shopify App
 Once you have a development store, create a private app.
@@ -30,28 +33,20 @@ ppublica.shopify.security.client.scope=scope1,scope2,...
 ppublica.shopify.security.cipher.password=your-password
 ```
 
-## Packaging the project
-Since the project is not in Maven's Central Repository, you're going to have to configure the way your application looks for dependencies.
+## Adding the project
+If you're using Maven, add the following under the `<dependencies>` element in the pom.xml:
 
-1. Do `git clone` or download this project from Github.
-2. From its root directory, deploy the project into a folder. The following snippet deploys it to the folder /Users/ppublica/Desktop/maven-local-repo:
 ```
-mvn deploy -DaltDeploymentRepository=any.id::default::file:///Users/ppublica/Desktop/maven-local-repo 
-```
-3. Move the maven-local-repo folder into a root folder in your project's base directory
-4. In your project's pom.xml, add the following under <project>:
-```
-<repositories>
-    <repository>
-	    <id>project.local</id>
-	    <name>maven-local-repo</name>
-	    <url>file:${project.basedir}/maven-local-repo</url>
-	</repository>
-</repositories>
+<dependency>
+   <groupId>com.ppublica.shopify</groupId>
+   <artifactId>shopify-embedded-app</artifactId>
+   <version>1.0.0-RELEASE</version>
+   <scope>compile</scope>
+</dependency>
 ```
 
 ## Preparing your Application
-1. Make sure your Spring/Spring Boot application can find the beans in the jar.
+1. Make sure your Spring/Spring Boot application can find the security beans in the jar.
 ```
 @ComponentScan(basePackages = {"com.ppublica.shopify.security"})
 ```
@@ -89,7 +84,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 The following endpoints were registered:
 
 `/install/shopify?shop={your-store-name.myshopify.com}`:
-- to log in (and install the app on the given store) either from the browser or the embedded app. This is done via    Javascript redirects
+- to log in (and install the app on the given store) either from the browser or the embedded app. This is done via Javascript redirects
 - if this endpont is called by Shopify from an embedded app and the store has already been installed, the user will be authomatically authenticated (without any OAuth redirects)
 - not including the `shop` parameter will force a redirect
 
