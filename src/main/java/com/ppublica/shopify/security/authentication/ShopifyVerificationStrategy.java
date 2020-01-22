@@ -215,7 +215,8 @@ public class ShopifyVerificationStrategy {
 	 * "/login/app/oauth2/code/**") would use method 2 because an OAuth2AuthorizationRequest has already been saved
 	 * 
 	 * @param req The HttpServletRequest
-	 * @return The client secret, RuntimeException of client secret not found
+	 * @return The client secret
+	 * @throws ShopifyVerificationException if client registration/secret not found
 	 */
 	public String getClientSecret(HttpServletRequest req) {
 		
@@ -229,7 +230,7 @@ public class ShopifyVerificationStrategy {
 			logger.debug("Installation request? Obtaining client secret using reg. id ");
 			String registrationId = authReqRepository.extractRegistrationId(req);
 			if(registrationId == null) {
-				throw new RuntimeException("No registrationId found!");
+				throw new ShopifyVerificationException("No registrationId found!");
 			}
 			
 			clientSecret = getClientSecretByRegistrationId(registrationId);
@@ -250,7 +251,7 @@ public class ShopifyVerificationStrategy {
 			}
 			
 			if(reg == null) {
-				throw new RuntimeException("No ClientRegistration found for " + clientId);
+				throw new ShopifyVerificationException("No ClientRegistration found for " + clientId);
 			}
 			
 			clientSecret = reg.getClientSecret();
@@ -260,7 +261,7 @@ public class ShopifyVerificationStrategy {
 		logger.debug("No client secret found");
 		
 		if(clientSecret == null) {
-			throw new RuntimeException("No client secret found");
+			throw new ShopifyVerificationException("No client secret found");
 		}
 		
 		return clientSecret;
@@ -305,6 +306,7 @@ public class ShopifyVerificationStrategy {
 	 * @param secret The secret
 	 * @param message The message
 	 * @return The hashed message
+	 * @throws ShopifyVerificationException if hashing error occurs
 	 */
 	public static String hash(String secret, String message) {
 		
@@ -319,7 +321,7 @@ public class ShopifyVerificationStrategy {
 		    hash = Hex.encodeHexString(sha256_HMAC.doFinal(message.getBytes("UTF-8")));
 		    
 		} catch (Exception e){
-		    throw new RuntimeException("Error hashing");
+		    throw new ShopifyVerificationException("Error hashing");
 		}
 		
 		return hash;
@@ -331,6 +333,7 @@ public class ShopifyVerificationStrategy {
 	 * 
 	 * @param req The HttpServletRequest
 	 * @return The body as a String
+	 * @throws ShopifyVerificationException if error parsing body occurs
 	 */
 	public String getBody(HttpServletRequest req) {
 		InputStream in = null;
@@ -340,7 +343,7 @@ public class ShopifyVerificationStrategy {
 			in = req.getInputStream();
 			IOUtils.toString(in, "UTF-8");
 		} catch(IOException ex) {
-			throw new RuntimeException("There was an error parsing the request body");
+			throw new ShopifyVerificationException("There was an error parsing the request body");
 		}
 		
 		return body;
