@@ -7,6 +7,8 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.security.core.Authentication;
 
 /**
@@ -19,7 +21,8 @@ import org.springframework.security.core.Authentication;
  * @see com.ppublica.shopify.security.configuration.SecurityBeansConfig 
  */
 public class GenerateDefaultAuthorizationPageStrategy implements AuthorizationSuccessPageStrategy {
-
+	private final Log logger = LogFactory.getLog(GenerateDefaultAuthorizationPageStrategy.class);
+	
 	private Map<String, String> menuLinks;
 
 	/**
@@ -41,6 +44,7 @@ public class GenerateDefaultAuthorizationPageStrategy implements AuthorizationSu
 	@Override
 	public void handleAuthorizationPage(HttpServletRequest request, HttpServletResponse response,
 			Authentication authentication) throws IOException {
+		logger.info("Generating default authorization page");
 		
 		String bodyHtml = generateAuthorizationRedirectPageHtml((HttpServletRequest)request);
 		response.setContentType("text/html;charset=UTF-8");

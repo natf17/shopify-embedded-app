@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.security.config.annotation.web.HttpSecurityBuilder;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
@@ -48,6 +50,7 @@ import com.ppublica.shopify.security.service.ShopifyBeansUtils;
  */
 public class ShopifySecurityConfigurer<H extends HttpSecurityBuilder<H>>
 	extends AbstractHttpConfigurer<ShopifySecurityConfigurer<H>, H> {
+	private final Log logger = LogFactory.getLog(ShopifySecurityConfigurer.class);
 
 	private final List<HttpSecurityBuilderConfigurerDelegate> shopifyConfigurers = new ArrayList<>();
 	
@@ -71,6 +74,10 @@ public class ShopifySecurityConfigurer<H extends HttpSecurityBuilder<H>>
 		Map<String, HttpSecurityBuilderConfigurerDelegate> dels = getBuilderDelegates(http);
 		
 		shopifyConfigurers.addAll(dels.values());
+		
+		if(logger.isDebugEnabled()) {
+			logger.info("***ShopifySecurityConfigurer init: " + dels.size() + "configurers found");
+		}
 		
 		for(HttpSecurityBuilderConfigurerDelegate del : shopifyConfigurers) {
 			del.applyShopifyInit(http);
@@ -109,6 +116,11 @@ public class ShopifySecurityConfigurer<H extends HttpSecurityBuilder<H>>
 		http.addFilterAfter(new ShopifyExistingTokenFilter(cS, sP.getInstallPath()), ShopifyOriginFilter.class);
 		http.addFilterBefore(new UninstallFilter(sP.getUninstallUri(), verStr, cS, ShopifyBeansUtils.getJacksonConverter(http)), OAuth2AuthorizationRequestRedirectFilter.class);
 		
+		logger.info("***ShopifySecurityConfigurer configure... filters added:");
+		logger.info("ShopifyOriginFilter");
+		logger.info("ShopifyExistingTokenFilter");
+		logger.info("UninstallFilter");
+
 		Map<String, String> menuLinks = new HashMap<>();
 		boolean isCustomInstallPath = sP.isCustomInstallPath();
 		boolean isCustomLoginEndpoint = sP.isCustomLoginEndpoint();
@@ -120,24 +132,28 @@ public class ShopifySecurityConfigurer<H extends HttpSecurityBuilder<H>>
 		if(!isCustomInstallPath) {
 			// bypass security...
 			http.addFilterBefore(new DefaultInstallFilter(sP.getInstallPath(), menuLinks), FilterSecurityInterceptor.class);
+			logger.info("DefaultInstallFilter");
+
 		}
 		
 		//DefaultLoginEndpointFilter
 		if(!isCustomLoginEndpoint) {
 			// since it doesn't modify the Authentication...
 			http.addFilterAfter(new DefaultLoginEndpointFilter(sP.getLoginEndpoint(), sP.getInstallPath(), sP.getLogoutEndpoint()), ConcurrentSessionFilter.class);
+			logger.info("DefaultLoginEndpointFilter");
 		}
 		
 		//DefaultAuthenticationFailureFilter
 		if(!isCustomAuthenticationFailurePage) {
-			//
 			http.addFilterAfter(new DefaultAuthenticationFailureFilter(sP.getAuthenticationFailureUri()), DefaultLogoutPageGeneratingFilter.class);
+			logger.info("DefaultAuthenticationFailureFilter");
 		}
 		
 		//DefaultUserInfoFilter
 		if(isUserInfoPageEnabled) {
 			// implements own "security"
 			http.addFilterBefore(new DefaultUserInfoFilter(sP.getUserInfoPagePath()), FilterSecurityInterceptor.class);
+			logger.info("DefaultUserInfoFilter");
 		}
 		
 	}

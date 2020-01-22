@@ -1,5 +1,7 @@
 package com.ppublica.shopify.security.configurer.delegates;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.security.config.annotation.web.HttpSecurityBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.CsrfConfigurer;
@@ -14,7 +16,8 @@ import org.springframework.security.web.csrf.CsrfTokenRepository;
  *
  */
 public class ShopifyCsrf implements HttpSecurityBuilderConfigurerDelegate {
-	
+	private final Log logger = LogFactory.getLog(ShopifyCsrf.class);
+
 	private String uninstallUri;
 	private CsrfTokenRepository csrfTokenRepo;
 	
@@ -44,6 +47,8 @@ public class ShopifyCsrf implements HttpSecurityBuilderConfigurerDelegate {
 	@SuppressWarnings("unchecked")
 	@Override
 	public void applyShopifyInit(HttpSecurityBuilder<?> http) {
+		logger.debug("Applying ShopifyCsrf init");
+		
 		CsrfConfigurer<HttpSecurity> configurer = new CsrfConfigurer<HttpSecurity>(null);		
 		
 		configurer = http.getConfigurer(configurer.getClass());

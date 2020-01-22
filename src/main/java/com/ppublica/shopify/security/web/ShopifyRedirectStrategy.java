@@ -5,6 +5,8 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.web.DefaultRedirectStrategy;
@@ -21,6 +23,8 @@ import org.springframework.web.util.UriComponentsBuilder;
  * @see DefaultRedirectStrategy
  */
 public class ShopifyRedirectStrategy extends DefaultRedirectStrategy {
+	private final Log logger = LogFactory.getLog(ShopifyRedirectStrategy.class);
+	
 	public final String I_FRAME_REDIRECT_URI = "/oauth/authorize";
 	private final String STATE = OAuth2ParameterNames.STATE;
 	private final String SCOPE = OAuth2ParameterNames.SCOPE;
@@ -41,8 +45,13 @@ public class ShopifyRedirectStrategy extends DefaultRedirectStrategy {
 		
 		// "template" already properly filled in with shop name
 		String authorizationUri = authorizationRequest.getAuthorizationUri();
-
+		
 		String parentFrameRedirectUrl = super.calculateRedirectUrl(request.getContextPath(), authorizationUri);
+		
+		if(logger.isDebugEnabled()) {
+			logger.debug("Generated redirect authorization uri: " + authorizationUri);
+			logger.debug("... and from parent: " + parentFrameRedirectUrl);
+		}
 		
 		request.setAttribute(I_FRAME_AUTHENTICATION_URI_KEY, addRedirectParams(I_FRAME_REDIRECT_URI, authorizationRequest));
 		request.setAttribute(PARENT_AUTHENTICATION_URI_KEY, addRedirectParams(parentFrameRedirectUrl, authorizationRequest));
@@ -95,8 +104,6 @@ public class ShopifyRedirectStrategy extends DefaultRedirectStrategy {
 						builder.append(e);
 						builder.append(",");
 					});
-		
-		
 		
 		return builder.substring(0, builder.length() - 1);
 	}

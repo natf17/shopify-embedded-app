@@ -11,6 +11,8 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.server.ServletServerHttpRequest;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
@@ -31,7 +33,8 @@ import com.ppublica.shopify.security.configuration.SecurityBeansConfig;
  *
  */
 public class UninstallFilter implements Filter {
-	
+	private final Log logger = LogFactory.getLog(UninstallFilter.class);
+
 	private AntPathRequestMatcher matcher;
 	private ShopifyVerificationStrategy verificationStrategy;
 	private OAuth2AuthorizedClientService clientService;
@@ -75,13 +78,15 @@ public class UninstallFilter implements Filter {
 			chain.doFilter(req, response);
 			return;
 		}
-		
+				
 		if(this.verificationStrategy.isHeaderShopifyRequest(req, REGISTRATION_ID)) {
+			logger.info("Store uninstallation request received");
+
 			doUninstall(req, resp);
 			
 			return;
 		}
-		
+				
 		uninstallFailure(req, resp);
 		
 		return;
@@ -118,6 +123,7 @@ public class UninstallFilter implements Filter {
 		String storeName = body.getShop_domain();
 
 		if(storeName == null || storeName.isEmpty()) {
+			logger.debug("No shop_domain found in body");
 			uninstallFailure(request, response);
 			return;
 		}
@@ -144,6 +150,7 @@ public class UninstallFilter implements Filter {
 	 * @throws IOException Unable to send an error 
 	 */
 	protected void uninstallFailure(HttpServletRequest req, HttpServletResponse resp) throws IOException{
+		logger.debug("Store uninstallation request failed");
 
 		resp.sendError(403, "This request must come from Shopify");
 	}

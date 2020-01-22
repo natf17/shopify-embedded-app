@@ -16,6 +16,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -58,6 +60,8 @@ import com.ppublica.shopify.security.authentication.ShopifyVerificationStrategy;
  * @see com.ppublica.shopify.security.authentication.ShopifyVerificationStrategy
  */
 public class ShopifyOriginFilter implements Filter {
+	private final Log logger = LogFactory.getLog(ShopifyOriginFilter.class);
+
 	private AntPathRequestMatcher mustComeFromShopifyMatcher;
 	private List<AntPathRequestMatcher> applicablePaths;
 	private ShopifyVerificationStrategy shopifyVerificationStrategy;
@@ -116,12 +120,20 @@ public class ShopifyOriginFilter implements Filter {
 			return;
 		}
 		
+		logger.debug("ShopifyOriginFilter applied");
+		
 		// this filter will be applied
 		mustBeFromShopify = mustComeFromShopifyMatcher.matches((HttpServletRequest)request);
 
 		comesFromShopify = isShopifyRequest(request);
 
 		isAlreadyAuthenticated = isAlreadyAuthenticated();
+		
+		if(logger.isDebugEnabled()) {
+			logger.debug("Request from Shopify: " + comesFromShopify);
+			logger.debug("Request must be from Shopify: " + mustBeFromShopify);
+			logger.debug("Authenticated: " + isAlreadyAuthenticated);
+		}
 
 		if(mustBeFromShopify) {
 
@@ -140,6 +152,7 @@ public class ShopifyOriginFilter implements Filter {
 			if(comesFromShopify) {
 				setEmbeddedApp((HttpServletRequest)request);
 				if(!isAlreadyAuthenticated) {
+					logger.debug("Setting ShopifyOriginToken");
 					SecurityContextHolder.getContext().setAuthentication(new ShopifyOriginToken());
 					
 				}
@@ -198,6 +211,8 @@ public class ShopifyOriginFilter implements Filter {
 	}
 	
 	private void setEmbeddedApp(HttpServletRequest req) {
+		logger.debug("Setting embedded app attribute");
+
 		HttpSession session = req.getSession(false);
 		if(session != null) {
 			session.setAttribute(SHOPIFY_EMBEDDED_APP, true);
@@ -205,6 +220,8 @@ public class ShopifyOriginFilter implements Filter {
 	}
 	
 	private void removeEmbeddedApp(HttpServletRequest req) {
+		logger.debug("Removing embedded app attribute");
+
 		HttpSession session = req.getSession(false);
 		if(session != null) {
 			session.removeAttribute(SHOPIFY_EMBEDDED_APP);

@@ -3,6 +3,12 @@ package com.ppublica.shopify.security.configurer.delegates;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrlPattern;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -11,6 +17,7 @@ import javax.servlet.Filter;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +48,15 @@ public class ShopifyLogoutTests {
 	Filter springSecurityFilterChain;
 	
 	MockMvc mockMvc;
+	
+	@BeforeClass
+	public static void testSetup() {
+		Logger logger = Logger.getLogger(ShopifyLogout.class.getName());
+		logger.setLevel(Level.FINE);
+		Handler handler = new ConsoleHandler();
+		handler.setLevel(Level.FINE);
+		logger.addHandler(handler);
+	}
 	
 	@Before
 	public void setup() throws Exception {
@@ -87,7 +103,7 @@ public class ShopifyLogoutTests {
 	
 	@EnableWebSecurity
 	static class ApplyCsrfSecurityConfig extends WebSecurityConfigurerAdapter {
-		
+		ShopifyLogout logout = new ShopifyLogout("/customLogin", "/customLogout");
 		// disable defaults to prevent configurer in spring.factories from being applied
 		public ApplyCsrfSecurityConfig() {
 			super(true);
@@ -114,11 +130,11 @@ public class ShopifyLogoutTests {
 			http.apply(new ShopifySecurityConfigurer<HttpSecurity>() {
 				@Override
 				public void init (HttpSecurity http) {
-					new ShopifyLogout("/customLogin", "/customLogout").applyShopifyInit(http);
+					logout.applyShopifyInit(http);
 				}
 				@Override
 				public void configure(HttpSecurity http) {
-					new ShopifyLogout("/customLogin", "/customLogout").applyShopifyConfig(http);
+					logout.applyShopifyConfig(http);
 				}
 
 			});

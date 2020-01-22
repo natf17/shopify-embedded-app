@@ -2,6 +2,7 @@ package com.ppublica.shopify.security.web;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.security.core.context.SecurityContext;
@@ -22,6 +23,12 @@ import org.junit.Assert;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 
@@ -32,6 +39,15 @@ public class ShopifyOAuth2AuthorizationRequestResolverTests {
 	ShopifyHttpSessionOAuth2AuthorizationRequestRepository customAuthorizationRequestRepository;
 	String authorizationRequestBaseUri = "/install";
 	String loginUri = "/init";
+	
+	@BeforeClass
+	public static void testSetup() {
+		Logger logger = Logger.getLogger(ShopifyOAuth2AuthorizationRequestResolver.class.getName());
+		logger.setLevel(Level.FINE);
+		Handler handler = new ConsoleHandler();
+		handler.setLevel(Level.FINE);
+		logger.addHandler(handler);
+	}
 	
 	@Before
 	public void setup() {

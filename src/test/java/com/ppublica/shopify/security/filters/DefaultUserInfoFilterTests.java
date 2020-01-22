@@ -3,6 +3,12 @@ package com.ppublica.shopify.security.filters;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.never;
 
@@ -14,6 +20,7 @@ import javax.servlet.http.HttpSession;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -27,6 +34,15 @@ public class DefaultUserInfoFilterTests {
 	
 	String pathToFilter = "/info";
 	DefaultUserInfoFilter filter;
+	
+	@BeforeClass
+	public static void testSetup() {
+		Logger logger = Logger.getLogger(DefaultUserInfoFilter.class.getName());
+		logger.setLevel(Level.FINE);
+		Handler handler = new ConsoleHandler();
+		handler.setLevel(Level.FINE);
+		logger.addHandler(handler);
+	}
 	
 	@Before
 	public void setup() {

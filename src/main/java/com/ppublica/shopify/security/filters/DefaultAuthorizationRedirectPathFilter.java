@@ -13,6 +13,9 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 
 /**
  * This filter generates an HTML page that is seen after successful completion of OAuth2 authorization with
@@ -29,7 +32,8 @@ import javax.servlet.http.HttpServletResponse;
  * 
  */
 public class DefaultAuthorizationRedirectPathFilter implements Filter {
-	
+	private final Log logger = LogFactory.getLog(DefaultAuthorizationRedirectPathFilter.class);
+
 	Map<String, String> menuLinks;
 	private String authorizationRedirectPath;
 	
@@ -62,7 +66,8 @@ public class DefaultAuthorizationRedirectPathFilter implements Filter {
 		HttpServletResponse response = (HttpServletResponse) res;
 
 		if(isAuthorizationRedirectRequest(request)) {
-
+			logger.debug("Generating successful authorization page");
+			
 			String bodyHtml = generateAuthorizationRedirectPageHtml((HttpServletRequest)request);
 			response.setContentType("text/html;charset=UTF-8");
 			response.setContentLength(bodyHtml.getBytes(StandardCharsets.UTF_8).length);

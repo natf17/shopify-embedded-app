@@ -2,9 +2,15 @@ package com.ppublica.shopify.security.configuration;
 
 import static org.mockito.Mockito.mock;
 
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -37,6 +43,15 @@ import com.ppublica.shopify.security.web.ShopifyHttpSessionOAuth2AuthorizationRe
 public class SecurityBeansConfigTests {
 	
 	private AnnotationConfigWebApplicationContext ctx;
+	
+	@BeforeClass
+	public static void testSetup() {
+		Logger logger = Logger.getLogger(SecurityBeansConfig.class.getName());
+		logger.setLevel(Level.FINE);
+		Handler handler = new ConsoleHandler();
+		handler.setLevel(Level.FINE);
+		logger.addHandler(handler);
+	}
 	
 	@Before
 	public void setup() {

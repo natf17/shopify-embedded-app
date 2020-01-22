@@ -1,5 +1,7 @@
 package com.ppublica.shopify.security.service;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.security.crypto.encrypt.Encryptors;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
 import org.springframework.security.crypto.keygen.KeyGenerators;
@@ -20,6 +22,7 @@ import com.ppublica.shopify.security.repository.TokenRepository;
  * @see ShopifyOAuth2AuthorizedClientService
  */
 public class TokenService {
+	private final Log logger = LogFactory.getLog(TokenService.class);
 	
 	/**
 	 * The parameter name that holds the shop domain in a request to the "installation" path.
@@ -57,7 +60,7 @@ public class TokenService {
 		EncryptedTokenAndSalt encryptedTokenAndSalt = getTokenAndSalt(authorizedClient);
 
 		PersistedStoreAccessToken token = persistedAccessTokenUtility.fromAuthenticationObjectsToPersistedStoreAccessToken(authorizedClient, principal, encryptedTokenAndSalt);
-		
+				
 		this.tokenRepository.saveNewStore(token);
 		
 	}
@@ -99,7 +102,7 @@ public class TokenService {
 		DecryptedTokenAndSalt decryptedTokenAndSalt = getRawToken(ets);
 		
 		if(decryptedTokenAndSalt == null) {
-			// the salt and encrypted passwords are out of date
+			logger.info("The salt and encrypted passwords are out of date/corrupted");
 			return null;
 		}
 		

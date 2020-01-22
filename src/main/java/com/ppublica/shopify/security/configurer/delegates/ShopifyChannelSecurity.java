@@ -1,5 +1,7 @@
 package com.ppublica.shopify.security.configurer.delegates;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.security.config.annotation.web.HttpSecurityBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.ChannelSecurityConfigurer;
@@ -13,6 +15,7 @@ import org.springframework.security.config.annotation.web.configurers.ChannelSec
  *
  */
 public class ShopifyChannelSecurity implements HttpSecurityBuilderConfigurerDelegate {
+	private final Log logger = LogFactory.getLog(ShopifyChannelSecurity.class);
 
 	/**
 	 * The ChannelSecurityConfigurer is set to require a secure connection for all paths.
@@ -22,6 +25,7 @@ public class ShopifyChannelSecurity implements HttpSecurityBuilderConfigurerDele
 	@SuppressWarnings("unchecked")
 	@Override
 	public void applyShopifyConfig(HttpSecurityBuilder<?> http) {
+		logger.debug("Applying ShopifyChannelSecurity config");
 		ChannelSecurityConfigurer<HttpSecurity> configurer = new ChannelSecurityConfigurer<HttpSecurity>(null);		
 		
 		configurer = http.getConfigurer(configurer.getClass());

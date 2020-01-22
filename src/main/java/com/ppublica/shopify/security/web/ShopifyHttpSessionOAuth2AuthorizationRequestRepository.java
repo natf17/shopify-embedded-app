@@ -6,6 +6,8 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.security.oauth2.client.web.HttpSessionOAuth2AuthorizationRequestRepository;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
@@ -35,6 +37,8 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
  * @see com.ppublica.shopify.security.authentication.ShopifyVerificationStrategy
  */
 public class ShopifyHttpSessionOAuth2AuthorizationRequestRepository {
+	private final Log logger = LogFactory.getLog(ShopifyHttpSessionOAuth2AuthorizationRequestRepository.class);
+
 	public static final String DEFAULT_AUTHORIZATION_REQUEST_ATTR_NAME =
 			HttpSessionOAuth2AuthorizationRequestRepository.class.getName() +  ".AUTHORIZATION_REQUEST";
 	
@@ -65,6 +69,8 @@ public class ShopifyHttpSessionOAuth2AuthorizationRequestRepository {
 		}		
 		
 		authorizationRequests.put(state, authorizationRequest);
+		
+		logger.debug("OAuth2AuthorizationRequest saved in HttpSession");
 
 		request.getSession().setAttribute(DEFAULT_AUTHORIZATION_REQUEST_ATTR_NAME, authorizationRequests);
 
@@ -82,6 +88,7 @@ public class ShopifyHttpSessionOAuth2AuthorizationRequestRepository {
 		Map<String, OAuth2AuthorizationRequest> authorizationRequests = session == null ? null :
 				(Map<String, OAuth2AuthorizationRequest>) session.getAttribute(DEFAULT_AUTHORIZATION_REQUEST_ATTR_NAME);
 		if (authorizationRequests == null) {
+			logger.debug("No OAuth2AuthorizationRequest map found in HttpSession");
 			return new HashMap<>();
 		}
 		return authorizationRequests;
@@ -95,7 +102,6 @@ public class ShopifyHttpSessionOAuth2AuthorizationRequestRepository {
 	 * @return the first OAuth2AuthorizationRequest
 	 */
 	public OAuth2AuthorizationRequest getAnAuthorizationRequest(HttpServletRequest request) {
-		
 		Map<String, OAuth2AuthorizationRequest> reqs = this.getAuthorizationRequests(request);
 				
 		if(reqs.size() < 1) {
@@ -121,13 +127,16 @@ public class ShopifyHttpSessionOAuth2AuthorizationRequestRepository {
 	 * @return the registration id
 	 */
 	public String extractRegistrationId(HttpServletRequest request) {
-		
 		String registrationId;
 		
 		if (this.installPathRequestMatcher.matches(request)) {
 			registrationId = this.installPathRequestMatcher.matcher(request).getVariables().get(REGISTRATION_ID_URI_VARIABLE_NAME);
 		} else {
 			registrationId = null;
+		}
+		
+		if(logger.isDebugEnabled()) {
+			logger.debug("Extracted registration id: " + registrationId);
 		}
 
 		return registrationId;

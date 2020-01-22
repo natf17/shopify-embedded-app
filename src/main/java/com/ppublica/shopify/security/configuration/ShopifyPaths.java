@@ -3,6 +3,9 @@ package com.ppublica.shopify.security.configuration;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 /* 
  * 
  */
@@ -14,7 +17,8 @@ import java.util.Map;
  *
  */
 public class ShopifyPaths {
-	
+	private final Log logger = LogFactory.getLog(ShopifyPaths.class);
+
 	private String installPath = "/install";
 	private String anyInstallPath = "/install/**";
 	private String authorizationRedirectPath = "/login/app/oauth2/code";
@@ -100,6 +104,19 @@ public class ShopifyPaths {
 		this.menuLinks = new LinkedHashMap<>();
 		if(menuLinks != null && !menuLinks.trim().isEmpty()) {
 			this.menuLinks.putAll(processMenuLinks(menuLinks));
+		}
+		
+		if(logger.isDebugEnabled()) {
+			logger.debug("***ShopifyPaths using: ***");
+			logger.debug("Installation:           " + installPath);
+			logger.debug("Authorization redirect: " + authorizationRedirectPath);
+			logger.debug("Login:                  " + loginEndpoint);
+			logger.debug("Logout:                 " + logoutEndpoint);
+			logger.debug("Authentication failure: " + authenticationFailureUri);
+			logger.debug("Uninstallation path:    " + uninstallUri);
+			logger.debug("Should enable app info: " + isUserInfoPageEnabled);
+			logger.debug("Menu link:              " + menuLinks);
+
 		}
 	}
 	

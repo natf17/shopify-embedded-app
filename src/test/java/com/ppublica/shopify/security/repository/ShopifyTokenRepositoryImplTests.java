@@ -3,10 +3,15 @@ package com.ppublica.shopify.security.repository;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -24,6 +29,15 @@ public class ShopifyTokenRepositoryImplTests {
 	String salt = "salt";
 	String shop = "lmdev.myshopify.com";
 	String scope = "read_products,write_products";
+	
+	@BeforeClass
+	public static void testSetup() {
+		Logger logger = Logger.getLogger(ShopifyTokenRepositoryImpl.class.getName());
+		logger.setLevel(Level.FINE);
+		Handler handler = new ConsoleHandler();
+		handler.setLevel(Level.FINE);
+		logger.addHandler(handler);
+	}
 	
 	@Before
 	public void setup() {

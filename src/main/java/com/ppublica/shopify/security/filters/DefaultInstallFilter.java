@@ -13,6 +13,8 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
@@ -30,6 +32,7 @@ import org.springframework.security.oauth2.client.authentication.OAuth2Authentic
  * @see com.ppublica.shopify.security.web.ShopifyRedirectStrategy
  */
 public class DefaultInstallFilter implements Filter {
+	private final Log logger = LogFactory.getLog(DefaultInstallFilter.class);
 	
 	public static String PARENT_AUTHENTICATION_URI = "PARENT_AUTHENTICATION_URI";
 	
@@ -71,6 +74,8 @@ public class DefaultInstallFilter implements Filter {
 		HttpServletResponse response = (HttpServletResponse) res;
 		
 		if(isInstallRequest(request)) {
+			logger.info("Generating default installation page");
+			
 			String bodyHtml = generateInstallPageHtml((HttpServletRequest)request);
 			response.setContentType("text/html;charset=UTF-8");
 			response.setContentLength(bodyHtml.getBytes(StandardCharsets.UTF_8).length);

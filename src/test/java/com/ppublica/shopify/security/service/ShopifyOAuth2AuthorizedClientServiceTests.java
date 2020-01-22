@@ -4,7 +4,13 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
@@ -13,6 +19,15 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 
 
 public class ShopifyOAuth2AuthorizedClientServiceTests {
+	
+	@BeforeClass
+	public static void testSetup() {
+		Logger logger = Logger.getLogger(ShopifyOAuth2AuthorizedClientService.class.getName());
+		logger.setLevel(Level.FINE);
+		Handler handler = new ConsoleHandler();
+		handler.setLevel(Level.FINE);
+		logger.addHandler(handler);
+	}
 	
 	@Test
 	public void loadAuthorizedClientWhenStoreExistsReturnsStore() {

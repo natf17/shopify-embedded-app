@@ -1,5 +1,7 @@
 package com.ppublica.shopify.security.configuration;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -99,7 +101,8 @@ import com.ppublica.shopify.security.repository.TokenRepository;
  */
 @Configuration
 public class SecurityBeansConfig {
-	
+	private final Log logger = LogFactory.getLog(SecurityBeansConfig.class);
+
 	public static final String SHOPIFY_REGISTRATION_ID = "shopify";
 	
 	
@@ -121,6 +124,18 @@ public class SecurityBeansConfig {
 							  @Value("${ppublica.shopify.security.endpoints.enable-default-info-page:}") String enableDefaultInfoPage,
 							  @Value("${ppublica.shopify.security.endpoints.menu-link:}") String menuLink) {
 		
+		if(logger.isDebugEnabled()) {
+			logger.debug("***Paths read from environment: ***");
+			logger.debug("Installation:           " + installPath);
+			logger.debug("Authorization redirect: " + authorizationRedirectPath);
+			logger.debug("Login:                  " + loginEndpoint);
+			logger.debug("Logout:                 " + logoutEndpoint);
+			logger.debug("Authentication failure: " + authenticationFailureUri);
+			logger.debug("Uninstallation path:    " + uninstallUri);
+			logger.debug("Should enable app info: " + enableDefaultInfoPage);
+			logger.debug("Menu link:              " + menuLink);
+
+		}
 		boolean enableDefaultInfo = false;
 		if(enableDefaultInfoPage != null) {
 			enableDefaultInfo = Boolean.parseBoolean(enableDefaultInfoPage);

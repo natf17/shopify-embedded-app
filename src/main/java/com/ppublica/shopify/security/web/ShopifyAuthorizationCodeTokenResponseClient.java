@@ -4,6 +4,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.http.converter.FormHttpMessageConverter;
 import org.springframework.security.oauth2.client.endpoint.DefaultAuthorizationCodeTokenResponseClient;
 import org.springframework.security.oauth2.client.endpoint.OAuth2AccessTokenResponseClient;
@@ -50,7 +52,8 @@ import com.ppublica.shopify.security.converter.ShopifyOAuth2AccessTokenResponseC
  * 
  */
 public class ShopifyAuthorizationCodeTokenResponseClient implements OAuth2AccessTokenResponseClient<OAuth2AuthorizationCodeGrantRequest> {
-	
+	private final Log logger = LogFactory.getLog(ShopifyAuthorizationCodeTokenResponseClient.class);
+
 	private DefaultAuthorizationCodeTokenResponseClient oAuth2AccessTokenResponseClient;
 	
 	
@@ -108,7 +111,11 @@ public class ShopifyAuthorizationCodeTokenResponseClient implements OAuth2Access
 		
 		OAuth2AuthorizationCodeGrantRequest newGrantReq = new OAuth2AuthorizationCodeGrantRequest(newClientRegistration, currentExchange);
 
+		logger.debug("Exchanging code for token with Shopify");
+
 		OAuth2AccessTokenResponse resp = oAuth2AccessTokenResponseClient.getTokenResponse(newGrantReq);
+		
+		logger.debug("Obtained Shopify response for token");
 
 		Map<String, Object> newAdditionalParameters = new HashMap<>();
 		

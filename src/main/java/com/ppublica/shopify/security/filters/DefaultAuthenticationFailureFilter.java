@@ -12,6 +12,9 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 /**
  * A filter that generates the page shown whenever an error occurs during authentication. THe user is redirected 
  * to this uri, and this filter processes it.
@@ -21,7 +24,8 @@ import javax.servlet.http.HttpServletResponse;
  * @see com.ppublica.shopify.security.configurer.ShopifySecurityConfigurer
  */
 public class DefaultAuthenticationFailureFilter implements Filter {
-	
+	private final Log logger = LogFactory.getLog(DefaultAuthenticationFailureFilter.class);
+
 	private String authenticationFailurePath;
 	
 	public DefaultAuthenticationFailureFilter(String authenticationFailurePath) {
@@ -45,6 +49,8 @@ public class DefaultAuthenticationFailureFilter implements Filter {
 		HttpServletResponse response = (HttpServletResponse) res;
 		
 		if(isAuthenticationFailureRequest(request)) {
+			logger.debug("Generating the default authentication failure page");
+			
 			String bodyHtml = generateAuthorizationFailurePageHtml((HttpServletRequest)request);
 			response.setContentType("text/html;charset=UTF-8");
 			response.setContentLength(bodyHtml.getBytes(StandardCharsets.UTF_8).length);

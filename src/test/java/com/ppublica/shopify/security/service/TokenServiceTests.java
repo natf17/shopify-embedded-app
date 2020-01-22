@@ -10,9 +10,14 @@ import static org.mockito.Mockito.never;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
@@ -40,6 +45,14 @@ public class TokenServiceTests {
 	ClientRegistration clientRegistration;
 	Collection <? extends GrantedAuthority> authorities;
 	
+	@BeforeClass
+	public static void testSetup() {
+		Logger logger = Logger.getLogger(TokenService.class.getName());
+		logger.setLevel(Level.FINE);
+		Handler handler = new ConsoleHandler();
+		handler.setLevel(Level.FINE);
+		logger.addHandler(handler);
+	}
 	
 	@Before
 	public void setup() {

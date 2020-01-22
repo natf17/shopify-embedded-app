@@ -1,5 +1,7 @@
 package com.ppublica.shopify.security.service;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
@@ -30,7 +32,8 @@ import org.springframework.security.oauth2.client.authentication.OAuth2Authentic
  * 
  */
 public class ShopifyOAuth2AuthorizedClientService implements OAuth2AuthorizedClientService {
-	
+	private final Log logger = LogFactory.getLog(ShopifyOAuth2AuthorizedClientService.class);
+
 	private TokenService tokenService;
 	
 	public ShopifyOAuth2AuthorizedClientService(TokenService tokenService) {
@@ -83,8 +86,11 @@ public class ShopifyOAuth2AuthorizedClientService implements OAuth2AuthorizedCli
 
 		if(doesStoreExist) {
 			tokenService.updateStore(authorizedClient, pr);
+			logger.info("Successfully updated store " + shop);
+
 		} else {
 			tokenService.saveNewStore(authorizedClient, pr);
+			logger.info("Successfully saved store " + shop);
 
 		}
 	
@@ -100,7 +106,8 @@ public class ShopifyOAuth2AuthorizedClientService implements OAuth2AuthorizedCli
 	@Override
 	public void removeAuthorizedClient(String clientRegistrationId, String principalName) {
 		tokenService.uninstallStore(principalName);
-		
+		logger.info("Successfully uninstalled store " + principalName);
+
 	}
 
 }

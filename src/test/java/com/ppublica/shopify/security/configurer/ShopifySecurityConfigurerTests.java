@@ -17,6 +17,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.ArgumentMatchers.any;
@@ -25,6 +29,7 @@ import static org.mockito.Mockito.mock;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -121,6 +126,16 @@ public class ShopifySecurityConfigurerTests {
 	private ShopifyHttpSessionOAuth2AuthorizationRequestRepository authorizationRequestRepository;
 
 	MockMvc mockMvc;
+	
+	@BeforeClass
+	public static void testSetup() {
+		Logger logger = Logger.getLogger("");
+		logger.setLevel(Level.FINE);
+		Handler handler = new ConsoleHandler();
+		handler.setLevel(Level.FINE);
+		logger.addHandler(handler);
+	}
+	
 
 	@Before
 	public void setup() throws Exception {
@@ -560,8 +575,8 @@ public class ShopifySecurityConfigurerTests {
 	static class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 		@Override
 		protected void configure(HttpSecurity http) throws Exception {
-			System.out.println("sec config");
-			/* minimum requirements... if not using defults:
+
+			/* minimum requirements... if not using defaults:
 			http.authorizeRequests()
 					.mvcMatchers(LOGIN_ENDPOINT).permitAll()
 					.mvcMatchers(ANY_INSTALL_PATH).permitAll()

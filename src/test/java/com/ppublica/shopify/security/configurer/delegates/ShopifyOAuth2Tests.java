@@ -5,6 +5,10 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -17,6 +21,7 @@ import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.http.HttpSession;
 
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,7 +51,6 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.web.context.WebApplicationContext;
-
 
 import com.ppublica.shopify.security.configurer.ShopifySecurityConfigurer;
 import com.ppublica.shopify.security.service.DefaultShopifyUserService;
@@ -78,6 +82,15 @@ public class ShopifyOAuth2Tests {
 	
 	@Autowired
 	DefaultShopifyUserService userService;
+	
+	@BeforeClass
+	public static void testSetup() {
+		Logger logger = Logger.getLogger(ShopifyOAuth2.class.getName());
+		logger.setLevel(Level.FINE);
+		Handler handler = new ConsoleHandler();
+		handler.setLevel(Level.FINE);
+		logger.addHandler(handler);
+	}
 	
 	/*
 	 * OAuth2AuthorizationRequestResolver:

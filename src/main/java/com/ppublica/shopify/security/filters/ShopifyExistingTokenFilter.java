@@ -8,6 +8,8 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
@@ -41,7 +43,8 @@ import com.ppublica.shopify.security.service.ShopifyStore;
  * @see com.ppublica.shopify.security.authentication.ShopifyVerificationStrategy
  */
 public class ShopifyExistingTokenFilter extends GenericFilterBean {
-	
+	private final Log logger = LogFactory.getLog(ShopifyExistingTokenFilter.class);
+
 	private OAuth2AuthorizedClientService clientService;
 	private AntPathRequestMatcher requestMatcher;
 	private static final String REGISTRATION_ID = SecurityBeansConfig.SHOPIFY_REGISTRATION_ID;
@@ -87,10 +90,9 @@ public class ShopifyExistingTokenFilter extends GenericFilterBean {
 		
 		if(auth != null && auth instanceof ShopifyOriginToken) {
 			// this request is to the installation path from an embedded app
-			
 			oauth2Token = this.getToken(req);
 			if(oauth2Token != null) {
-
+				logger.info("Store found! Setting OAuth2AuthenticationToken");
 				this.setToken(oauth2Token);
 			} else {
 				// If the store has not been installed, ShopifyOriginToken is still in the SecurityContextHolder
@@ -100,6 +102,7 @@ public class ShopifyExistingTokenFilter extends GenericFilterBean {
 			
 		} else {
 			// if there's no ShopifyOriginToken, leave whatever Authentication object is there
+			logger.debug("Authentication is not of type ShopifyOriginToken");
 		}
 		
 		chain.doFilter(request, response);
@@ -123,6 +126,7 @@ public class ShopifyExistingTokenFilter extends GenericFilterBean {
 		String shopName = request.getParameter(TokenService.SHOP_ATTRIBUTE_NAME);
 		
 		if(shopName == null || shopName.isEmpty()) {
+			logger.debug("Unable to find store. No shop name found in request parameters");
 			return null;
 		}
 		
@@ -131,6 +135,7 @@ public class ShopifyExistingTokenFilter extends GenericFilterBean {
 		
 		if(client == null) {
 			// this store "has not been installed", or salt and passwords are outdated
+			logger.info("The store " + shopName + " has not been installed.");
 			return null;
 		}
 

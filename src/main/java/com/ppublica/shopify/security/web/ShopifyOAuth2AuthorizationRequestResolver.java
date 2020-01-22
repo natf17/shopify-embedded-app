@@ -6,6 +6,8 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.keygen.Base64StringKeyGenerator;
 import org.springframework.security.crypto.keygen.StringKeyGenerator;
@@ -35,6 +37,8 @@ import com.ppublica.shopify.security.service.TokenService;
  * 
  */
 public class ShopifyOAuth2AuthorizationRequestResolver implements OAuth2AuthorizationRequestResolver {
+	private final Log logger = LogFactory.getLog(ShopifyOAuth2AuthorizationRequestResolver.class);
+
 	/**
 	 * The key to store the shop name as an additional parameter in OAuth2AuthorizationRequest.
 	 * It must match the template variable in ClientRegistration token_uri
@@ -119,13 +123,12 @@ public class ShopifyOAuth2AuthorizationRequestResolver implements OAuth2Authoriz
 		// extract the registrationId (ex: "shopify")
 		String registrationId;
 		
-		if (this.installPathRequestMatcher.matches(request)) {
+		if(this.installPathRequestMatcher.matches(request)) {
 			registrationId = this.installPathRequestMatcher
 					.matcher(request).getVariables().get(REGISTRATION_ID_URI_VARIABLE_NAME);
 
 			if(registrationId == null || registrationId.isEmpty()) {
-
-				throw new IllegalArgumentException("Invalid registration id");
+				throw new IllegalArgumentException("Registration id is required");
 			}
 		} else {
 			return null;
@@ -140,6 +143,7 @@ public class ShopifyOAuth2AuthorizationRequestResolver implements OAuth2Authoriz
 		if(shopName == null || shopName.isEmpty() || registrationId == null) {
 			// shop name is required, or registrationId
 			// trigger a redirect
+			logger.info("ShopifyOAuth2AuthorizationRequestResolver redirecting to login");
 			return redirectToLogin();
 		}
 		
@@ -163,6 +167,10 @@ public class ShopifyOAuth2AuthorizationRequestResolver implements OAuth2Authoriz
 		}
 		
 		String redirectUriStr = this.expandRedirectUri(request, clientRegistration);
+		
+		if(logger.isDebugEnabled()) {
+			logger.debug("Constructed the redirect uri string: " + redirectUriStr);
+		}
 		
 		Map<String, Object> additionalParameters = new HashMap<>();
 		additionalParameters.put(SHOPIFY_SHOP_PARAMETER_KEY_FOR_TOKEN, shopName);
@@ -190,15 +198,15 @@ public class ShopifyOAuth2AuthorizationRequestResolver implements OAuth2Authoriz
 	
 	
 	/**
-	 * Method called to handle a ClientAuthorizationRequiredException. OAuth2RequestRedirectFilter calls
-	 * this method to create a redirect uri to the authorization server. This scenario should never occur, 
+	 * Method called to handle a ClientAuthorizationRequiredException. OAuth2AuthorizationRequestRedirectFilter 
+	 * calls this method to create a redirect uri to the authorization server. This scenario should never occur, 
 	 * so it always returns null.
 	 * 
 	 * @return null
 	 */
 	@Override
 	public OAuth2AuthorizationRequest resolve(HttpServletRequest req, String registrationId) {
-
+		logger.debug("Called potentially to handle ClientAuthorizationRequiredException");
 		return null;
 	}
  
@@ -233,11 +241,18 @@ public class ShopifyOAuth2AuthorizationRequestResolver implements OAuth2Authoriz
 							.buildAndExpand(uriVariables)
 							.toUriString();
 
+		if(logger.isDebugEnabled()) {
+			logger.debug("Generated authorization uri: " + authorizationUri);
+		}
 		return authorizationUri;
 	}
 	
 	private String getShopName(HttpServletRequest request) {
 		String shopName = request.getParameter(TokenService.SHOP_ATTRIBUTE_NAME);
+		
+		if(logger.isDebugEnabled()) {
+			logger.debug("Resolved shop name from request: " + shopName);
+		}
 		
 		if(shopName == null || shopName.isEmpty()) {
 			return null;

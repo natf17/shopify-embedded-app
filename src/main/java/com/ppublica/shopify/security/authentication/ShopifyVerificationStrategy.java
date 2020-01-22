@@ -14,6 +14,8 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
@@ -36,6 +38,8 @@ import com.ppublica.shopify.security.web.ShopifyHttpSessionOAuth2AuthorizationRe
  * @see com.ppublica.shopify.security.filters.UninstallFilter
  */
 public class ShopifyVerificationStrategy {
+	private final Log logger = LogFactory.getLog(ShopifyVerificationStrategy.class);
+
 	public static final String NONCE_PARAMETER = OAuth2ParameterNames.STATE;
 	public static final String HMAC_PARAMETER = "hmac";
 	public static final String HMAC_HEADER = "X-Shopify-Hmac-SHA256";
@@ -71,6 +75,7 @@ public class ShopifyVerificationStrategy {
 		Map<String,String[]> requestParameters = this.getRequestParameters(request);
 				
 		if(requestParameters == null) {
+			logger.debug("No request parameters found");
 			return false;
 			
 		}
@@ -78,18 +83,21 @@ public class ShopifyVerificationStrategy {
 		String[] hmacValues = requestParameters.get(HMAC_PARAMETER);
 		
 		if(hmacValues == null || hmacValues.length != 1) {
+			logger.debug("No HMAC parameter found");
 			return false;
 		}
 		
 		String hmacValue = hmacValues[0];
 		
 		if(hmacValue.isEmpty()) {
+			logger.debug("HMAC parameter is empty");
 			return false;
 		}
 		
 		String secret = getClientSecret(request);
 		
 		if(!isShopifyQueryRequest(request.getQueryString(), hmacValue, secret)) {
+			logger.debug("url-decoding request query string");
 			// try again...
 			// sometimes the query string has been url encoded (by the server...?)
 			return isShopifyQueryRequest(UriUtils.decode(request.getQueryString(), StandardCharsets.UTF_8), hmacValue, secret);
@@ -107,7 +115,6 @@ public class ShopifyVerificationStrategy {
 	 * 4. If the hash equals the hmac value, the request came from Shopify.
 	 */
 	private boolean isShopifyQueryRequest(String rawQueryString, String hmac, String secret) {
-
 		String hmacQueryStringPiece = HMAC_PARAMETER + "=" + hmac + "&";
 
 		String processedQuery = rawQueryString.replaceFirst(Pattern.quote(hmacQueryStringPiece), "");
@@ -123,6 +130,7 @@ public class ShopifyVerificationStrategy {
 				// it should have been found because the hmac parameter should be from query string
 				// ... unless there is an encoding issue
 				// (hmac as it appears in query string is encoded, whereas in parameter map it is decoded
+				logger.debug("HMAC parameter not found in query string");
 				return false;
 
 			}
@@ -154,6 +162,7 @@ public class ShopifyVerificationStrategy {
 		String nonce = request.getParameter(NONCE_PARAMETER);
 		
 		if(nonce == null || nonce.isEmpty()) {
+			logger.debug("No NONCE parameter found");
 			return false;
 		}
 		
@@ -166,42 +175,17 @@ public class ShopifyVerificationStrategy {
 			
 			// try again...
 			// Url-decode the nonce:
+			logger.debug("url-decoding nonce");
 			nonce = UriUtils.decode(nonce, StandardCharsets.UTF_8);
 			if(authorizationRequests.keySet().contains(nonce)) {
 				return true;
 			}
 		}
 	
+		logger.debug("No matching OAuth2AuthorizationRequest found for the nonce");
 		return false;
 		
 	}
-	
-	/*
-	 * 
-	 * This method uses the HttpServletRequest to obtain the client secret to use.
-	 * 
-	 * 
-	 * Use the ShopifyHttpSessionOAuth2AuthorizationRequestRepository to get the OAuth2AuthorizationRequest 
-	 * for this request.
-	 * 
-	 * Method 1: no OAuth2AuthorizationRequest
-	 * 		- Use ShopifyHttpSessionOAuth2AuthorizationRequestRepository to extract the registrationId 
-	 * 		  from the request path
-	 * 		- Delegate to getClientSecretByRegistrationId(...) to search the ClientRegistrationRepository to get the 
-	 * 		  ClientRegistration that matches the registrationId and obtain the client secret
-	 * 
-	 * Method 2: OAuth2AuthorizationRequest found
-	 * 		- Obtain the clientId from the OAuth2AuthorizationRequest
-	 * 		- Search the ClientRegistrationRepository to get the 
-	 * 		  ClientRegistration that matches the clientId and obtain the client secret
-	 * 
-	 * 
-	 * "/install/**": uses method 1 because no OAuth2AuthorizationRequest exists yet. 
-	 * 				  (ShopifyOriginFilter is before OAuth2AuthorizationRequestRedirectFilter)
-	 * 
-	 * "/login/app/oauth2/code/**": uses method 2 because an OAuth2AuthorizationRequest has already been saved
-	 * 
-	 */
 	
 	/**
 	 * This method returns the client secret that matches this request. The client secret is obtained via 2 
@@ -242,6 +226,7 @@ public class ShopifyVerificationStrategy {
 		
 
 		if(authReq == null) {
+			logger.debug("Installation request? Obtaining client secret using reg. id ");
 			String registrationId = authReqRepository.extractRegistrationId(req);
 			if(registrationId == null) {
 				throw new RuntimeException("No registrationId found!");
@@ -250,6 +235,8 @@ public class ShopifyVerificationStrategy {
 			clientSecret = getClientSecretByRegistrationId(registrationId);
 			
 		} else {
+			logger.debug("Auth redirect request? Obtaining client secret from ClientRegistrationRepository");
+
 			clientId = authReq.getClientId();
 			
 			Iterator<ClientRegistration> it = ((InMemoryClientRegistrationRepository)clientRegistrationRepository).iterator();
@@ -269,6 +256,8 @@ public class ShopifyVerificationStrategy {
 			clientSecret = reg.getClientSecret();
 
 		}
+		
+		logger.debug("No client secret found");
 		
 		if(clientSecret == null) {
 			throw new RuntimeException("No client secret found");
@@ -329,9 +318,8 @@ public class ShopifyVerificationStrategy {
 
 		    hash = Hex.encodeHexString(sha256_HMAC.doFinal(message.getBytes("UTF-8")));
 		    
-		}
-		    catch (Exception e){
-		     throw new RuntimeException("Error hashing");
+		} catch (Exception e){
+		    throw new RuntimeException("Error hashing");
 		}
 		
 		return hash;
@@ -392,6 +380,7 @@ public class ShopifyVerificationStrategy {
 		String hmacValue = request.getHeader(HMAC_HEADER);
 		
 		if(hmacValue == null || hmacValue.isEmpty()) {
+			logger.debug("No HMAC header found");
 			return false;
 		}
 		

@@ -1,5 +1,7 @@
 package com.ppublica.shopify.security.configurer.delegates;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.security.config.annotation.web.HttpSecurityBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.LogoutConfigurer;
@@ -13,7 +15,8 @@ import org.springframework.security.config.annotation.web.configurers.LogoutConf
  *
  */
 public class ShopifyLogout implements HttpSecurityBuilderConfigurerDelegate {
-	
+	private final Log logger = LogFactory.getLog(ShopifyLogout.class);
+
 	private String loginEndpoint;
 	private String logoutEndpoint;
 	
@@ -39,6 +42,8 @@ public class ShopifyLogout implements HttpSecurityBuilderConfigurerDelegate {
 	@SuppressWarnings("unchecked")
 	@Override
 	public void applyShopifyInit(HttpSecurityBuilder<?> http) {
+		logger.debug("Applying ShopifyLogout init");
+		System.out.println("shouldve just logged");
 		LogoutConfigurer<HttpSecurity> configurer = new LogoutConfigurer<HttpSecurity>();		
 		
 		configurer = http.getConfigurer(configurer.getClass());

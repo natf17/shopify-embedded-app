@@ -3,9 +3,14 @@ package com.ppublica.shopify.security.web;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
@@ -15,6 +20,15 @@ public class ShopifyHttpSessionOAuth2AuthorizationRequestRepositoryTests {
 	OAuth2AuthorizationRequest authorizationRequest;
 	
 	ShopifyHttpSessionOAuth2AuthorizationRequestRepository authorizationRequestRepository;
+	
+	@BeforeClass
+	public static void testSetup() {
+		Logger logger = Logger.getLogger(ShopifyHttpSessionOAuth2AuthorizationRequestRepository.class.getName());
+		logger.setLevel(Level.FINE);
+		Handler handler = new ConsoleHandler();
+		handler.setLevel(Level.FINE);
+		logger.addHandler(handler);
+	}
 	
 	@Before
 	public void setup() {
@@ -101,7 +115,6 @@ public class ShopifyHttpSessionOAuth2AuthorizationRequestRepositoryTests {
 	}
 	
 	
-	
 	@Test
 	public void extractRegistrationIdWhenExistingReturnsId() {
 		
@@ -134,19 +147,6 @@ public class ShopifyHttpSessionOAuth2AuthorizationRequestRepositoryTests {
 		
 		Assert.assertNull(regId);
 		
-	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
+	}	
 	
 }

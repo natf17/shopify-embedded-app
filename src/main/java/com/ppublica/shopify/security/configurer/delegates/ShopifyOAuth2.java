@@ -1,5 +1,7 @@
 package com.ppublica.shopify.security.configurer.delegates;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.security.config.annotation.web.HttpSecurityBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.oauth2.client.OAuth2LoginConfigurer;
@@ -20,6 +22,7 @@ import com.ppublica.shopify.security.service.ShopifyBeansUtils;
  *
  */
 public class ShopifyOAuth2 implements HttpSecurityBuilderConfigurerDelegate {
+	private final Log logger = LogFactory.getLog(ShopifyOAuth2.class);
 	
 	private String anyAuthorizationRedirectPath;
 	private String loginEndpoint;
@@ -56,6 +59,7 @@ public class ShopifyOAuth2 implements HttpSecurityBuilderConfigurerDelegate {
 	@SuppressWarnings("unchecked")
 	@Override
 	public void applyShopifyInit(HttpSecurityBuilder<?> http) {
+		logger.debug("Applying ShopifyOAuth2 init");
 		OAuth2LoginConfigurer<HttpSecurity> configurer = new OAuth2LoginConfigurer<HttpSecurity>();		
 		
 		configurer = http.getConfigurer(configurer.getClass());

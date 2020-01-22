@@ -7,6 +7,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.security.core.Authentication;
 
 
@@ -18,6 +20,7 @@ import org.springframework.security.core.Authentication;
  * @see com.ppublica.shopify.security.configuration.SecurityBeansConfig
  */
 public class ForwardAuthorizationSuccessPageStrategy implements AuthorizationSuccessPageStrategy {
+	private final Log logger = LogFactory.getLog(ForwardAuthorizationSuccessPageStrategy.class);
 
 	private String forwardUri;
 	
@@ -39,6 +42,10 @@ public class ForwardAuthorizationSuccessPageStrategy implements AuthorizationSuc
 			Authentication authentication) throws IOException, ServletException {
 		RequestDispatcher rs = request.getRequestDispatcher(forwardUri);
 		
+		if(logger.isDebugEnabled()) {
+			logger.info("Forwarding to " + forwardUri);
+		}
+
 		rs.forward(request, response);
 		
 	}

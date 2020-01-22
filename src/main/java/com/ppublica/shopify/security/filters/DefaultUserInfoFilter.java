@@ -13,10 +13,13 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
+
 
 /**
  * This filter responds to the userInfoPath it's provided and displays some useful information about the app:
@@ -32,7 +35,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
  * @see com.ppublica.shopify.security.configurer.ShopifySecurityConfigurer
  */
 public class DefaultUserInfoFilter implements Filter {
-	
+	private final Log logger = LogFactory.getLog(DefaultUserInfoFilter.class);
 	
 	private String userInfoPathShopify;
 
@@ -63,6 +66,7 @@ public class DefaultUserInfoFilter implements Filter {
 		HttpServletResponse resp = (HttpServletResponse) response;
 		
 		if(isUserInfoRequest(req) && isAuthenticated()) {
+			logger.info("Generating default info page");
 			String bodyHtml = generateUserInfoPageHtml((HttpServletRequest)request);
 			resp.setContentType("text/html;charset=UTF-8");
 			resp.setContentLength(bodyHtml.getBytes(StandardCharsets.UTF_8).length);
