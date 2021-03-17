@@ -21,6 +21,7 @@ import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.http.HttpSession;
 
+import com.ppublica.shopify.security.configuration.ShopifyPaths;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -70,19 +71,25 @@ public class ShopifyOAuth2Tests {
 
 	@Autowired
 	Filter springSecurityFilterChain;
-	
+
 	@Autowired
 	OAuth2AuthorizationRequestResolver shopifyOAuth2AuthorizationRequestResolver;
-	
+
 	@Autowired
 	ShopifyAuthorizationCodeTokenResponseClient responseClient;
-	
+
 	@Autowired
 	NoRedirectSuccessHandler successHandler;
-	
+
 	@Autowired
 	DefaultShopifyUserService userService;
-	
+
+	@Autowired
+	ShopifyPaths shopifyPaths;
+
+	@Autowired
+	ClientRegistration clientRegistration;
+
 	@BeforeClass
 	public static void testSetup() {
 		Logger logger = Logger.getLogger(ShopifyOAuth2.class.getName());
@@ -91,11 +98,11 @@ public class ShopifyOAuth2Tests {
 		handler.setLevel(Level.FINE);
 		logger.addHandler(handler);
 	}
-	
+
 	/*
 	 * OAuth2AuthorizationRequestResolver:
 	 * If not explicitly set, OAuth2LoginConfigurer uses authorizationRequestBaseUri, or default uri to build a default.
-	 * 
+	 *
 	 * Assert: the configurer's is invoked.
 	 */
 	@Test
@@ -107,15 +114,15 @@ public class ShopifyOAuth2Tests {
 
 		springSecurityFilterChain.doFilter(req, resp, chain);
 		verify(shopifyOAuth2AuthorizationRequestResolver, times(1)).resolve(any());
-		
-		
+
+
 	}
 
-	
+
 	/*
 	 * OAuth2AccessTokenResponseClient<OAuth2AuthorizationCodeGrantRequest>:
 	 * If not explicitly set, OAuth2LoginConfigurer uses a default.
-	 * 
+	 *
 	 * Assert: the configurer's is invoked.
 	 */
 	@Test
@@ -128,13 +135,13 @@ public class ShopifyOAuth2Tests {
 		req.setParameter("state", "state-123");
 		MockHttpServletResponse resp = new MockHttpServletResponse();
 		FilterChain chain = mock(FilterChain.class);
-		
+
 		// add an OAuth2AuthorizationRequest to the session
-		Map<String, Object> additionalParameters = new HashMap<>();		
+		Map<String, Object> additionalParameters = new HashMap<>();
 		Map<String, Object> attributes = new HashMap<>();
 		attributes.put(OAuth2ParameterNames.REGISTRATION_ID, "shopify");
 
-		
+
 		Map<String, OAuth2AuthorizationRequest> authorizationRequests = new HashMap<>();
 		OAuth2AuthorizationRequest oAuthReq = OAuth2AuthorizationRequest.authorizationCode()
 											.clientId("client-id")
@@ -146,13 +153,13 @@ public class ShopifyOAuth2Tests {
 											.attributes(attributes)
 											.build();
 		authorizationRequests.put("state-123", oAuthReq);
-		
+
 		HttpSession mockSession = mock(HttpSession.class);
 		when(mockSession.getAttribute(HttpSessionOAuth2AuthorizationRequestRepository.class.getName() +  ".AUTHORIZATION_REQUEST")).thenReturn(authorizationRequests);
 		when(mockSession.getId()).thenReturn("val");
 
 		req.setSession(mockSession);
-		
+
 		try {
 			springSecurityFilterChain.doFilter(req, resp, chain);
 
@@ -160,14 +167,14 @@ public class ShopifyOAuth2Tests {
 
 		verify(mockSession, times(1)).getAttribute(HttpSessionOAuth2AuthorizationRequestRepository.class.getName() +  ".AUTHORIZATION_REQUEST");
 		verify(responseClient, times(1)).getTokenResponse(any());
-		
+
 	}
-	
-	
+
+
 	/*
 	 * AuthenticationSuccessHandler:
 	 * If not explicitly set, OAuth2LoginConfigurer uses the default SavedRequestAwareAuthenticationSuccessHandler.
-	 * 
+	 *
 	 * Assert: the configurer's is invoked.
 	 */
 	@Test
@@ -180,13 +187,13 @@ public class ShopifyOAuth2Tests {
 		req.setParameter("state", "state-123");
 		MockHttpServletResponse resp = new MockHttpServletResponse();
 		FilterChain chain = mock(FilterChain.class);
-		
+
 		// add an OAuth2AuthorizationRequest to the session
-		Map<String, Object> additionalParameters = new HashMap<>();		
+		Map<String, Object> additionalParameters = new HashMap<>();
 		Map<String, Object> attributes = new HashMap<>();
 		attributes.put(OAuth2ParameterNames.REGISTRATION_ID, "shopify");
 
-		
+
 		Map<String, OAuth2AuthorizationRequest> authorizationRequests = new HashMap<>();
 		OAuth2AuthorizationRequest oAuthReq = OAuth2AuthorizationRequest.authorizationCode()
 											.clientId("client-id")
@@ -198,28 +205,28 @@ public class ShopifyOAuth2Tests {
 											.attributes(attributes)
 											.build();
 		authorizationRequests.put("state-123", oAuthReq);
-		
+
 		HttpSession mockSession = mock(HttpSession.class);
 		when(mockSession.getAttribute(HttpSessionOAuth2AuthorizationRequestRepository.class.getName() +  ".AUTHORIZATION_REQUEST")).thenReturn(authorizationRequests);
 		when(mockSession.getId()).thenReturn("for_ChangeSessionIdAuthenticationStrategy");
 		req.setSession(mockSession);
-		
+
 		doReturn(getSampleOAuth2AccessTokenResponse()).when(responseClient).getTokenResponse(any());
 		doReturn(getSampleOAuth2User()).when(userService).loadUser(any());
-		
-		
+
+
 		springSecurityFilterChain.doFilter(req, resp, chain);
 
 		verify(userService, times(1)).loadUser(any());
 		verify(successHandler, times(1)).onAuthenticationSuccess(any(), any(), any());
-		
+
 	}
-	
-	
+
+
 	/*
 	 * OAuth2UserService<OAuth2UserRequest, OAuth2User>:
 	 * If not explicitly set, OAuth2LoginConfigurer searches for a bean.
-	 * 
+	 *
 	 * Assert: the configurer's is invoked.
 	 */
 	@Test
@@ -232,13 +239,13 @@ public class ShopifyOAuth2Tests {
 		req.setParameter("state", "state-123");
 		MockHttpServletResponse resp = new MockHttpServletResponse();
 		FilterChain chain = mock(FilterChain.class);
-		
+
 		// add an OAuth2AuthorizationRequest to the session
-		Map<String, Object> additionalParameters = new HashMap<>();		
+		Map<String, Object> additionalParameters = new HashMap<>();
 		Map<String, Object> attributes = new HashMap<>();
 		attributes.put(OAuth2ParameterNames.REGISTRATION_ID, "shopify");
 
-		
+
 		Map<String, OAuth2AuthorizationRequest> authorizationRequests = new HashMap<>();
 		OAuth2AuthorizationRequest oAuthReq = OAuth2AuthorizationRequest.authorizationCode()
 											.clientId("client-id")
@@ -250,27 +257,27 @@ public class ShopifyOAuth2Tests {
 											.attributes(attributes)
 											.build();
 		authorizationRequests.put("state-123", oAuthReq);
-		
+
 		HttpSession mockSession = mock(HttpSession.class);
 		when(mockSession.getAttribute(HttpSessionOAuth2AuthorizationRequestRepository.class.getName() +  ".AUTHORIZATION_REQUEST")).thenReturn(authorizationRequests);
-		
+
 		req.setSession(mockSession);
-		
+
 		doReturn(getSampleOAuth2AccessTokenResponse()).when(responseClient).getTokenResponse(any());
-		
+
 		try {
 			springSecurityFilterChain.doFilter(req, resp, chain);
 
 		} catch(NullPointerException exc) { }
 
 		verify(userService, times(1)).loadUser(any());
-		
+
 	}
-	
+
 	private OAuth2User getSampleOAuth2User() {
 		return new ShopifyStore("test-store","access-token", "api-key", null);
 	}
-	
+
 	private OAuth2AccessTokenResponse getSampleOAuth2AccessTokenResponse() {
 		Map<String, Object> additionalParameters = new LinkedHashMap<>();
 		additionalParameters.put(ShopifyOAuth2AuthorizationRequestResolver.SHOPIFY_SHOP_PARAMETER_KEY_FOR_TOKEN, "test-store");
@@ -283,19 +290,19 @@ public class ShopifyOAuth2Tests {
 				.additionalParameters(additionalParameters)
 				.build();
 	}
-	
+
 	@EnableWebSecurity
 	static class ApplyCsrfSecurityConfig extends WebSecurityConfigurerAdapter {
-		private final ShopifyOAuth2 conf = new ShopifyOAuth2("/login/app/oauth2/code/*", "/init", "/auth/error");
-		
+		private final ShopifyOAuth2 conf = new ShopifyOAuth2(shopifyPaths(), clientRegistration());
+
 		// disable defaults to prevent configurer in spring.factories from being applied
 		public ApplyCsrfSecurityConfig() {
 			super(true);
 		}
-		
+
 		@Override
 		protected void configure(HttpSecurity http) throws Exception {
-			
+
 			// applying the defaults that had been disabled
 			http
 				.csrf().and()
@@ -309,7 +316,7 @@ public class ShopifyOAuth2Tests {
 				.servletApi().and()
 				.apply(new DefaultLoginPageConfigurer<>()).and()
 				.logout();
-						
+
 			// apply an AbstractHttpConfigurer
 			http.apply(new ShopifySecurityConfigurer<HttpSecurity>() {
 				@Override
@@ -322,20 +329,20 @@ public class ShopifyOAuth2Tests {
 				}
 
 			});
-			
+
 			http.authorizeRequests()
 					.anyRequest().permitAll().and()
 				.oauth2Login().and()
 				.requiresChannel();
 		}
-		
+
 		/*
 		 * Beans picked up by ShopifyBeansUtils
 		 */
-		
+
 		@Bean
 		public ClientRegistrationRepository testRepo() {
-			ClientRegistration reg = 
+			ClientRegistration reg =
 					ClientRegistration.withRegistrationId("shopify")
             .clientId("client-id")
             .clientSecret("client-secret")
@@ -350,34 +357,43 @@ public class ShopifyOAuth2Tests {
 	        return new InMemoryClientRegistrationRepository(reg);
 
 		}
-		
+
 		@Bean
 		public ShopifyOAuth2AuthorizationRequestResolver shopifyOAuth2AuthorizationRequestResolver() {
 			return mock(ShopifyOAuth2AuthorizationRequestResolver.class);
 		}
-		
+
 		@Bean
 		public ShopifyAuthorizationCodeTokenResponseClient accessTokenResponseClient() {
 			return mock(ShopifyAuthorizationCodeTokenResponseClient.class);
 		}
-		
+
 		@Bean
 		public NoRedirectSuccessHandler successHandler() {
 			return mock(NoRedirectSuccessHandler.class);
 		}
-		
+
 		@Bean
 		public DefaultShopifyUserService userService() {
 			return mock(DefaultShopifyUserService.class);
 		}
-		
+
 		// picked up by OAuth2ClientConfigurerUtils
 		@Bean
 		public OAuth2AuthorizedClientService authorizedClientService() {
 			return mock(OAuth2AuthorizedClientService.class);
 		}
-		
-		
+
+		@Bean
+		public ShopifyPaths shopifyPaths() {
+			return mock(ShopifyPaths.class);
+		}
+
+		@Bean
+		public ClientRegistration clientRegistration() {
+			return mock(ClientRegistration.class);
+		}
+
 	}
-	
+
 }
