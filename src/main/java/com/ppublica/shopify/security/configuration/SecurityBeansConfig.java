@@ -1,22 +1,16 @@
 package com.ppublica.shopify.security.configuration;
 
 import com.ppublica.shopify.security.authentication.CipherPassword;
-import com.ppublica.shopify.security.authentication.ShopifyVerificationStrategy;
 import com.ppublica.shopify.security.configurer.delegates.*;
 import com.ppublica.shopify.security.repository.ShopifyTokenRepositoryImpl;
 import com.ppublica.shopify.security.repository.TokenRepository;
-import com.ppublica.shopify.security.service.ShopifyOAuth2AuthorizedClientService;
-import com.ppublica.shopify.security.service.TokenService;
-import com.ppublica.shopify.security.web.ShopifyHttpSessionOAuth2AuthorizationRequestRepository;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
-import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
@@ -125,7 +119,6 @@ public class SecurityBeansConfig {
 
 	}
 
-
 	@Bean
 	public CipherPassword cipherPassword(@Value("${ppublica.shopify.security.cipher.password:#{null}}") String password) {
 		if(password == null) {
@@ -164,24 +157,6 @@ public class SecurityBeansConfig {
             .clientName("Shopify")
             .build();
     }
-
-	@Bean
-	public TokenService tokenService(TokenRepository repo, CipherPassword cipherPassword, ClientRegistrationRepository clientRegistrationRepository) {
-		return new TokenService(repo, cipherPassword, clientRegistrationRepository);
-	}
-
-	// used by AuthenticatedPrincipalOAuth2AuthorizedClientRepository
-	@Bean
-	public OAuth2AuthorizedClientService clientService(TokenService tokenService) {
-		return new ShopifyOAuth2AuthorizedClientService(tokenService);
-	}
-
-	@Bean
-	public ShopifyVerificationStrategy shopifyVerficationStrategy(ClientRegistrationRepository clientRegistrationRepository,
-					ShopifyHttpSessionOAuth2AuthorizationRequestRepository customAuthorizationRequestRepository) {
-		return new ShopifyVerificationStrategy(clientRegistrationRepository, customAuthorizationRequestRepository);
-	}
-
 
 	@Bean
 	public CsrfTokenRepository csrfTokenRepository() {

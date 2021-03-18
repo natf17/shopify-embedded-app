@@ -5,11 +5,19 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.ppublica.shopify.security.authentication.CipherPassword;
+import com.ppublica.shopify.security.repository.TokenRepository;
+import com.ppublica.shopify.security.service.ShopifyOAuth2AuthorizedClientService;
+import com.ppublica.shopify.security.service.TokenService;
+import com.ppublica.shopify.security.web.ShopifyHttpSessionOAuth2AuthorizationRequestRepository;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.security.config.annotation.web.HttpSecurityBuilder;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
+import org.springframework.security.oauth2.client.registration.ClientRegistration;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestRedirectFilter;
 import org.springframework.security.web.access.intercept.FilterSecurityInterceptor;
 import org.springframework.security.web.authentication.logout.LogoutFilter;
@@ -30,20 +38,20 @@ import com.ppublica.shopify.security.service.ShopifyBeansUtils;
 
 
 /**
- * The main configurer that WebSecurityConfigurerAdapter finds and applies to HttoSecurity to connfigure it for 
+ * The main configurer that WebSecurityConfigurerAdapter finds and applies to HttoSecurity to connfigure it for
  * OAuth2 authorization with Shopify.
- * 
+ *
  * <p>By default, the WebSecurityConfigurerAdapter will look in spring.factories for AbstractHttpConfigurers to apply, where
- * it should find ShopifySecurityConfigurer. This configurer's init() and configure() methods will be invoked in the 
+ * it should find ShopifySecurityConfigurer. This configurer's init() and configure() methods will be invoked in the
  * following order:</p>
- * 
+ *
  * <ol>
  * <li>configurers WebSecurityConfigurerAdapter adds by default</li>
  * <li>ShopifySecurityConfigurer</li>
  * <li>configurers added in overridden configure(HttpSecurity) method</li>
  * </ol>
- * 
- * 
+ *
+ *
  * @author N F
  * @see com.ppublica.shopify.security.service.ShopifyBeansUtils
  *
@@ -53,10 +61,10 @@ public class ShopifySecurityConfigurer<H extends HttpSecurityBuilder<H>>
 	private final Log logger = LogFactory.getLog(ShopifySecurityConfigurer.class);
 
 	private final List<HttpSecurityBuilderConfigurerDelegate> shopifyConfigurers = new ArrayList<>();
-	
+
 	/**
 	 * Get all HttpSecurityBuilderConfigurerDelegate from ShopifyBeansUtils.
-	 * 
+	 *
 	 * @param http The HttpSecurity
 	 * @return a Map of HttpSecurityBuilderConfigurerDelegates
 	 */
@@ -66,23 +74,23 @@ public class ShopifySecurityConfigurer<H extends HttpSecurityBuilder<H>>
 
 	/**
 	 * Obtain all HttpSecurityBuilderConfigurerDelegate beans and allow each to initialize HttpSecurityBuilder
-	 * 
+	 *
 	 * @param http The HttpSecurity
 	 */
 	@Override
 	public void init(H http) {
 		Map<String, HttpSecurityBuilderConfigurerDelegate> dels = getBuilderDelegates(http);
-		
+
 		shopifyConfigurers.addAll(dels.values());
-		
+
 		if(logger.isDebugEnabled()) {
 			logger.info("***ShopifySecurityConfigurer init: " + dels.size() + "configurers found");
 		}
-		
+
 		for(HttpSecurityBuilderConfigurerDelegate del : shopifyConfigurers) {
 			del.applyShopifyInit(http);
 		}
-		
+
 	}
 
 	/**
@@ -92,30 +100,37 @@ public class ShopifySecurityConfigurer<H extends HttpSecurityBuilder<H>>
 	 * 	<li>ShopifyOriginFilter</li>
 	 * 	<li>ShopifyExistingTokenFilter</li>
 	 * 	<li>UninstallFilter</li>
-	 * 
+	 *
 	 *	<li>DefaultInstallFilter</li>
 	 *	<li>DefaultLoginEndpointFilter</li>
 	 * 	<li>DefaultAuthenticationFailureFilter</li>
 	 * 	<li>DefaultUserInfoFilter</li>
 	 * </ul>
-	 * 
+	 *
 	 * @param http The HttpSecurity
 	 */
 	@Override
 	public void configure(H http) {
-		
+
 		for(HttpSecurityBuilderConfigurerDelegate del : shopifyConfigurers) {
 			del.applyShopifyConfig(http);
 		}
-			
-		ShopifyVerificationStrategy verStr = ShopifyBeansUtils.getShopifyVerificationStrategy(http);
-		OAuth2AuthorizedClientService cS = ShopifyBeansUtils.getAuthorizedClientService(http);
+
+		ClientRegistration clientRegistration = ShopifyBeansUtils.getClientRegistration(http);
+		ClientRegistrationRepository clientRegistrationRepository = clientRegistrationRepository(clientRegistration);
 		ShopifyPaths sP = ShopifyBeansUtils.getShopifyPaths(http);
-		
+		ShopifyHttpSessionOAuth2AuthorizationRequestRepository sessionRepository = customAuthorizationRequestRepository(sP);
+		TokenRepository tokenRepository = ShopifyBeansUtils.getTokenRepository(http);
+		CipherPassword cipherPassword = ShopifyBeansUtils.getCipherPassword(http);
+		TokenService tokenService = tokenService(tokenRepository, cipherPassword, clientRegistrationRepository);
+
+		ShopifyVerificationStrategy verStr = shopifyVerficationStrategy(clientRegistrationRepository, sessionRepository);
+		OAuth2AuthorizedClientService cS = clientService(tokenService);
+
 		http.addFilterAfter(new ShopifyOriginFilter(verStr, sP.getAnyAuthorizationRedirectPath(), sP.getAnyInstallPath()), LogoutFilter.class);
 		http.addFilterAfter(new ShopifyExistingTokenFilter(cS, sP.getInstallPath()), ShopifyOriginFilter.class);
 		http.addFilterBefore(new UninstallFilter(sP.getUninstallUri(), verStr, cS, ShopifyBeansUtils.getJacksonConverter(http)), OAuth2AuthorizationRequestRedirectFilter.class);
-		
+
 		logger.info("***ShopifySecurityConfigurer configure... filters added:");
 		logger.info("ShopifyOriginFilter");
 		logger.info("ShopifyExistingTokenFilter");
@@ -135,27 +150,50 @@ public class ShopifySecurityConfigurer<H extends HttpSecurityBuilder<H>>
 			logger.info("DefaultInstallFilter");
 
 		}
-		
+
 		//DefaultLoginEndpointFilter
 		if(!isCustomLoginEndpoint) {
 			// since it doesn't modify the Authentication...
 			http.addFilterAfter(new DefaultLoginEndpointFilter(sP.getLoginEndpoint(), sP.getInstallPath(), sP.getLogoutEndpoint()), ConcurrentSessionFilter.class);
 			logger.info("DefaultLoginEndpointFilter");
 		}
-		
+
 		//DefaultAuthenticationFailureFilter
 		if(!isCustomAuthenticationFailurePage) {
 			http.addFilterAfter(new DefaultAuthenticationFailureFilter(sP.getAuthenticationFailureUri()), DefaultLogoutPageGeneratingFilter.class);
 			logger.info("DefaultAuthenticationFailureFilter");
 		}
-		
+
 		//DefaultUserInfoFilter
 		if(isUserInfoPageEnabled) {
 			// implements own "security"
 			http.addFilterBefore(new DefaultUserInfoFilter(sP.getUserInfoPagePath()), FilterSecurityInterceptor.class);
 			logger.info("DefaultUserInfoFilter");
 		}
-		
+
+	}
+
+	private ClientRegistrationRepository clientRegistrationRepository(ClientRegistration shopifyClientRegistration) {
+		return new InMemoryClientRegistrationRepository(shopifyClientRegistration);
+	}
+
+	private ShopifyHttpSessionOAuth2AuthorizationRequestRepository customAuthorizationRequestRepository(ShopifyPaths shopifyPaths) {
+		return new ShopifyHttpSessionOAuth2AuthorizationRequestRepository(shopifyPaths.getInstallPath());
+	}
+
+	private ShopifyVerificationStrategy shopifyVerficationStrategy(
+			ClientRegistrationRepository clientRegistrationRepository,
+			ShopifyHttpSessionOAuth2AuthorizationRequestRepository customAuthorizationRequestRepository
+	) {
+		return new ShopifyVerificationStrategy(clientRegistrationRepository, customAuthorizationRequestRepository);
+	}
+
+	private TokenService tokenService(TokenRepository repo, CipherPassword cipherPassword, ClientRegistrationRepository clientRegistrationRepository) {
+		return new TokenService(repo, cipherPassword, clientRegistrationRepository);
+	}
+
+	private OAuth2AuthorizedClientService clientService(TokenService tokenService) {
+		return new ShopifyOAuth2AuthorizedClientService(tokenService);
 	}
 
 }
