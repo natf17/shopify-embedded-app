@@ -1,6 +1,6 @@
 # This project replaces the shopify-spring-boot-embedded-app project
 
-This application enables any Spring web application with Spring Security to become a Shopify app and use Shopify's default OAuth offline access token.
+This application demonstrates how to build a Spring Boot backend with Spring Security that serves a Shopify embedded app.
 
 # Running the App
 
@@ -105,3 +105,14 @@ The following endpoints were registered:
 
 # Customize the default paths
 Coming soon!
+
+# How it works
+The following outlines how this project meets the Shopify requirements for app installation as described [here] (https://shopify.dev/docs/apps/build/authentication-authorization/access-tokens/authorization-code-grant):
+- We leverage Spring Security OAuth2 Client to perform the Authorization code grant flow and obtain the token upon installation
+  - Step 1: Verify the installation request: See ShopifyInstallationRequestFilter
+  - Step 2: Request authorization code: see ShopifyOAuth2AuthorizationRequestResolver
+  - Step 3: Validate authorization code: ShopifyOAuth2AuthorizationCodeGrantFilter 
+  - Step 4: Get an access token: ShopifyOAuth2AuthorizationCodeGrantFilter
+  - Step 5: Redirect to your app's UI: ShopifyOAuth2AuthorizationCodeGrantFilter
+
+- We leverage Spring Security OAuth2 Resource Server to validate the session token
