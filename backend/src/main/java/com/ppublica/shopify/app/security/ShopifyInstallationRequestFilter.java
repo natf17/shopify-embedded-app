@@ -9,8 +9,24 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 public class ShopifyInstallationRequestFilter extends OncePerRequestFilter {
+
+    private ShopifyOriginVerifier shopifyOriginVerifier;
+
     @Override
     protected void doFilterInternal(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, FilterChain filterChain) throws ServletException, IOException {
 
+        if(requiresVerification(httpServletRequest)) {
+            if(shopifyOriginVerifier.comesFromShopify(httpServletRequest)) {
+                filterChain.doFilter(httpServletRequest, httpServletResponse);
+            } else {
+                httpServletResponse.sendError(HttpServletResponse.SC_FORBIDDEN, "Access Denied");
+            }
+        }
+
+        filterChain.doFilter(httpServletRequest, httpServletResponse);
+    }
+
+    private boolean requiresVerification(HttpServletRequest httpServletRequest) {
+        return true;
     }
 }
