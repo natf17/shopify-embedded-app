@@ -1,5 +1,6 @@
 package com.ppublica.shopify.app.security;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -9,10 +10,16 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationCodeGrantFilter;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestRedirectFilter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+    @Value("${ppublica.shopify.app.client-secret}")
+    private String clientSecret;
+
+    @Value("${ppublica.shopify.app.path-requiring-shopify-origin-verification:/**}")
+    private String pathRequiringShopifyOriginVerification;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, ShopifyInstallationRequestFilter shopifyInstallationRequestFilter, ShopifyOAuth2AuthorizationCodeGrantFilter shopifyOAuth2AuthorizationCodeGrantFilter) throws Exception {
@@ -33,8 +40,13 @@ public class SecurityConfig {
     }
 
     @Bean
+    public ShopifyOriginVerifier shopifyOriginVerifier() {
+        return new ShopifyOriginVerifier(clientSecret);
+    }
+
+    @Bean
     public ShopifyInstallationRequestFilter shopifyInstallationRequestFilter() {
-        return new ShopifyInstallationRequestFilter();
+        return new ShopifyInstallationRequestFilter(PathPatternRequestMatcher.pathPattern(pathRequiringShopifyOriginVerification));
     }
 
     @Bean

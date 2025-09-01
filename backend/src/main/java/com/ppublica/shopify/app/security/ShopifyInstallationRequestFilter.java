@@ -1,5 +1,6 @@
 package com.ppublica.shopify.app.security;
 
+import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import jakarta.servlet.FilterChain;
@@ -11,7 +12,11 @@ import java.io.IOException;
 public class ShopifyInstallationRequestFilter extends OncePerRequestFilter {
 
     private ShopifyOriginVerifier shopifyOriginVerifier;
+    private final RequestMatcher path;
 
+    public ShopifyInstallationRequestFilter(RequestMatcher path) {
+        this.path = path;
+    }
     @Override
     protected void doFilterInternal(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, FilterChain filterChain) throws ServletException, IOException {
 
@@ -27,6 +32,6 @@ public class ShopifyInstallationRequestFilter extends OncePerRequestFilter {
     }
 
     private boolean requiresVerification(HttpServletRequest httpServletRequest) {
-        return true;
+        return this.path.matches(httpServletRequest);
     }
 }
