@@ -1,5 +1,6 @@
 package com.ppublica.shopify.app.security;
 
+import java.util.List;
 import java.util.TreeMap;
 
 import org.junit.jupiter.api.Test;
@@ -12,18 +13,14 @@ public class ShopifyOriginVerifierTest {
 
     @Test
     void toQueryString_shouldReturnQueryString_whenFullMap() {
-        TreeMap<String, String[]> queryStringMap = new TreeMap<>();
-        queryStringMap.put("code", new String[]{"0907"});
-        queryStringMap.put("shop", new String[]{"shop.myshopify.com"});
-        queryStringMap.put("state", new String[]{"0.63"});
-        queryStringMap.put("timestamp", new String[]{"13"});
+        TreeMap<String, List<String>> queryStringMap = new TreeMap<>();
+        queryStringMap.put("code", List.of("0907"));
+        queryStringMap.put("shop", List.of("shop.myshopify.com"));
+        queryStringMap.put("state", List.of("0.63"));
+        queryStringMap.put("timestamp", List.of("13"));
 
         assertEquals("code=0907&shop=shop.myshopify.com&state=0.63&timestamp=13", verifier.toQueryString(queryStringMap));
 
     }
 
-    @Test
-    void isHmacEquals_shouldReturnTrue_whenCorrectHash() {
-
-    }
 }

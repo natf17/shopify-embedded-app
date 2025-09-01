@@ -1,11 +1,15 @@
 package com.ppublica.shopify.app.security;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.util.UriComponents;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -20,19 +24,24 @@ public class ShopifyOriginVerifier {
 
     public boolean comesFromShopify(HttpServletRequest httpServletRequest) {
 
-        // Remove the HMAC parameter from the query string
-        Map<String, String[]> parameterMap = httpServletRequest.getParameterMap();
-        String[] hmacValues = parameterMap.get(HMAC_KEY);
+        String uriString = httpServletRequest.getRequestURL().toString() + "?" + httpServletRequest.getQueryString();
+        UriComponents uriComponents = UriComponentsBuilder.fromUriString(uriString).build();
+        MultiValueMap<String, String> queryParams = uriComponents.getQueryParams();
 
-        if(hmacValues.length != 1) {
+        // the parameters must be sorted alphabetically
+        TreeMap<String, List<String>> sortedQueryStringMap = new TreeMap<>(queryParams);
+
+        // Remove the HMAC parameter from the query string
+        List<String> hmacValues = sortedQueryStringMap.get(HMAC_KEY);
+
+        if(hmacValues.size() != 1) {
             return false;
         }
 
-        String hmacValue = hmacValues[0];
-        parameterMap.remove(HMAC_KEY);
+        String hmacValue = hmacValues.getFirst();
+        sortedQueryStringMap.remove(HMAC_KEY);
 
-        // the parameters must be sorted alphabetically
-        TreeMap<String, String[]> sortedQueryStringMap = new TreeMap<>(parameterMap);
+
 
         String sortedQueryString = toQueryString(sortedQueryStringMap);
 
@@ -40,7 +49,7 @@ public class ShopifyOriginVerifier {
 
     }
 
-    String toQueryString(TreeMap<String, String[]> sortedQueryStringMap) {
+    String toQueryString(TreeMap<String, List<String>> sortedQueryStringMap) {
         StringBuilder queryStringBuilder = new StringBuilder();
         for(String parameterName : sortedQueryStringMap.keySet()) {
             for(String parameterValue : sortedQueryStringMap.get(parameterName)) {
