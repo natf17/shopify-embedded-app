@@ -11,6 +11,8 @@ import java.io.IOException;
 
 public class ShopifyInstallationRequestFilter extends OncePerRequestFilter {
 
+    public static final String SHOP_NAME_ATTR = "security_shopify_shop_name";
+
     private ShopifyOriginVerifier shopifyOriginVerifier;
     private final RequestMatcher path;
 

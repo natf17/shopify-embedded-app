@@ -15,6 +15,7 @@ import java.util.TreeMap;
 
 public class ShopifyOriginVerifier {
     private static final String HMAC_KEY = "hmac";
+    private static final String SHOP_PARAM_NAME = "shop";
     private static final String ALGORITHM = "HmacSHA256";
     private final String hmacSecret;
 
@@ -22,6 +23,7 @@ public class ShopifyOriginVerifier {
         this.hmacSecret = hmacSecret;
     }
 
+    // also adds shop to request attribute if successful
     public boolean comesFromShopify(HttpServletRequest httpServletRequest) {
 
         String uriString = httpServletRequest.getRequestURL().toString() + "?" + httpServletRequest.getQueryString();
@@ -42,10 +44,15 @@ public class ShopifyOriginVerifier {
         sortedQueryStringMap.remove(HMAC_KEY);
 
 
-
         String sortedQueryString = toQueryString(sortedQueryStringMap);
 
-        return isHmacEquals(hmacValue, sortedQueryString);
+        boolean comesFromShopify = isHmacEquals(hmacValue, sortedQueryString);
+
+        if(comesFromShopify) {
+            httpServletRequest.setAttribute(ShopifyInstallationRequestFilter.SHOP_NAME_ATTR, sortedQueryStringMap.get(SHOP_PARAM_NAME).getFirst());
+        }
+
+        return comesFromShopify;
 
     }
 
