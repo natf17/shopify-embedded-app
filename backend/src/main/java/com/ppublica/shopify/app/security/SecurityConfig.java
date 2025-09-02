@@ -7,10 +7,17 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizationRequestResolver;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationCodeGrantFilter;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestRedirectFilter;
+import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
+import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
+import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
+
+import java.util.function.Consumer;
 
 @Configuration
 @EnableWebSecurity
@@ -22,13 +29,15 @@ public class SecurityConfig {
     private String pathRequiringShopifyOriginVerification;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, ShopifyInstallationRequestFilter shopifyInstallationRequestFilter, ShopifyOAuth2AuthorizationCodeGrantFilter shopifyOAuth2AuthorizationCodeGrantFilter) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, ShopifyInstallationRequestFilter shopifyInstallationRequestFilter,
+                                                   ShopifyOAuth2AuthorizationCodeGrantFilter shopifyOAuth2AuthorizationCodeGrantFilter,
+                                                   ClientRegistrationRepository clientRegistrationRepo) throws Exception {
         http.authorizeHttpRequests( authorize -> authorize
                 .anyRequest().authenticated()
         )
             .oauth2Client(oauth2Client -> oauth2Client
                         .authorizationCodeGrant(authCodeGrant -> authCodeGrant
-                                .authorizationRequestResolver(new ShopifyOAuth2AuthorizationRequestResolver())
+                                .authorizationRequestResolver(authorizationRequestResolver(clientRegistrationRepo))
                         )
             )
             .addFilterBefore(shopifyInstallationRequestFilter, OAuth2AuthorizationRequestRedirectFilter.class)
@@ -58,4 +67,15 @@ public class SecurityConfig {
     public AuthenticationProvider shopifyOAuth2AuthorizationCodeAuthenticationProvider() {
         return new ShopifyOAuth2AuthorizationCodeAuthenticationProvider();
     }
+
+    // a request to /shopify will start the oauth flow -> the client registration with
+    // id "shopify" will be matched
+    private OAuth2AuthorizationRequestResolver authorizationRequestResolver(
+            ClientRegistrationRepository clientRegistrationRepository) {
+
+        return new ShopifyOAuth2AuthorizationRequestResolver(
+                        clientRegistrationRepository, "/");
+
+    }
+
 }
