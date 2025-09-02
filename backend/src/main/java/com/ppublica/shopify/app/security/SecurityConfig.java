@@ -31,6 +31,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, ShopifyInstallationRequestFilter shopifyInstallationRequestFilter,
                                                    ShopifyOAuth2AuthorizationCodeGrantFilter shopifyOAuth2AuthorizationCodeGrantFilter,
+                                                   ShopifyOAuthTokenExistsFilter shopifyOAuthTokenExistsFilter,
                                                    ClientRegistrationRepository clientRegistrationRepo) throws Exception {
         http.authorizeHttpRequests( authorize -> authorize
                 .anyRequest().authenticated()
@@ -40,7 +41,8 @@ public class SecurityConfig {
                                 .authorizationRequestResolver(authorizationRequestResolver(clientRegistrationRepo))
                         )
             )
-            .addFilterBefore(shopifyInstallationRequestFilter, OAuth2AuthorizationRequestRedirectFilter.class)
+            .addFilterBefore(shopifyOAuthTokenExistsFilter, OAuth2AuthorizationRequestRedirectFilter.class)
+            .addFilterBefore(shopifyInstallationRequestFilter, ShopifyOAuthTokenExistsFilter.class)
             .addFilterBefore(shopifyOAuth2AuthorizationCodeGrantFilter, OAuth2AuthorizationCodeGrantFilter.class);
 
 
@@ -51,6 +53,11 @@ public class SecurityConfig {
     @Bean
     public ShopifyOriginVerifier shopifyOriginVerifier() {
         return new ShopifyOriginVerifier(clientSecret);
+    }
+
+    @Bean
+    public ShopifyOAuthTokenExistsFilter shopifyOAuthTokenExistsFilter(AccessTokenService accessTokenService) {
+        return new ShopifyOAuthTokenExistsFilter(accessTokenService);
     }
 
     @Bean
@@ -66,6 +73,16 @@ public class SecurityConfig {
     @Bean
     public AuthenticationProvider shopifyOAuth2AuthorizationCodeAuthenticationProvider() {
         return new ShopifyOAuth2AuthorizationCodeAuthenticationProvider();
+    }
+
+    @Bean
+    public AccessTokenService accessTokenService(ShopAccessTokenRepository shopAccessTokenRepository) {
+        return new AccessTokenService(shopAccessTokenRepository);
+    }
+
+    @Bean
+    public ShopAccessTokenRepository shopAccessTokenRepository() {
+        return new ShopAccessTokenRepository();
     }
 
     // a request to /shopify will start the oauth flow -> the client registration with
