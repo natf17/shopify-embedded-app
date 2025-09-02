@@ -1,23 +1,20 @@
 package com.ppublica.shopify.app.security;
 
+import com.ppublica.shopify.app.security.repository.ShopAccessTokenRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
-import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizationRequestResolver;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationCodeGrantFilter;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestRedirectFilter;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
-import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
-import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
-
-import java.util.function.Consumer;
 
 @Configuration
 @EnableWebSecurity
@@ -81,8 +78,8 @@ public class SecurityConfig {
     }
 
     @Bean
-    public ShopAccessTokenRepository shopAccessTokenRepository() {
-        return new ShopAccessTokenRepository();
+    public ShopAccessTokenRepository shopAccessTokenRepository(JdbcTemplate template) {
+        return new ShopAccessTokenRepository(template);
     }
 
     // a request to /shopify will start the oauth flow -> the client registration with
