@@ -8,11 +8,11 @@ import org.springframework.security.core.AuthenticationException;
 public class ShopifyOAuth2AuthorizationCodeAuthenticationProvider implements AuthenticationProvider {
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
-        return null;
+        throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
     public boolean supports(Class<?> aClass) {
-        return false;
+        throw new UnsupportedOperationException("Not implemented");
     }
 }

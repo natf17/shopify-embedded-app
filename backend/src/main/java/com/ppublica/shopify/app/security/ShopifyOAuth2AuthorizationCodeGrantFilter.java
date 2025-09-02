@@ -17,6 +17,6 @@ public class ShopifyOAuth2AuthorizationCodeGrantFilter extends OncePerRequestFil
    }
     @Override
     protected void doFilterInternal(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, FilterChain filterChain) throws ServletException, IOException {
-
+        throw new UnsupportedOperationException("Not implemented");
     }
 }
