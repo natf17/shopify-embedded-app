@@ -49,6 +49,6 @@ public class ShopifyOAuthTokenExistsFilter extends OncePerRequestFilter {
     }
 
     boolean isTokenValid(ShopifyAccessToken accessToken) {
-        return false;
+        throw new UnsupportedOperationException("Needs to be implemented");
     }
 }

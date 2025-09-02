@@ -14,6 +14,14 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.net.URI;
 import java.util.Map;
 
+/*
+ * This class updates the authorization uri and authorization request uri to ensure that
+ * - only the query parameters required by Shopify are included
+ * - the {shop} path variable is resolved and inserted dynamically
+ *
+ * This class also checks to see if a valid access token exists already. If it does, it returns null instead
+ * of OAuth2AuthorizationRequest to bypass the OAuth redirect in OAuth2AuthorizationRequestRedirectFilter.
+ */
 public class ShopifyOAuth2AuthorizationRequestResolver implements OAuth2AuthorizationRequestResolver {
 
     private final DefaultOAuth2AuthorizationRequestResolver delegate;
@@ -28,7 +36,7 @@ public class ShopifyOAuth2AuthorizationRequestResolver implements OAuth2Authoriz
 
     @Override
     public OAuth2AuthorizationRequest resolve(HttpServletRequest request) {
-        if(oauthTokenExists()) {
+        if(oauthTokenExists(request)) {
             return null;
         }
 
@@ -38,7 +46,7 @@ public class ShopifyOAuth2AuthorizationRequestResolver implements OAuth2Authoriz
 
     @Override
     public OAuth2AuthorizationRequest resolve(HttpServletRequest request, String clientRegistrationId) {
-        if(oauthTokenExists()) {
+        if(oauthTokenExists(request)) {
             return null;
         }
 
@@ -66,14 +74,9 @@ public class ShopifyOAuth2AuthorizationRequestResolver implements OAuth2Authoriz
                 .build();
     }
 
-     boolean oauthTokenExists() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+     boolean oauthTokenExists(HttpServletRequest request) {
+        return (Boolean)request.getAttribute(ShopifyOAuthTokenExistsFilter.ACCESSTOKEN_EXISTS_ATTRIBUTE);
 
-        if(auth != null && auth.isAuthenticated() && !(auth instanceof AnonymousAuthenticationToken)) {
-            return true;
-        }
-
-        return false;
     }
 
 }

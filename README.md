@@ -120,7 +120,7 @@ The following outlines how this project meets the Shopify requirements for app i
 
 - Scenario 2: The shop is already installed, and we have a token (`/shopify`)
 - Step 1: Verify the installation request: See ShopifyInstallationRequestFilter
-- ShopifyOAuthTokenExistsFilter finds a token for this shop
+- ShopifyOAuthTokenExistsFilter finds a token for this shop. If it's invalid, it deletes it and reverts to scenario 1
 - In OAuth2AuthorizationRequestRedirectFilter, ShopifyOAuth2AuthorizationRequestResolver returns null, and OAuth2AuthorizationRequestRedirectFilter continues through the chain
 
 - We leverage Spring Security OAuth2 Resource Server to validate the session token
