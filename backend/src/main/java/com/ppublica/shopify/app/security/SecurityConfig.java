@@ -25,6 +25,9 @@ public class SecurityConfig {
     @Value("${ppublica.shopify.app.path-requiring-shopify-origin-verification:/**}")
     private String pathRequiringShopifyOriginVerification;
 
+    private String authorizationRequestBaseUri = "/";
+    private String pathToApp = authorizationRequestBaseUri + "shopify";
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, ShopifyInstallationRequestFilter shopifyInstallationRequestFilter,
                                                    ShopifyOAuth2AuthorizationCodeGrantFilter shopifyOAuth2AuthorizationCodeGrantFilter,
@@ -36,6 +39,7 @@ public class SecurityConfig {
             .oauth2Client(oauth2Client -> oauth2Client
                         .authorizationCodeGrant(authCodeGrant -> authCodeGrant
                                 .authorizationRequestResolver(authorizationRequestResolver(clientRegistrationRepo))
+                                .authorizationRedirectStrategy(authorizationRedirectStrategy())
                         )
             )
             .addFilterBefore(shopifyOAuthTokenExistsFilter, OAuth2AuthorizationRequestRedirectFilter.class)
@@ -45,6 +49,11 @@ public class SecurityConfig {
 
         return http.build();
 
+    }
+
+    @Bean
+    public ShopifyAuthorizationRequestRedirectStrategy authorizationRedirectStrategy() {
+        return new ShopifyAuthorizationRequestRedirectStrategy(pathToApp);
     }
 
     @Bean
@@ -88,8 +97,10 @@ public class SecurityConfig {
             ClientRegistrationRepository clientRegistrationRepository) {
 
         return new ShopifyOAuth2AuthorizationRequestResolver(
-                        clientRegistrationRepository, "/");
+                        clientRegistrationRepository, authorizationRequestBaseUri);
 
     }
+
+
 
 }

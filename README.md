@@ -112,8 +112,10 @@ The following outlines how this project meets the Shopify requirements for app i
 - Scenario 1: The shop is being installed (`/shopify`)
   - Step 1: Verify the installation request: See ShopifyInstallationRequestFilter
   - ShopifyOAuthTokenExistsFilter doesn't find a token for this shop
-  - In OAuth2AuthorizationRequestRedirectFilter, ShopifyOAuth2AuthorizationRequestResolver builds a OAuth2AuthorizationRequest for the redirect (Step 2: Request authorization code) 
-  - ShopifyAuthorizationRequestRedirectStrategy returns a page that will redirect with app bridge if embedded, and if not embedded it redirects
+  - In OAuth2AuthorizationRequestRedirectFilter, ShopifyOAuth2AuthorizationRequestResolver builds a OAuth2AuthorizationRequest for the redirect (Step 2: Request authorization code)
+  - ShopifyAuthorizationRequestRedirectStrategy
+    - if embedded: returns a generated html page that will exit the iframe page via an AppBridge redirect
+    - if not embedded it redirects to the authorization uri
   - Step 3: Validate authorization code: ShopifyOAuth2AuthorizationCodeGrantFilter 
   - Step 4: Get an access token: ShopifyOAuth2AuthorizationCodeGrantFilter
   - Step 5: Redirect to your app's UI: ShopifyOAuth2AuthorizationCodeGrantFilter
