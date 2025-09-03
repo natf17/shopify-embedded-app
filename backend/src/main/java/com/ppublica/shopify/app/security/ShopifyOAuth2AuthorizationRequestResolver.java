@@ -16,7 +16,8 @@ import java.util.Map;
 
 /*
  * This class updates the authorization uri and authorization request uri to ensure that
- * - only the query parameters required by Shopify are included
+ * - only the query parameters required by Shopify are included (see OAuth2AuthorizationRequest.Builder.getParameters())
+ *   (the grant_options[] query param is omitted since we need an offline access token)
  * - the {shop} path variable is resolved and inserted dynamically
  *
  * This class also checks to see if a valid access token exists already. If it does, it returns null instead
@@ -55,8 +56,10 @@ public class ShopifyOAuth2AuthorizationRequestResolver implements OAuth2Authoriz
         return customize(original, request);
     }
 
-    // gets shop name from request attribute that was set by ShopifyInstallationRequestFilter
-    // and substitutes into {shop} path variable in the existing authorization request and authorization uris
+    /* Gets shop name from request attribute that was set by ShopifyInstallationRequestFilter
+     * and substitutes into {shop} path variable in the existing authorization request and authorization uris
+     *
+     */
     OAuth2AuthorizationRequest customize(OAuth2AuthorizationRequest original, HttpServletRequest request) {
         String shop = (String)request.getAttribute(ShopifyInstallationRequestFilter.SHOP_NAME_ATTR);
         Map<String, String> vars = Map.of("shop", shop);

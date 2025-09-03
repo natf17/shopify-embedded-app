@@ -126,3 +126,8 @@ The following outlines how this project meets the Shopify requirements for app i
 - In OAuth2AuthorizationRequestRedirectFilter, ShopifyOAuth2AuthorizationRequestResolver returns null, and OAuth2AuthorizationRequestRedirectFilter continues through the chain
 
 - We leverage Spring Security OAuth2 Resource Server to validate the session token
+
+
+TODOS
+- use cookie to store request instead of session
+- encode the token in DB
