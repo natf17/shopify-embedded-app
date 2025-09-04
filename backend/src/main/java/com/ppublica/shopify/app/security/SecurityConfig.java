@@ -39,6 +39,7 @@ public class SecurityConfig {
             .oauth2Client(oauth2Client -> oauth2Client
                         .authorizationCodeGrant(authCodeGrant -> authCodeGrant
                                 .authorizationRequestResolver(authorizationRequestResolver(clientRegistrationRepo))
+                                .authorizationRequestRepository(authorizationRequestRepository())
                                 .authorizationRedirectStrategy(authorizationRedirectStrategy())
                         )
             )
@@ -49,6 +50,16 @@ public class SecurityConfig {
 
         return http.build();
 
+    }
+
+    @Bean
+    public SecureCookieSerializer cookieSerializer() {
+        return new SecureCookieSerializer(clientSecret);
+    }
+
+    @Bean
+    public CookieOAuth2AuthorizationRequestRepository authorizationRequestRepository() {
+        return new CookieOAuth2AuthorizationRequestRepository(cookieSerializer());
     }
 
     @Bean
