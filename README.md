@@ -115,7 +115,7 @@ The following outlines how this project meets the Shopify requirements for app i
   - In OAuth2AuthorizationRequestRedirectFilter, ShopifyOAuth2AuthorizationRequestResolver builds a OAuth2AuthorizationRequest for the redirect (Step 2: Request authorization code)
   - ShopifyAuthorizationRequestRedirectStrategy
     - if embedded: returns a generated html page that will exit the iframe page via an AppBridge redirect
-    - if not embedded it redirects to the authorization uri
+    - if not embedded: redirects to the authorization uri
   - Step 3: Validate authorization code: ShopifyOAuth2AuthorizationCodeGrantFilter 
   - Step 4: Get an access token: ShopifyOAuth2AuthorizationCodeGrantFilter
   - Step 5: Redirect to your app's UI: ShopifyOAuth2AuthorizationCodeGrantFilter
@@ -129,5 +129,16 @@ The following outlines how this project meets the Shopify requirements for app i
 
 
 TODOS
-- use cookie to store request instead of session
 - encode the token in DB
+- OAuth2AuthorizationCodeGrantFilter:
+  - matchesAuthorizationResponse works as needed
+  - looks for matching Client registration (uses the id in the attributes)
+  - creates a OAuth2AuthorizationResponse using OAuth2ParameterNames.CODE, Error, and STATE params in request
+    - it also passes the current uri as "redirectUri"; the current uri that the auth server sent the code to
+  - wraps the OAuth2AuthorizationResponse with the OAuth2AuthorizationRequest in a OAuth2AuthorizationExchange, which along with the ClientRegistration are used to build a OAuth2AuthorizationCodeAuthenticationToken
+  - gives the OAuth2AuthorizationCodeAuthenticationToken to the AuthenticationManager to authenticate
+    - if there is an error -> redirects to redirectUri with error query params
+    - if not, build OAuth2AuthorizedClient from the authentication result (OAuth2AuthorizationCodeAuthenticationToken)
+    - saves it in the OAuth2AuthorizedClientRepository (default: provided to filter)
+    - redirects to redirectUrl from request in RequestCache or from OAuth2AuthorizationRequest using the DefaultRedirectStrategy.
+- determine whether RequestCache used in OAuth2AuthorizationCodeGrantFilter and OAuth2AuthorizationCodeGrantFilter is a problem

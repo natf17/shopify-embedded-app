@@ -25,8 +25,10 @@ public class SecurityConfig {
     @Value("${ppublica.shopify.app.path-requiring-shopify-origin-verification:/**}")
     private String pathRequiringShopifyOriginVerification;
 
+    private String clientRegistrationId = "shopify";
+
     private String authorizationRequestBaseUri = "/";
-    private String pathToApp = authorizationRequestBaseUri + "shopify";
+    private String pathToApp = authorizationRequestBaseUri + clientRegistrationId;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, ShopifyInstallationRequestFilter shopifyInstallationRequestFilter,
@@ -54,7 +56,7 @@ public class SecurityConfig {
 
     @Bean
     public SecureCookieSerializer cookieSerializer() {
-        return new SecureCookieSerializer(clientSecret);
+        return new SecureCookieSerializer(clientSecret, clientRegistrationId);
     }
 
     @Bean

@@ -1,11 +1,17 @@
 package com.ppublica.shopify.app.security;
 
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
+import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 
+import java.util.Map;
 import java.util.Set;
 
 public class OAuth2AuthorizationRequestMapper {
+    private Map<String, Object> attributes;
 
+    public OAuth2AuthorizationRequestMapper(String clientRegistrationId) {
+        attributes = Map.of(OAuth2ParameterNames.REGISTRATION_ID, clientRegistrationId);
+    }
     public OAuth2AuthorizationRequest toOAuth2AuthorizationRequest(OAuth2AuthorizationRequestDTO dto) {
         return OAuth2AuthorizationRequest.authorizationCode()
                 .authorizationUri(dto.getAuthorizationUri())
@@ -14,6 +20,7 @@ public class OAuth2AuthorizationRequestMapper {
                 .scopes(dto.getScopes())
                 .state(dto.getState())
                 .authorizationRequestUri(dto.getAuthorizationRequestUri())
+                .attributes(attributes)
                 .build();
     }
 

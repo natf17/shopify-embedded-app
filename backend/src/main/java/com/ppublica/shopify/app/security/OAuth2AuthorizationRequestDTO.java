@@ -72,6 +72,7 @@ public class OAuth2AuthorizationRequestDTO {
         private Set<String> scopes;
         private String state;
         private String authorizationRequestUri;
+        private String registrationId;
 
 
 
@@ -105,11 +106,16 @@ public class OAuth2AuthorizationRequestDTO {
             return this;
         }
 
+        public Builder registrationId(String registrationId) {
+            this.state = state;
+            return this;
+        }
+
         public OAuth2AuthorizationRequestDTO build() {
             OAuth2AuthorizationRequestDTO dto = new OAuth2AuthorizationRequestDTO();
 
-            if(isNull(this.authorizationUri) || isNull(this.clientId) || isNull(this.redirectUri) || isNull(scopes)
-                    || isNull(state) || isNull(authorizationRequestUri)) {
+            if(isNull(this.authorizationUri) || isNull(this.clientId) || isNull(this.redirectUri) || isNull(this.scopes)
+                    || isNull(this.state) || isNull(this.authorizationRequestUri)) {
                 throw new NullPointerException();
             }
 

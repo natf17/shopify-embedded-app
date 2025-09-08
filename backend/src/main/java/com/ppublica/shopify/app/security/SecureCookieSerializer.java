@@ -14,14 +14,15 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 
 public class SecureCookieSerializer {
-    private OAuth2AuthorizationRequestMapper dtoMapper = new OAuth2AuthorizationRequestMapper();
+    private final OAuth2AuthorizationRequestMapper dtoMapper;
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final String secret;
     private static final String ALGORITHM = "HmacSHA256";
     private static final int maxAgeDefault = 100;
 
-    public SecureCookieSerializer(String secret) {
+    public SecureCookieSerializer(String secret, String clientRegistrationId) {
         this.secret = secret;
+        this.dtoMapper = new OAuth2AuthorizationRequestMapper(clientRegistrationId);
     }
 
     protected OAuth2AuthorizationRequest deserializeAsOAuth2AuthorizationRequest(Cookie signedCookie) {
