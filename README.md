@@ -116,9 +116,23 @@ The following outlines how this project meets the Shopify requirements for app i
   - ShopifyAuthorizationRequestRedirectStrategy
     - if embedded: returns a generated html page that will exit the iframe page via an AppBridge redirect
     - if not embedded: redirects to the authorization uri
-  - Step 3: Validate authorization code: ShopifyOAuth2AuthorizationCodeGrantFilter 
+  - Step 3: Validate authorization code: ShopifyOAuth2AuthorizationCodeAuthenticationProvider 
+    - Nonce check (nonce sent to authorization uri in query = nonce in current request params): see ShopifyOAuth2AuthorizationCodeAuthenticationProvider
+    - Nonce check (cookie = nonce in current request params)
+      - CookieOAuth2AuthorizationRequestRepository extracts from cookie and creates the OAuth2AuthorizationRequest.
+      - OAuth2AuthorizationCodeAuthenticationProvider compares with the nonce in current request params
+    - HMAC check (see ShopifyOAuth2AuthorizationCodeAuthenticationProvider)
+    - Check for valid shop parameter (see ShopifyOAuth2AuthorizationCodeAuthenticationProvider)
   - Step 4: Get an access token: ShopifyOAuth2AuthorizationCodeGrantFilter
+    - insert shop name into token uri
+    - add parameters to body (see RestClientAuthorizationCodeTokenResponseClient and DefaultOAuth2TokenRequestParametersConverter)
+    - process response: "access_token" and "scope" values
+      - DefaultMapOAuth2AccessTokenResponseConverter (used by RestClientAuthorizationCodeTokenResponseClient to parse the response) correctly extracts these values.
+      - However, the scope string is split with " " as delimiter. We need to use ",".
+    - Note: if the authorization server responds with an error, OAuth2AuthorizationCodeGrantFilter will redirect to redirect uri with error params. On the second pass, the filter will not match the request as an authorization response and will let the request continue. Further down the filter chain, if this path (redirect uri) requires the user to be authenticated, the AuthorizationFilter will throw an AccessDeniedException.
+    - We must verify returned scopes
   - Step 5: Redirect to your app's UI: ShopifyOAuth2AuthorizationCodeGrantFilter
+    - use custom redirect strategy to redirect to app url or to embedded app url
 
 - Scenario 2: The shop is already installed, and we have a token (`/shopify`)
 - Step 1: Verify the installation request: See ShopifyInstallationRequestFilter
