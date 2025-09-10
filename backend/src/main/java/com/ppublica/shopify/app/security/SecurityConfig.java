@@ -9,6 +9,8 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.oauth2.client.endpoint.OAuth2AccessTokenResponseClient;
+import org.springframework.security.oauth2.client.endpoint.RestClientAuthorizationCodeTokenResponseClient;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationCodeGrantFilter;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestRedirectFilter;
@@ -91,7 +93,7 @@ public class SecurityConfig {
 
     @Bean
     public AuthenticationProvider shopifyOAuth2AuthorizationCodeAuthenticationProvider() {
-        return new ShopifyOAuth2AuthorizationCodeAuthenticationProvider();
+        return new ShopifyOAuth2AuthorizationCodeAuthenticationProvider(new RestClientAuthorizationCodeTokenResponseClient());
     }
 
     @Bean

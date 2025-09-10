@@ -117,12 +117,12 @@ The following outlines how this project meets the Shopify requirements for app i
     - if embedded: returns a generated html page that will exit the iframe page via an AppBridge redirect
     - if not embedded: redirects to the authorization uri
   - Step 3: Validate authorization code: ShopifyOAuth2AuthorizationCodeAuthenticationProvider 
-    - Nonce check (nonce sent to authorization uri in query = nonce in current request params): see ShopifyOAuth2AuthorizationCodeAuthenticationProvider
+    - Nonce check (nonce sent to authorization uri in query = nonce in current request params): the nonce sent to the auth server is guaranteed to be the same as the nonce in the cookie. So it is sufficient to only check the cookie.
     - Nonce check (cookie = nonce in current request params)
       - CookieOAuth2AuthorizationRequestRepository extracts from cookie and creates the OAuth2AuthorizationRequest.
       - OAuth2AuthorizationCodeAuthenticationProvider compares with the nonce in current request params
-    - HMAC check (see ShopifyOAuth2AuthorizationCodeAuthenticationProvider)
-    - Check for valid shop parameter (see ShopifyOAuth2AuthorizationCodeAuthenticationProvider)
+    - HMAC check (already done by ShopifyInstallationRequestFilter)
+    - Check for valid shop parameter (extracted by ShopifyInstallationRequestFilter and verified in ShopifyOAuth2AuthorizationCodeAuthenticationProvider)
   - Step 4: Get an access token: ShopifyOAuth2AuthorizationCodeGrantFilter
     - insert shop name into token uri
     - add parameters to body (see RestClientAuthorizationCodeTokenResponseClient and DefaultOAuth2TokenRequestParametersConverter)
