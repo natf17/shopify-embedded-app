@@ -17,6 +17,7 @@ import org.springframework.security.oauth2.client.registration.ClientRegistratio
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationCodeGrantFilter;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestRedirectFilter;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
+import org.springframework.security.oauth2.core.http.converter.OAuth2AccessTokenResponseHttpMessageConverter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 import org.springframework.web.client.RestClient;
@@ -96,9 +97,12 @@ public class SecurityConfig {
 
     @Bean
     public AuthenticationProvider shopifyOAuth2AuthorizationCodeAuthenticationProvider() {
+        OAuth2AccessTokenResponseHttpMessageConverter accessTokenResponseHttpMessageConverter = new OAuth2AccessTokenResponseHttpMessageConverter();
+        accessTokenResponseHttpMessageConverter.setAccessTokenResponseConverter(new ShopifyMapOAuth2AccessTokenResponseConverter());
+
         RestClient newRestClient = RestClient.builder().configureMessageConverters(clientBuilder -> {
             clientBuilder.customMessageConverter(new FormHttpMessageConverter());
-            clientBuilder.customMessageConverter(new ShopifyOAuth2AccessTokenResponseHttpMessageConverter());
+            clientBuilder.customMessageConverter(accessTokenResponseHttpMessageConverter);
         }).build();
 
         RestClientAuthorizationCodeTokenResponseClient authCodeTokenResponseClient = new RestClientAuthorizationCodeTokenResponseClient();
