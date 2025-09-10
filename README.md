@@ -123,14 +123,15 @@ The following outlines how this project meets the Shopify requirements for app i
       - OAuth2AuthorizationCodeAuthenticationProvider compares with the nonce in current request params
     - HMAC check (already done by ShopifyInstallationRequestFilter)
     - Check for valid shop parameter (extracted by ShopifyInstallationRequestFilter and verified in ShopifyOAuth2AuthorizationCodeAuthenticationProvider)
-  - Step 4: Get an access token: ShopifyOAuth2AuthorizationCodeGrantFilter
-    - insert shop name into token uri
+  - Step 4: Get an access token:
+    - insert shop name into token uri (ShopifyOAuth2AuthorizationCodeAuthenticationProvider)
     - add parameters to body (see RestClientAuthorizationCodeTokenResponseClient and DefaultOAuth2TokenRequestParametersConverter)
     - process response: "access_token" and "scope" values
       - DefaultMapOAuth2AccessTokenResponseConverter (used by RestClientAuthorizationCodeTokenResponseClient to parse the response) correctly extracts these values.
       - However, the scope string is split with " " as delimiter. We need to use ",".
+        - set custom rest client (with custom message converter for response) in RestClientAuthorizationCodeTokenResponseClient before passing into the auth provider
     - Note: if the authorization server responds with an error, OAuth2AuthorizationCodeGrantFilter will redirect to redirect uri with error params. On the second pass, the filter will not match the request as an authorization response and will let the request continue. Further down the filter chain, if this path (redirect uri) requires the user to be authenticated, the AuthorizationFilter will throw an AccessDeniedException.
-    - We must verify returned scopes
+    - We must verify returned scopes (see ShopifyOAuth2AuthorizationCodeAuthenticationProvider)
   - Step 5: Redirect to your app's UI: ShopifyOAuth2AuthorizationCodeGrantFilter
     - use custom redirect strategy to redirect to app url or to embedded app url
 

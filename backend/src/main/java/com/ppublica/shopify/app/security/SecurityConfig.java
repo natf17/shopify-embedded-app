@@ -4,6 +4,8 @@ import com.ppublica.shopify.app.security.repository.ShopAccessTokenRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.converter.FormHttpMessageConverter;
+import org.springframework.http.converter.HttpMessageConverters;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -17,6 +19,7 @@ import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequest
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
+import org.springframework.web.client.RestClient;
 
 @Configuration
 @EnableWebSecurity
@@ -93,7 +96,15 @@ public class SecurityConfig {
 
     @Bean
     public AuthenticationProvider shopifyOAuth2AuthorizationCodeAuthenticationProvider() {
-        return new ShopifyOAuth2AuthorizationCodeAuthenticationProvider(new RestClientAuthorizationCodeTokenResponseClient());
+        RestClient newRestClient = RestClient.builder().configureMessageConverters(clientBuilder -> {
+            clientBuilder.customMessageConverter(new FormHttpMessageConverter());
+            clientBuilder.customMessageConverter(new ShopifyOAuth2AccessTokenResponseHttpMessageConverter());
+        }).build();
+
+        RestClientAuthorizationCodeTokenResponseClient authCodeTokenResponseClient = new RestClientAuthorizationCodeTokenResponseClient();
+        authCodeTokenResponseClient.setRestClient(newRestClient);
+
+        return new ShopifyOAuth2AuthorizationCodeAuthenticationProvider(authCodeTokenResponseClient);
     }
 
     @Bean

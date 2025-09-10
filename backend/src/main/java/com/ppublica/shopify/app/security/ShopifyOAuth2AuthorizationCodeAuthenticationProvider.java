@@ -18,6 +18,7 @@ import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 /*
@@ -25,10 +26,11 @@ import java.util.regex.Pattern;
  * Before delegating to the Spring authentication provider, it:
  *  - creates a new ClientRegistration with a shop-specific token uri
  *  - verifies that the shop parameter (extracted from the redirectUri) is valid
+ *
+ * After successful authentication, it verifies that all requested scopes were granted.
  */
 public class ShopifyOAuth2AuthorizationCodeAuthenticationProvider implements AuthenticationProvider {
     private final OAuth2AuthorizationCodeAuthenticationProvider authProvider;
-    private static final String INVALID_STATE_PARAMETER_ERROR_CODE = "invalid_state_parameter";
     private static final String INVALID_HMAC_PARAMETER_ERROR_CODE = "invalid_hmac_parameter";
     private static final String SHOP_PARAM_NAME = "shop";
     private static final Pattern shopNameRegex = Pattern.compile("^https?://[a-zA-Z0-9][a-zA-Z0-9\\-]*\\.myshopify\\.com/?");
@@ -52,8 +54,13 @@ public class ShopifyOAuth2AuthorizationCodeAuthenticationProvider implements Aut
 
         OAuth2AuthorizationCodeAuthenticationToken customizedAuthToken = addShopNameToTokenUri(authorizationCodeAuthenticationToken, shop);
 
-        return authProvider.authenticate(customizedAuthToken);
+        OAuth2AuthorizationCodeAuthenticationToken authenticationResult = (OAuth2AuthorizationCodeAuthenticationToken)authProvider.authenticate(customizedAuthToken);
 
+        if(!areAllScopesGranted(authenticationResult)) {
+            throw new OAuth2AuthorizationException(new OAuth2Error(OAuth2ErrorCodes.INSUFFICIENT_SCOPE));
+        }
+
+        return authenticationResult;
     }
 
     @Override
@@ -81,6 +88,16 @@ public class ShopifyOAuth2AuthorizationCodeAuthenticationProvider implements Aut
 
 
     protected boolean isShopNameValid(String shop) {
-        return shopNameRegex.matcher(shop).matches();
+       return shopNameRegex.matcher(shop).matches();
+    }
+
+    protected boolean areAllScopesGranted(OAuth2AuthorizationCodeAuthenticationToken authenticationResult) {
+       Set<String> requestedScopes = authenticationResult.getAuthorizationExchange().getAuthorizationRequest().getScopes();
+       Set<String> approvedScopes = authenticationResult.getAccessToken().getScopes();
+
+        return requestedScopes.stream()
+                .allMatch(scope -> approvedScopes.contains(scope) ||
+                        approvedScopes.contains(scope.replaceFirst("read", "write")));
+
     }
 }
