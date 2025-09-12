@@ -25,8 +25,11 @@ import org.springframework.web.client.RestClient;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
-    @Value("${ppublica.shopify.app.client-secret}")
+    @Value("${ppublica.shopify.app.oauth.client-secret}")
     private String clientSecret;
+
+    @Value("${ppublica.shopify.app.oauth.client-id}")
+    private String clientId;
 
     @Value("${ppublica.shopify.app.path-requiring-shopify-origin-verification:/**}")
     private String pathRequiringShopifyOriginVerification;
@@ -53,11 +56,17 @@ public class SecurityConfig {
             )
             .addFilterBefore(shopifyOAuthTokenExistsFilter, OAuth2AuthorizationRequestRedirectFilter.class)
             .addFilterBefore(shopifyInstallationRequestFilter, ShopifyOAuthTokenExistsFilter.class)
-            .addFilterBefore(shopifyOAuth2AuthorizationCodeGrantFilter, OAuth2AuthorizationCodeGrantFilter.class);
+            .addFilterBefore(shopifyOAuth2AuthorizationCodeGrantFilter, OAuth2AuthorizationCodeGrantFilter.class)
+            .requestCache(requestCache -> requestCache.requestCache(shopifyAppRequestCache()));
 
 
         return http.build();
 
+    }
+
+    @Bean
+    public ShopifyAppRequestCache shopifyAppRequestCache() {
+        return new ShopifyAppRequestCache(pathToApp, clientId);
     }
 
     @Bean

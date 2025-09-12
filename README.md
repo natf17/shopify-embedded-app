@@ -133,7 +133,9 @@ The following outlines how this project meets the Shopify requirements for app i
     - Note: if the authorization server responds with an error, OAuth2AuthorizationCodeGrantFilter will redirect to redirect uri with error params. On the second pass, the filter will not match the request as an authorization response and will let the request continue. Further down the filter chain, if this path (redirect uri) requires the user to be authenticated, the AuthorizationFilter will throw an AccessDeniedException.
     - We must verify returned scopes (see ShopifyOAuth2AuthorizationCodeAuthenticationProvider)
   - Step 5: Redirect to your app's UI: ShopifyOAuth2AuthorizationCodeGrantFilter
-    - use custom redirect strategy to redirect to app url or to embedded app url
+    - PostOAuth2AuthorizationRedirectStrategy redirects to either
+      - the full app url (/shopify?shop={shop}&host={host})
+      - or to embedded app url ()
 
 - Scenario 2: The shop is already installed, and we have a token (`/shopify`)
 - Step 1: Verify the installation request: See ShopifyInstallationRequestFilter
@@ -145,15 +147,4 @@ The following outlines how this project meets the Shopify requirements for app i
 
 TODOS
 - encode the token in DB
-- OAuth2AuthorizationCodeGrantFilter:
-  - matchesAuthorizationResponse works as needed
-  - looks for matching Client registration (uses the id in the attributes)
-  - creates a OAuth2AuthorizationResponse using OAuth2ParameterNames.CODE, Error, and STATE params in request
-    - it also passes the current uri as "redirectUri"; the current uri that the auth server sent the code to
-  - wraps the OAuth2AuthorizationResponse with the OAuth2AuthorizationRequest in a OAuth2AuthorizationExchange, which along with the ClientRegistration are used to build a OAuth2AuthorizationCodeAuthenticationToken
-  - gives the OAuth2AuthorizationCodeAuthenticationToken to the AuthenticationManager to authenticate
-    - if there is an error -> redirects to redirectUri with error query params
-    - if not, build OAuth2AuthorizedClient from the authentication result (OAuth2AuthorizationCodeAuthenticationToken)
-    - saves it in the OAuth2AuthorizedClientRepository (default: provided to filter)
-    - redirects to redirectUrl from request in RequestCache or from OAuth2AuthorizationRequest using the DefaultRedirectStrategy.
-- determine whether RequestCache used in OAuth2AuthorizationCodeGrantFilter and OAuth2AuthorizationCodeGrantFilter is a problem
+-  build up ShopifyAppRequestCache so that it is a fully functional cookie-based request cache
