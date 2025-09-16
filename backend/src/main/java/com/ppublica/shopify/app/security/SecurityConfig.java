@@ -41,7 +41,6 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, ShopifyInstallationRequestFilter shopifyInstallationRequestFilter,
-                                                   ShopifyOAuth2AuthorizationCodeGrantFilter shopifyOAuth2AuthorizationCodeGrantFilter,
                                                    ShopifyOAuthTokenExistsFilter shopifyOAuthTokenExistsFilter,
                                                    ClientRegistrationRepository clientRegistrationRepo) throws Exception {
         http.authorizeHttpRequests( authorize -> authorize
@@ -56,7 +55,6 @@ public class SecurityConfig {
             )
             .addFilterBefore(shopifyOAuthTokenExistsFilter, OAuth2AuthorizationRequestRedirectFilter.class)
             .addFilterBefore(shopifyInstallationRequestFilter, ShopifyOAuthTokenExistsFilter.class)
-            .addFilterBefore(shopifyOAuth2AuthorizationCodeGrantFilter, OAuth2AuthorizationCodeGrantFilter.class)
             .requestCache(requestCache -> requestCache.requestCache(shopifyAppRequestCache()));
 
 
@@ -97,11 +95,6 @@ public class SecurityConfig {
     @Bean
     public ShopifyInstallationRequestFilter shopifyInstallationRequestFilter() {
         return new ShopifyInstallationRequestFilter(PathPatternRequestMatcher.pathPattern(pathRequiringShopifyOriginVerification));
-    }
-
-    @Bean
-    public ShopifyOAuth2AuthorizationCodeGrantFilter shopifyOAuth2AuthorizationCodeGrantFilter(AuthenticationManager authManager) {
-        return new ShopifyOAuth2AuthorizationCodeGrantFilter(authManager);
     }
 
     @Bean

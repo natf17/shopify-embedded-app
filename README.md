@@ -144,7 +144,11 @@ The following outlines how this project meets the Shopify requirements for app i
 
 - We leverage Spring Security OAuth2 Resource Server to validate the session token
 
+An H2 in-memory database is configured to run when the dev profile is active. 
+If desired, an H2-in-memory database can be configured when running integration tests. The single existing integration test activates the test profile.
 
 TODOS
 - encode the token in DB
 -  build up ShopifyAppRequestCache so that it is a fully functional cookie-based request cache
+- add instructions for set up:
+  - env vars: those in props file and active profile (export SPRING_PROFILES_ACTIVE=dev)
