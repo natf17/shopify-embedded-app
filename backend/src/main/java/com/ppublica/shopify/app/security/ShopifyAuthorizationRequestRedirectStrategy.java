@@ -10,7 +10,6 @@ import java.io.IOException;
 
 public class ShopifyAuthorizationRequestRedirectStrategy implements RedirectStrategy {
     private final DefaultRedirectStrategy defaultRedirectStrategy = new DefaultRedirectStrategy();
-    private final EmbeddingStatusResolver embeddingStatusResolver = new EmbeddingStatusResolver();
     private final String shopifyApiKey;
 
     public ShopifyAuthorizationRequestRedirectStrategy(String shopifyApiKey) {
@@ -19,7 +18,7 @@ public class ShopifyAuthorizationRequestRedirectStrategy implements RedirectStra
 
     @Override
     public void sendRedirect(HttpServletRequest request, HttpServletResponse response, String url) throws IOException {
-        if (!embeddingStatusResolver.isEmbedded(request)) {
+        if (!ShopifyUtils.isEmbedded(request)) {
             defaultRedirectStrategy.sendRedirect(request, response, url);
             return;
         }

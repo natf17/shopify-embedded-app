@@ -52,5 +52,20 @@ public class ShopifyUtils {
         return request.getParameter(SHOP_QUERY_PARAM);
     }
 
+    public static boolean isEmbedded(HttpServletRequest request) {
+        return hasActiveEmbeddedParameter(request);
+    }
+
+    public static boolean hasActiveEmbeddedParameter(HttpServletRequest request) {
+        String isEmbedded = request.getParameter(EMBEDDED_QUERY_PARAM);
+
+        if(isEmbedded == null || isEmbedded.isEmpty() || isEmbedded.equals("0")) {
+            return false;
+        }
+
+        // then it must equal 1
+        return true;
+    }
+
 
 }

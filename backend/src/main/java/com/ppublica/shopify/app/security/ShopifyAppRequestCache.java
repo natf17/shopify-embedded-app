@@ -24,7 +24,6 @@ public class ShopifyAppRequestCache implements RequestCache {
     private RequestCache requestCache = new HttpSessionRequestCache();
 
     private final DefaultRedirectStrategy defaultRedirectStrategy = new DefaultRedirectStrategy();
-    private final EmbeddingStatusResolver embeddingStatusResolver = new EmbeddingStatusResolver();
     private final String pathToAppTemplate;
     private final String pathToEmbeddedAppTemplate;
     private final String clientId;
@@ -49,7 +48,7 @@ public class ShopifyAppRequestCache implements RequestCache {
      *  - authorizationRequest.getRedirectUri()
      */
     public void sendRedirect(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        if(embeddingStatusResolver.hasActiveEmbeddedParameter(request)) {
+        if(ShopifyUtils.hasActiveEmbeddedParameter(request)) {
             redirectToFullAppUrl(request, response);
         } else {
             redirectToEmbeddedAppUrl(request, response);
@@ -109,7 +108,7 @@ public class ShopifyAppRequestCache implements RequestCache {
 
         String redirectUri;
 
-        if(embeddingStatusResolver.hasActiveEmbeddedParameter(request)) {
+        if(ShopifyUtils.hasActiveEmbeddedParameter(request)) {
             redirectUri = redirectToFullAppUrl(request, response);
         } else {
             redirectUri = redirectToEmbeddedAppUrl(request, response);

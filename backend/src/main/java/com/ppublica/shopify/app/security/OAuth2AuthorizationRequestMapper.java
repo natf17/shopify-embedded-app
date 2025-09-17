@@ -4,7 +4,6 @@ import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequ
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 
 import java.util.Map;
-import java.util.Set;
 
 public class OAuth2AuthorizationRequestMapper {
     private Map<String, Object> attributes;

@@ -68,19 +68,19 @@ The following outlines how this project meets the Shopify requirements for app i
   - Step 3: Validate authorization code: `ShopifyOAuth2AuthorizationCodeAuthenticationProvider`
     - Nonce check (nonce sent to authorization uri in query = nonce in current request params): the nonce sent to the auth server is guaranteed to be the same as the nonce in the cookie. So it is sufficient to only check the cookie.
     - Nonce check (cookie = nonce in current request params)
-      - CookieOAuth2AuthorizationRequestRepository extracts from cookie and creates the OAuth2AuthorizationRequest.
-      - OAuth2AuthorizationCodeAuthenticationProvider compares with the nonce in current request params
-    - HMAC check (already done by ShopifyInstallationRequestFilter)
-    - Check for valid shop parameter (extracted by ShopifyInstallationRequestFilter and verified in ShopifyOAuth2AuthorizationCodeAuthenticationProvider)
+      - `CookieOAuth2AuthorizationRequestRepository` extracts from cookie and creates the `OAuth2AuthorizationRequest`.
+      - `OAuth2AuthorizationCodeAuthenticationProvider` compares with the nonce in current request params
+    - HMAC check (already done by `ShopifyRequestAuthenticationFilter`)
+    - Check for valid `shop` parameter (see `ShopifyOAuth2AuthorizationCodeAuthenticationProvider`)
   - Step 4: Get an access token:
-    - insert shop name into token uri (ShopifyOAuth2AuthorizationCodeAuthenticationProvider)
-    - add parameters to body (see RestClientAuthorizationCodeTokenResponseClient and DefaultOAuth2TokenRequestParametersConverter)
-    - process response: "access_token" and "scope" values
-      - DefaultMapOAuth2AccessTokenResponseConverter (used by RestClientAuthorizationCodeTokenResponseClient to parse the response) correctly extracts these values.
-      - However, the scope string is split with " " as delimiter. We need to use ",".
-        - see ShopifyMapOAuth2AccessTokenResponseConverter
-    - Note: if the authorization server responds with an error, OAuth2AuthorizationCodeGrantFilter will redirect to redirect uri with error params. On the second pass, the filter will not match the request as an authorization response and will let the request continue. Further down the filter chain, if this path (redirect uri) requires the user to be authenticated, the AuthorizationFilter will throw an AccessDeniedException.
-    - We must verify returned scopes (see ShopifyOAuth2AuthorizationCodeAuthenticationProvider)
+    - insert shop name into token uri (`ShopifyOAuth2AuthorizationCodeAuthenticationProvider`)
+    - add parameters to body (already down by default: `RestClientAuthorizationCodeTokenResponseClient` and `DefaultOAuth2TokenRequestParametersConverter`)
+    - process response: `access_token` and `scope` values
+      - `DefaultMapOAuth2AccessTokenResponseConverter` (used by `RestClientAuthorizationCodeTokenResponseClient` to parse the response) correctly extracts these values.
+      - However, the `scope` string is split with `" "` as delimiter. We need to use `","`.
+        - see `ShopifyMapOAuth2AccessTokenResponseConverter`
+    - Note: if the authorization server responds with an error, `OAuth2AuthorizationCodeGrantFilter` will redirect to the redirect uri with error params. On the second pass, the filter will not match the request as an authorization response and will let the request continue. Further down the filter chain, if this path (redirect uri) requires the user to be authenticated, the AuthorizationFilter will throw an `AccessDeniedException` because the request didn't come from Shopify.
+    - The approved scopes are verified in `ShopifyOAuth2AuthorizationCodeAuthenticationProvider`
   - Step 5: Redirect to your app's UI: ShopifyOAuth2AuthorizationCodeGrantFilter
     - PostOAuth2AuthorizationRedirectStrategy redirects to either
       - the full app url (/shopify?shop={shop}&host={host})

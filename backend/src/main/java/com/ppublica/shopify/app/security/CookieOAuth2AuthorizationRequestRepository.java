@@ -12,7 +12,7 @@ import java.util.Optional;
 
 public class CookieOAuth2AuthorizationRequestRepository implements AuthorizationRequestRepository<OAuth2AuthorizationRequest> {
     private static final String OAUTH2_COOKIE_NAME = "Shopify_OAuth_Request";
-    private SecureCookieSerializer cookieSerializer;
+    private final SecureCookieSerializer cookieSerializer;
 
     public CookieOAuth2AuthorizationRequestRepository(SecureCookieSerializer cookieSerializer) {
         this.cookieSerializer = cookieSerializer;
