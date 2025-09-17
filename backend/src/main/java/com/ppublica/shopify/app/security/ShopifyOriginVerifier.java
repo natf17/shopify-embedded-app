@@ -13,9 +13,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import static com.ppublica.shopify.app.security.ShopifyUtils.HMAC_QUERY_PARAM;
+import static com.ppublica.shopify.app.security.ShopifyUtils.SHOP_QUERY_PARAM;
+
 public class ShopifyOriginVerifier {
-    private static final String HMAC_KEY = "hmac";
-    private static final String SHOP_PARAM_NAME = "shop";
+    private static final String HMAC_KEY = HMAC_QUERY_PARAM;
+    private static final String SHOP_PARAM_NAME = SHOP_QUERY_PARAM;
     private static final String ALGORITHM = "HmacSHA256";
     private final String hmacSecret;
 
@@ -23,11 +26,11 @@ public class ShopifyOriginVerifier {
         this.hmacSecret = hmacSecret;
     }
 
-    // also adds shop to request attribute if successful
-    public boolean comesFromShopify(MultiValueMap<String, String> queryParams) {
+    public boolean comesFromShopify(String queryString) {
+        MultiValueMap<String, String> queryParamMap = UriUtils.getQueryParams(queryString);
 
         // the parameters must be sorted alphabetically
-        TreeMap<String, List<String>> sortedQueryStringMap = new TreeMap<>(queryParams);
+        TreeMap<String, List<String>> sortedQueryStringMap = new TreeMap<>(queryParamMap);
 
         // Remove the HMAC parameter from the query string
         List<String> hmacValues = sortedQueryStringMap.get(HMAC_KEY);

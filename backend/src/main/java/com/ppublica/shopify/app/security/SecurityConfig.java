@@ -5,17 +5,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.converter.FormHttpMessageConverter;
-import org.springframework.http.converter.HttpMessageConverters;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.oauth2.client.endpoint.OAuth2AccessTokenResponseClient;
 import org.springframework.security.oauth2.client.endpoint.RestClientAuthorizationCodeTokenResponseClient;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
-import org.springframework.security.oauth2.client.web.OAuth2AuthorizationCodeGrantFilter;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestRedirectFilter;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
 import org.springframework.security.oauth2.core.http.converter.OAuth2AccessTokenResponseHttpMessageConverter;
@@ -41,7 +38,7 @@ public class SecurityConfig {
     private String pathToApp = authorizationRequestBaseUri + clientRegistrationId;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, ShopifyInstallationRequestFilter shopifyInstallationRequestFilter,
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, ShopifyRequestAuthenticationFilter shopifyRequestAuthenticationFilter,
                                                    ClientRegistrationRepository clientRegistrationRepo,
                                                    AuthenticationManager authenticationManager) throws Exception {
         http.authorizeHttpRequests( authorize -> authorize
@@ -54,7 +51,7 @@ public class SecurityConfig {
                                 .authorizationRedirectStrategy(authorizationRedirectStrategy())
                         )
             )
-            .addFilterBefore(shopifyInstallationRequestFilter, OAuth2AuthorizationRequestRedirectFilter.class)
+            .addFilterBefore(shopifyRequestAuthenticationFilter, OAuth2AuthorizationRequestRedirectFilter.class)
             .requestCache(requestCache -> requestCache.requestCache(shopifyAppRequestCache()))
             .authenticationManager(authenticationManager); // spring internals will use this instead of authentication manager builder
 
@@ -90,8 +87,8 @@ public class SecurityConfig {
 
 
     @Bean
-    public ShopifyInstallationRequestFilter shopifyInstallationRequestFilter(AuthenticationManager authenticationManager, ShopifyOriginVerifier shopifyOriginVerifier) {
-        return new ShopifyInstallationRequestFilter(authenticationManager, PathPatternRequestMatcher.pathPattern(pathRequiringShopifyOriginVerification));
+    public ShopifyRequestAuthenticationFilter shopifyRequestAuthenticationFilter(AuthenticationManager authenticationManager, ShopifyOriginVerifier shopifyOriginVerifier) {
+        return new ShopifyRequestAuthenticationFilter(authenticationManager, PathPatternRequestMatcher.pathPattern(pathRequiringShopifyOriginVerification));
     }
 
     @Bean

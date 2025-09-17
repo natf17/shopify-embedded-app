@@ -21,18 +21,22 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+import static com.ppublica.shopify.app.security.ShopifyUtils.SHOP_QUERY_PARAM;
+
 /*
  * Custom AuthenticationProvider that uses OAuth2AuthorizationCodeAuthenticationProvider under the hood.
  * Before delegating to the Spring authentication provider, it:
  *  - creates a new ClientRegistration with a shop-specific token uri
  *  - verifies that the shop parameter (extracted from the redirectUri) is valid
  *
+ * The shop name could be taken from the Authentication object (since only Shopify should call this endpoint), but
+ * we extract directly from the uri to ensure it is always obtained this way.
+ *
  * After successful authentication, it verifies that all requested scopes were granted.
  */
 public class ShopifyOAuth2AuthorizationCodeAuthenticationProvider implements AuthenticationProvider {
     private final OAuth2AuthorizationCodeAuthenticationProvider authProvider;
     private static final String INVALID_HMAC_PARAMETER_ERROR_CODE = "invalid_hmac_parameter";
-    private static final String SHOP_PARAM_NAME = "shop";
     private static final Pattern shopNameRegex = Pattern.compile("^https?://[a-zA-Z0-9][a-zA-Z0-9\\-]*\\.myshopify\\.com/?");
 
    public ShopifyOAuth2AuthorizationCodeAuthenticationProvider(OAuth2AccessTokenResponseClient<OAuth2AuthorizationCodeGrantRequest> accessTokenResponseClient) {
@@ -44,9 +48,8 @@ public class ShopifyOAuth2AuthorizationCodeAuthenticationProvider implements Aut
         OAuth2AuthorizationCodeAuthenticationToken authorizationCodeAuthenticationToken = (OAuth2AuthorizationCodeAuthenticationToken) authentication;
 
         String requestUri = authorizationCodeAuthenticationToken.getAuthorizationExchange().getAuthorizationResponse().getRedirectUri();
-        UriComponents uriComponents = UriComponentsBuilder.fromUriString(requestUri).build();
-        MultiValueMap<String, String> queryParams = uriComponents.getQueryParams();
-        String shop = queryParams.getFirst(SHOP_PARAM_NAME);
+
+        String shop = ShopifyUtils.resolveShopQueryParamFromFullUri(requestUri);
 
         if(!isShopNameValid(shop)) {
             throw new OAuth2AuthorizationException(new OAuth2Error(INVALID_HMAC_PARAMETER_ERROR_CODE));
@@ -95,9 +98,7 @@ public class ShopifyOAuth2AuthorizationCodeAuthenticationProvider implements Aut
        Set<String> requestedScopes = authenticationResult.getAuthorizationExchange().getAuthorizationRequest().getScopes();
        Set<String> approvedScopes = authenticationResult.getAccessToken().getScopes();
 
-        return requestedScopes.stream()
-                .allMatch(scope -> approvedScopes.contains(scope) ||
-                        approvedScopes.contains(scope.replaceFirst("read", "write")));
+        return ShopifyUtils.areScopesSatisfied(requestedScopes, approvedScopes);
 
     }
 }

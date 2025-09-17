@@ -126,7 +126,7 @@ public class ShopifyOAuth2AuthorizationRequestResolver implements OAuth2Authoriz
 
         // fall back to any request param; maybe the request is from a non-embedded request
 
-        return request.getParameter(SHOP_QUERY_PARAM);
+        return ShopifyUtils.resolveShopParamFromRequest(request);
 
 
     }

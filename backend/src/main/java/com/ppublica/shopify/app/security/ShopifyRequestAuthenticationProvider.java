@@ -4,12 +4,9 @@ import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.util.MultiValueMap;
 
 import java.util.Optional;
 import java.util.Set;
-
-import static com.ppublica.shopify.app.security.ShopifyUtils.SHOP_QUERY_PARAM;
 
 /*
  * populates the ShopifyRequestAuthenticationToken with token information, if it is found.
@@ -28,12 +25,12 @@ public class ShopifyRequestAuthenticationProvider implements AuthenticationProvi
         ShopifyRequestAuthenticationToken shopifyRequestAuthentication = (ShopifyRequestAuthenticationToken) authentication;
 
         String queryString = (String) shopifyRequestAuthentication.getCredentials();
-        MultiValueMap<String, String> queryParamMap = UriUtils.getQueryParams(queryString);
 
-        if(!shopifyOriginVerifier.comesFromShopify(queryParamMap)) {
+
+        if(!shopifyOriginVerifier.comesFromShopify(queryString)) {
             throw new BadCredentialsException("Request does not come from Shopify");
         }
-        String shop = queryParamMap.getFirst(SHOP_QUERY_PARAM);
+        String shop = ShopifyUtils.resolveShopQueryParamFromQueryString(queryString);
 
         Optional<ShopifyAccessToken> accessToken = accessTokenService.accessTokenForShop(shop);
 
@@ -46,7 +43,7 @@ public class ShopifyRequestAuthenticationProvider implements AuthenticationProvi
             tokenMetadata = new OAuthTokenMetadata(false, null);
         }
 
-        return ShopifyRequestAuthenticationToken.authenticated(queryParamMap, tokenMetadata);
+        return ShopifyRequestAuthenticationToken.authenticated(UriUtils.getQueryParams(queryString), tokenMetadata);
 
     }
 

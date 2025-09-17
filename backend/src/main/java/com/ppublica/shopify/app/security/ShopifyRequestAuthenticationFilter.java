@@ -19,7 +19,7 @@ import java.io.IOException;
  * This filter authenticates requests to paths that should come from Shopify.
  *
  */
-public class ShopifyInstallationRequestFilter extends OncePerRequestFilter {
+public class ShopifyRequestAuthenticationFilter extends OncePerRequestFilter {
 
     private final RequestMatcher path;
     private final AuthenticationManager authenticationManager;
@@ -27,7 +27,7 @@ public class ShopifyInstallationRequestFilter extends OncePerRequestFilter {
             .getContextHolderStrategy();
     private SecurityContextRepository securityContextRepository = new RequestAttributeSecurityContextRepository();
 
-    public ShopifyInstallationRequestFilter(AuthenticationManager authenticationManager, RequestMatcher path) {
+    public ShopifyRequestAuthenticationFilter(AuthenticationManager authenticationManager, RequestMatcher path) {
         this.path = path;
         this.authenticationManager = authenticationManager;
     }

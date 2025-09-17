@@ -59,13 +59,13 @@ These are the app endpoints:
 The following outlines how this project meets the Shopify requirements for app installation as described [here](https://shopify.dev/docs/apps/build/authentication-authorization/access-tokens/authorization-code-grant):
 - We leverage Spring Security OAuth2 Client to perform the Authorization code grant flow and obtain the token upon installation:
 - Scenario 1: The shop is being installed (`/shopify`)
-  - Step 1: Verify the installation request: See `ShopifyInstallationRequestFilter`, `ShopifyRequestAuthenticationToken`
+  - Step 1: Verify the installation request: See `ShopifyRequestAuthenticationFilter`, `ShopifyRequestAuthenticationToken`
   - `ShopifyRequestAuthenticationProvider` authenticates the request, but the principal reflects that no OAuth token was found.
   - In `OAuth2AuthorizationRequestRedirectFilter`, `ShopifyOAuth2AuthorizationRequestResolver` builds a `OAuth2AuthorizationRequest` for the redirect (Step 2: Request authorization code)
-  - ShopifyAuthorizationRequestRedirectStrategy
+  - `ShopifyAuthorizationRequestRedirectStrategy`
     - if embedded: returns a generated html page that will exit the iframe page via an AppBridge redirect
     - if not embedded: redirects to the authorization uri
-  - Step 3: Validate authorization code: ShopifyOAuth2AuthorizationCodeAuthenticationProvider 
+  - Step 3: Validate authorization code: `ShopifyOAuth2AuthorizationCodeAuthenticationProvider`
     - Nonce check (nonce sent to authorization uri in query = nonce in current request params): the nonce sent to the auth server is guaranteed to be the same as the nonce in the cookie. So it is sufficient to only check the cookie.
     - Nonce check (cookie = nonce in current request params)
       - CookieOAuth2AuthorizationRequestRepository extracts from cookie and creates the OAuth2AuthorizationRequest.
@@ -97,12 +97,8 @@ An H2 in-memory database is configured to run when the dev profile is active.
 If desired, an H2-in-memory database can be configured when running integration tests. The single existing integration test activates the test profile.
 
 # TODOs
-- ShopifyInstallationRequestFilter -> rename to ShopifyRequestAuthenticationFilter
-- AutoOAuthTokenLoaderFilter -> rename to AutoOAuthTokenCheckFilter; sets property in ShopifyRequestAuthenticationToken if valid oauth token exists (checks client registration)
-- ShopifyOAuth2AuthorizationRequestResolver -> must only resolve if the user is authenticated,and property not set
 - `isTokenValid()` method in `AutoOAuthTokenLoaderFilter`
 - encode the token in DB
 -  build up ShopifyAppRequestCache so that it is a fully functional cookie-based request cache
-- add instructions for set up:
-  - env vars: those in props file and active profile (export SPRING_PROFILES_ACTIVE=dev)
 - ShopifyAccessToken scopes should be a set, not a String
+- A way of authenticating non-embedded requests. Currently none, so trying to reach the SPA returns `401`
