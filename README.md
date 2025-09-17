@@ -59,9 +59,9 @@ These are the app endpoints:
 The following outlines how this project meets the Shopify requirements for app installation as described [here](https://shopify.dev/docs/apps/build/authentication-authorization/access-tokens/authorization-code-grant):
 - We leverage Spring Security OAuth2 Client to perform the Authorization code grant flow and obtain the token upon installation:
 - Scenario 1: The shop is being installed (`/shopify`)
-  - Step 1: Verify the installation request: See `ShopifyInstallationRequestFilter`
-  - ShopifyOAuthTokenExistsFilter doesn't find a token for this shop
-  - In OAuth2AuthorizationRequestRedirectFilter, ShopifyOAuth2AuthorizationRequestResolver builds a OAuth2AuthorizationRequest for the redirect (Step 2: Request authorization code)
+  - Step 1: Verify the installation request: See `ShopifyInstallationRequestFilter`, `ShopifyRequestAuthenticationToken`
+  - `ShopifyRequestAuthenticationProvider` authenticates the request, but the principal reflects that no OAuth token was found.
+  - In `OAuth2AuthorizationRequestRedirectFilter`, `ShopifyOAuth2AuthorizationRequestResolver` builds a `OAuth2AuthorizationRequest` for the redirect (Step 2: Request authorization code)
   - ShopifyAuthorizationRequestRedirectStrategy
     - if embedded: returns a generated html page that will exit the iframe page via an AppBridge redirect
     - if not embedded: redirects to the authorization uri
@@ -87,8 +87,8 @@ The following outlines how this project meets the Shopify requirements for app i
       - or to embedded app url ()
 
 - Scenario 2: The shop is already installed, and we have a token (`/shopify`)
-- Step 1: Verify the installation request: See ShopifyInstallationRequestFilter
-- ShopifyOAuthTokenExistsFilter finds a token for this shop. If it's invalid, it deletes it and reverts to scenario 1
+- Step 1: Verify the installation request: See `ShopifyInstallationRequestFilter`
+- `AutoOAuthTokenLoaderFilter` finds a token for this shop. If it's invalid, it deletes it and reverts to scenario 1
 - In OAuth2AuthorizationRequestRedirectFilter, ShopifyOAuth2AuthorizationRequestResolver returns null, and OAuth2AuthorizationRequestRedirectFilter continues through the chain
 
 - We leverage Spring Security OAuth2 Resource Server to validate the session token
@@ -97,7 +97,12 @@ An H2 in-memory database is configured to run when the dev profile is active.
 If desired, an H2-in-memory database can be configured when running integration tests. The single existing integration test activates the test profile.
 
 # TODOs
+- ShopifyInstallationRequestFilter -> rename to ShopifyRequestAuthenticationFilter
+- AutoOAuthTokenLoaderFilter -> rename to AutoOAuthTokenCheckFilter; sets property in ShopifyRequestAuthenticationToken if valid oauth token exists (checks client registration)
+- ShopifyOAuth2AuthorizationRequestResolver -> must only resolve if the user is authenticated,and property not set
+- `isTokenValid()` method in `AutoOAuthTokenLoaderFilter`
 - encode the token in DB
 -  build up ShopifyAppRequestCache so that it is a fully functional cookie-based request cache
 - add instructions for set up:
   - env vars: those in props file and active profile (export SPRING_PROFILES_ACTIVE=dev)
+- ShopifyAccessToken scopes should be a set, not a String

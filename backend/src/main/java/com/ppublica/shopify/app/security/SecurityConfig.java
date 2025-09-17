@@ -9,6 +9,7 @@ import org.springframework.http.converter.HttpMessageConverters;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.oauth2.client.endpoint.OAuth2AccessTokenResponseClient;
@@ -41,8 +42,8 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, ShopifyInstallationRequestFilter shopifyInstallationRequestFilter,
-                                                   ShopifyOAuthTokenExistsFilter shopifyOAuthTokenExistsFilter,
-                                                   ClientRegistrationRepository clientRegistrationRepo) throws Exception {
+                                                   ClientRegistrationRepository clientRegistrationRepo,
+                                                   AuthenticationManager authenticationManager) throws Exception {
         http.authorizeHttpRequests( authorize -> authorize
                 .anyRequest().authenticated()
         )
@@ -53,9 +54,9 @@ public class SecurityConfig {
                                 .authorizationRedirectStrategy(authorizationRedirectStrategy())
                         )
             )
-            .addFilterBefore(shopifyOAuthTokenExistsFilter, OAuth2AuthorizationRequestRedirectFilter.class)
-            .addFilterBefore(shopifyInstallationRequestFilter, ShopifyOAuthTokenExistsFilter.class)
-            .requestCache(requestCache -> requestCache.requestCache(shopifyAppRequestCache()));
+            .addFilterBefore(shopifyInstallationRequestFilter, OAuth2AuthorizationRequestRedirectFilter.class)
+            .requestCache(requestCache -> requestCache.requestCache(shopifyAppRequestCache()))
+            .authenticationManager(authenticationManager); // spring internals will use this instead of authentication manager builder
 
 
         return http.build();
@@ -87,14 +88,23 @@ public class SecurityConfig {
         return new ShopifyOriginVerifier(clientSecret);
     }
 
+
     @Bean
-    public ShopifyOAuthTokenExistsFilter shopifyOAuthTokenExistsFilter(AccessTokenService accessTokenService) {
-        return new ShopifyOAuthTokenExistsFilter(accessTokenService);
+    public ShopifyInstallationRequestFilter shopifyInstallationRequestFilter(AuthenticationManager authenticationManager, ShopifyOriginVerifier shopifyOriginVerifier) {
+        return new ShopifyInstallationRequestFilter(authenticationManager, PathPatternRequestMatcher.pathPattern(pathRequiringShopifyOriginVerification));
     }
 
     @Bean
-    public ShopifyInstallationRequestFilter shopifyInstallationRequestFilter(ShopifyOriginVerifier shopifyOriginVerifier) {
-        return new ShopifyInstallationRequestFilter(shopifyOriginVerifier, PathPatternRequestMatcher.pathPattern(pathRequiringShopifyOriginVerification));
+    public AuthenticationManager authenticationManager(HttpSecurity http, ShopifyRequestAuthenticationProvider shopifyRequestAuthenticationProvider, ShopifyOAuth2AuthorizationCodeAuthenticationProvider shopifyOAuth2AuthorizationCodeAuthenticationProvider) throws Exception {
+        AuthenticationManagerBuilder builder = http.getSharedObject(AuthenticationManagerBuilder.class);
+        builder.authenticationProvider(shopifyOAuth2AuthorizationCodeAuthenticationProvider);
+        builder.authenticationProvider(shopifyOAuth2AuthorizationCodeAuthenticationProvider);
+        return builder.build();
+    }
+
+    @Bean
+    public ShopifyRequestAuthenticationProvider shopifyRequestAuthenticationProvider(AccessTokenService accessTokenService, ShopifyOriginVerifier shopifyOriginVerifier) {
+        return new ShopifyRequestAuthenticationProvider(accessTokenService, shopifyOriginVerifier);
     }
 
     @Bean
@@ -129,7 +139,7 @@ public class SecurityConfig {
             ClientRegistrationRepository clientRegistrationRepository) {
 
         return new ShopifyOAuth2AuthorizationRequestResolver(
-                        clientRegistrationRepository, authorizationRequestBaseUri);
+                        clientRegistrationRepository, authorizationRequestBaseUri, clientRegistrationId);
 
     }
 

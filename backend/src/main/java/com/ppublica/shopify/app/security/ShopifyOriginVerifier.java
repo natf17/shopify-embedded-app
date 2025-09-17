@@ -24,11 +24,7 @@ public class ShopifyOriginVerifier {
     }
 
     // also adds shop to request attribute if successful
-    public boolean comesFromShopify(HttpServletRequest httpServletRequest) {
-
-        String uriString = httpServletRequest.getRequestURL().toString() + "?" + httpServletRequest.getQueryString();
-        UriComponents uriComponents = UriComponentsBuilder.fromUriString(uriString).build();
-        MultiValueMap<String, String> queryParams = uriComponents.getQueryParams();
+    public boolean comesFromShopify(MultiValueMap<String, String> queryParams) {
 
         // the parameters must be sorted alphabetically
         TreeMap<String, List<String>> sortedQueryStringMap = new TreeMap<>(queryParams);
@@ -46,13 +42,8 @@ public class ShopifyOriginVerifier {
 
         String sortedQueryString = toQueryString(sortedQueryStringMap);
 
-        boolean comesFromShopify = isHmacEquals(hmacValue, sortedQueryString);
+        return isHmacEquals(hmacValue, sortedQueryString);
 
-        if(comesFromShopify) {
-            httpServletRequest.setAttribute(ShopifyInstallationRequestFilter.SHOP_NAME_ATTR, sortedQueryStringMap.get(SHOP_PARAM_NAME).getFirst());
-        }
-
-        return comesFromShopify;
 
     }
 
