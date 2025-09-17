@@ -36,7 +36,7 @@ public class ShopifyOriginVerifier {
         // Remove the HMAC parameter from the query string
         List<String> hmacValues = sortedQueryStringMap.get(HMAC_KEY);
 
-        if(hmacValues.size() != 1) {
+        if(hmacValues == null || hmacValues.size() != 1) {
             return false;
         }
 

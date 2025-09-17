@@ -16,7 +16,8 @@ public class ShopifyInstallationRequestFilter extends OncePerRequestFilter {
     private ShopifyOriginVerifier shopifyOriginVerifier;
     private final RequestMatcher path;
 
-    public ShopifyInstallationRequestFilter(RequestMatcher path) {
+    public ShopifyInstallationRequestFilter(ShopifyOriginVerifier shopifyOriginVerifier, RequestMatcher path) {
+        this.shopifyOriginVerifier = shopifyOriginVerifier;
         this.path = path;
     }
     @Override

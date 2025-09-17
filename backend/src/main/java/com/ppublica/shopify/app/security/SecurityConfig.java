@@ -93,8 +93,8 @@ public class SecurityConfig {
     }
 
     @Bean
-    public ShopifyInstallationRequestFilter shopifyInstallationRequestFilter() {
-        return new ShopifyInstallationRequestFilter(PathPatternRequestMatcher.pathPattern(pathRequiringShopifyOriginVerification));
+    public ShopifyInstallationRequestFilter shopifyInstallationRequestFilter(ShopifyOriginVerifier shopifyOriginVerifier) {
+        return new ShopifyInstallationRequestFilter(shopifyOriginVerifier, PathPatternRequestMatcher.pathPattern(pathRequiringShopifyOriginVerification));
     }
 
     @Bean
