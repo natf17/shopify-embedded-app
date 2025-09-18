@@ -82,6 +82,7 @@ The following outlines how this project meets the Shopify requirements for app i
         - see `ShopifyMapOAuth2AccessTokenResponseConverter`
     - Note: if the authorization server responds with an error, `OAuth2AuthorizationCodeGrantFilter` will redirect to the redirect uri with error params. On the second pass, the filter will not match the request as an authorization response and will let the request continue. Further down the filter chain, if this path (redirect uri) requires the user to be authenticated, the AuthorizationFilter will throw an `AccessDeniedException` because the request didn't come from Shopify.
     - The approved scopes are verified in `ShopifyOAuth2AuthorizationCodeAuthenticationProvider`
+    - The default `OAuth2AuthorizedClientRepository` implementation (`AuthenticatedPrincipalOAuth2...`) uses our custom `AccessTokenService` to save the token
   - Step 5: Redirect to your app's UI: by default, `OAuth2AuthorizationCodeGrantFilter` checks the `RequestCache` for a `SavedRequest` to determine where to redirect to
     - `ShopifyAppRequestCache` always returns a `SavedRequest` with the redirect url:
       - the full app url (/shopify?shop={shop}&host={host})
@@ -100,8 +101,10 @@ An H2 in-memory database is configured to run when the dev profile is active.
 If desired, an H2-in-memory database can be configured when running integration tests. The single existing integration test activates the test profile.
 
 # TODOs
-- `isTokenValid()` method in `AutoOAuthTokenLoaderFilter`
+- Update README sections: The database and Url paths
 - encode the token in DB
--  build up ShopifyAppRequestCache so that it is a fully functional cookie-based request cache
-- ShopifyAccessToken scopes should be a set, not a String
+-  build up `ShopifyAppRequestCache` so that it is a fully functional cookie-based request cache
+- `ShopifyAccessToken` scopes should be a set, not a String. [Update: REPLACE token with Spring default]
 - A way of authenticating non-embedded requests. Currently none, so trying to reach the SPA returns `401`
+- Consolidate the retrieval of the OAuth token in `AccessTokenService` to perhaps only use the `OAuth2AuthorizedClientService` interface
+  - `ShopifyRequestAuthenticationFilter` should use `AccessTokenService`

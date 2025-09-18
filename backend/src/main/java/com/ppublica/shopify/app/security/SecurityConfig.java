@@ -40,7 +40,8 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, ShopifyRequestAuthenticationFilter shopifyRequestAuthenticationFilter,
                                                    ClientRegistrationRepository clientRegistrationRepo,
-                                                   AuthenticationManager authenticationManager) throws Exception {
+                                                   AuthenticationManager authenticationManager,
+                                                   AccessTokenService accessTokenService) throws Exception {
         http.authorizeHttpRequests( authorize -> authorize
                 .anyRequest().authenticated()
         )
@@ -50,6 +51,7 @@ public class SecurityConfig {
                                 .authorizationRequestRepository(authorizationRequestRepository())
                                 .authorizationRedirectStrategy(authorizationRedirectStrategy())
                         )
+                    .authorizedClientService(accessTokenService)
             )
             .addFilterBefore(shopifyRequestAuthenticationFilter, OAuth2AuthorizationRequestRedirectFilter.class)
             .requestCache(requestCache -> requestCache.requestCache(shopifyAppRequestCache()))
@@ -121,8 +123,8 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AccessTokenService accessTokenService(ShopAccessTokenRepository shopAccessTokenRepository) {
-        return new AccessTokenService(shopAccessTokenRepository);
+    public AccessTokenService accessTokenService(ShopAccessTokenRepository shopAccessTokenRepository, ClientRegistrationRepository clientRegistrationRepo) {
+        return new AccessTokenService(shopAccessTokenRepository, clientRegistrationRepo, clientRegistrationId);
     }
 
     @Bean

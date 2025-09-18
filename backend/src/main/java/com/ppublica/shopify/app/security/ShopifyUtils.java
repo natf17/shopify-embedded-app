@@ -15,6 +15,10 @@ public class ShopifyUtils {
     public static String HMAC_QUERY_PARAM = "hmac";
     public static String SHOPIFY_SCOPE_DELIMITER = ",";
 
+    public static String convertScope(Set<String> scope) {
+        return String.join(SHOPIFY_SCOPE_DELIMITER, scope);
+    }
+
     public static Set<String> convertScope(String scope) {
         return convertScope(scope, SHOPIFY_SCOPE_DELIMITER);
     }
