@@ -56,6 +56,7 @@ These are the app endpoints:
 
 
 # How it works
+## The SPA
 The following outlines how this project meets the Shopify requirements for app installation as described [here](https://shopify.dev/docs/apps/build/authentication-authorization/access-tokens/authorization-code-grant):
 - We leverage Spring Security OAuth2 Client to perform the Authorization code grant flow and obtain the token upon installation:
 - Scenario 1: The shop is being installed (`/shopify`)
@@ -81,16 +82,18 @@ The following outlines how this project meets the Shopify requirements for app i
         - see `ShopifyMapOAuth2AccessTokenResponseConverter`
     - Note: if the authorization server responds with an error, `OAuth2AuthorizationCodeGrantFilter` will redirect to the redirect uri with error params. On the second pass, the filter will not match the request as an authorization response and will let the request continue. Further down the filter chain, if this path (redirect uri) requires the user to be authenticated, the AuthorizationFilter will throw an `AccessDeniedException` because the request didn't come from Shopify.
     - The approved scopes are verified in `ShopifyOAuth2AuthorizationCodeAuthenticationProvider`
-  - Step 5: Redirect to your app's UI: ShopifyOAuth2AuthorizationCodeGrantFilter
-    - PostOAuth2AuthorizationRedirectStrategy redirects to either
+  - Step 5: Redirect to your app's UI: by default, `OAuth2AuthorizationCodeGrantFilter` checks the `RequestCache` for a `SavedRequest` to determine where to redirect to
+    - `ShopifyAppRequestCache` always returns a `SavedRequest` with the redirect url:
       - the full app url (/shopify?shop={shop}&host={host})
       - or to embedded app url ()
 
 - Scenario 2: The shop is already installed, and we have a token (`/shopify`)
-- Step 1: Verify the installation request: See `ShopifyInstallationRequestFilter`
-- `AutoOAuthTokenLoaderFilter` finds a token for this shop. If it's invalid, it deletes it and reverts to scenario 1
-- In OAuth2AuthorizationRequestRedirectFilter, ShopifyOAuth2AuthorizationRequestResolver returns null, and OAuth2AuthorizationRequestRedirectFilter continues through the chain
+- Step 1: Verify the installation request: See `ShopifyInstallationRequestFilter` authenticates the request
+- `ShopifyOAuth2AuthorizationRequestResolver` checks the scope of the token found: if not all scopes granted, it reverts to scenario 1
+- In `OAuth2AuthorizationRequestRedirectFilter`, `ShopifyOAuth2AuthorizationRequestResolver` returns `null`, and the request continues through the chain. Since it's authenticated, it'll go through the entire chain.
 
+
+## The API
 - We leverage Spring Security OAuth2 Resource Server to validate the session token
 
 An H2 in-memory database is configured to run when the dev profile is active. 
