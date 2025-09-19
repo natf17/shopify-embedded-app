@@ -8,7 +8,7 @@ import org.springframework.http.converter.FormHttpMessageConverter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.oauth2.client.endpoint.RestClientAuthorizationCodeTokenResponseClient;
@@ -19,6 +19,8 @@ import org.springframework.security.oauth2.core.http.converter.OAuth2AccessToken
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 import org.springframework.web.client.RestClient;
+
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -93,12 +95,13 @@ public class SecurityConfig {
         return new ShopifyRequestAuthenticationFilter(authenticationManager, PathPatternRequestMatcher.pathPattern(pathRequiringShopifyOriginVerification));
     }
 
+    // becomes the parent/global AuthenticationManager: see AuthenticationConfiguration/HttpSecurityConfiguration
     @Bean
-    public AuthenticationManager authenticationManager(HttpSecurity http, ShopifyRequestAuthenticationProvider shopifyRequestAuthenticationProvider, ShopifyOAuth2AuthorizationCodeAuthenticationProvider shopifyOAuth2AuthorizationCodeAuthenticationProvider) throws Exception {
-        AuthenticationManagerBuilder builder = http.getSharedObject(AuthenticationManagerBuilder.class);
-        builder.authenticationProvider(shopifyOAuth2AuthorizationCodeAuthenticationProvider);
-        builder.authenticationProvider(shopifyOAuth2AuthorizationCodeAuthenticationProvider);
-        return builder.build();
+    public AuthenticationManager authenticationManager(ShopifyRequestAuthenticationProvider shopifyRequestAuthenticationProvider, ShopifyOAuth2AuthorizationCodeAuthenticationProvider shopifyOAuth2AuthorizationCodeAuthenticationProvider) throws Exception {
+        List<AuthenticationProvider> providers = List.of(
+            shopifyRequestAuthenticationProvider,
+            shopifyOAuth2AuthorizationCodeAuthenticationProvider);
+        return new ProviderManager(providers);
     }
 
     @Bean
@@ -107,7 +110,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationProvider shopifyOAuth2AuthorizationCodeAuthenticationProvider() {
+    public ShopifyOAuth2AuthorizationCodeAuthenticationProvider shopifyOAuth2AuthorizationCodeAuthenticationProvider() {
         OAuth2AccessTokenResponseHttpMessageConverter accessTokenResponseHttpMessageConverter = new OAuth2AccessTokenResponseHttpMessageConverter();
         accessTokenResponseHttpMessageConverter.setAccessTokenResponseConverter(new ShopifyMapOAuth2AccessTokenResponseConverter());
 

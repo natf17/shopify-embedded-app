@@ -1,6 +1,9 @@
 package com.ppublica.shopify.app.security;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.context.SecurityContextHolderStrategy;
@@ -20,7 +23,7 @@ import java.io.IOException;
  *
  */
 public class ShopifyRequestAuthenticationFilter extends OncePerRequestFilter {
-
+    private static final Logger log = LoggerFactory.getLogger(ShopifyRequestAuthenticationFilter.class);
     private final RequestMatcher path;
     private final AuthenticationManager authenticationManager;
     private SecurityContextHolderStrategy securityContextHolderStrategy = SecurityContextHolder
@@ -34,20 +37,30 @@ public class ShopifyRequestAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, FilterChain filterChain) throws ServletException, IOException {
-
+        log.debug("In ShopifyRequestAuthenticationFilter---");
         if(!requiresVerification(httpServletRequest)) {
+            log.debug("ShopifyRequestAuthenticationFilter--- not matched");
+
             filterChain.doFilter(httpServletRequest, httpServletResponse);
         }
-        ShopifyRequestAuthenticationToken authentication = ShopifyRequestAuthenticationToken.unauthenticated(httpServletRequest.getQueryString());
+        log.debug("ShopifyRequestAuthenticationFilter--- matched");
 
-        ShopifyRequestAuthenticationToken authResult = (ShopifyRequestAuthenticationToken) authenticationManager.authenticate(authentication);
+        try {
+            ShopifyRequestAuthenticationToken authentication = ShopifyRequestAuthenticationToken.unauthenticated(httpServletRequest.getQueryString());
+            ShopifyRequestAuthenticationToken authResult = (ShopifyRequestAuthenticationToken) authenticationManager.authenticate(authentication);
+            SecurityContext context = this.securityContextHolderStrategy.createEmptyContext();
+            context.setAuthentication(authResult);
+            this.securityContextHolderStrategy.setContext(context);
+            this.securityContextRepository.saveContext(context, httpServletRequest, httpServletResponse);
+            log.debug("Authenticated");
 
-        SecurityContext context = this.securityContextHolderStrategy.createEmptyContext();
-        context.setAuthentication(authResult);
-        this.securityContextHolderStrategy.setContext(context);
-        this.securityContextRepository.saveContext(context, httpServletRequest, httpServletResponse);
+        } catch (AuthenticationException ex) {
+            log.debug("Authentication failed");
+            httpServletResponse.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+        }
 
-
+        log.info("Authenticated user");
         filterChain.doFilter(httpServletRequest, httpServletResponse);
     }
 
