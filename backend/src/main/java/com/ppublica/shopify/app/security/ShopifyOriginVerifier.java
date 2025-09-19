@@ -1,6 +1,8 @@
 package com.ppublica.shopify.app.security;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -17,6 +19,7 @@ import static com.ppublica.shopify.app.security.ShopifyUtils.HMAC_QUERY_PARAM;
 import static com.ppublica.shopify.app.security.ShopifyUtils.SHOP_QUERY_PARAM;
 
 public class ShopifyOriginVerifier {
+    private static final Logger log = LoggerFactory.getLogger(ShopifyOriginVerifier.class);
     private static final String HMAC_KEY = HMAC_QUERY_PARAM;
     private static final String SHOP_PARAM_NAME = SHOP_QUERY_PARAM;
     private static final String ALGORITHM = "HmacSHA256";
@@ -36,6 +39,7 @@ public class ShopifyOriginVerifier {
         List<String> hmacValues = sortedQueryStringMap.get(HMAC_KEY);
 
         if(hmacValues == null || hmacValues.size() != 1) {
+            log.debug("Did not find exactly one hmac query parameter");
             return false;
         }
 
@@ -73,7 +77,8 @@ public class ShopifyOriginVerifier {
 
             return MessageDigest.isEqual(expected.getBytes(), rawHmac);
         } catch(Exception ex) {
-            throw new RuntimeException("Invalid hmac");
+            log.info("Invalid hmac");
+            throw new ShopifySecurityException();
         }
     }
 }
