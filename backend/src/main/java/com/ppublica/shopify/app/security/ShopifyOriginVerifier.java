@@ -73,12 +73,21 @@ public class ShopifyOriginVerifier {
             Mac sha256_HMAC = Mac.getInstance("HmacSHA256");
             SecretKeySpec secret_key = new SecretKeySpec(hmacSecret.getBytes(StandardCharsets.UTF_8), ALGORITHM);
             sha256_HMAC.init(secret_key);
-            byte[] rawHmac = sha256_HMAC.doFinal(message.getBytes(StandardCharsets.UTF_8));
+            byte[] rawHmacOfMessage = sha256_HMAC.doFinal(message.getBytes(StandardCharsets.UTF_8));
+            String hexHmacOfMessage = toHex(rawHmacOfMessage);
 
-            return MessageDigest.isEqual(expected.getBytes(), rawHmac);
+            return MessageDigest.isEqual(expected.getBytes(), hexHmacOfMessage.getBytes());
         } catch(Exception ex) {
-            log.info("Invalid hmac");
+            log.info("Invalid hmac: {}", ex.getMessage());
             throw new ShopifySecurityException();
         }
+    }
+
+    private String toHex(byte[] bytes) {
+        StringBuilder hex = new StringBuilder();
+        for (byte b : bytes) {
+            hex.append(String.format("%02x", b));
+        }
+        return hex.toString();
     }
 }

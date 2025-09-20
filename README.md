@@ -19,13 +19,13 @@ This application demonstrates how to tweak Spring Security to authorize a Shopif
 4. Set the profile to `dev` (e.g. set the env. variable: `SPRING_PROFILES_ACTIVE=dev`)
 5. cd into the backend module: `cd backend`
 5. Start the spring boot app: `mvn spring-boot:run`
-6. Create a tunnel to make `localhost:8081` publicly accessible. You can use ngrok or pinggy.
+6. Create a tunnel to make `localhost:8080` publicly accessible. You can use ngrok or pinggy.
 7. In your Dev Dashboard, create a new version configure it:
    - Enter the "App Url": `https://{your-hostname}/shopify`
    - Select "Embed app in Shopify admin"
    - Add all the scopes that are in the `application.properties`
    - Select "Use legacy install flow"
-   - Under "Redirect URLs", add: https://{your-hostname}/authorized/shopify
+   - Under "Redirect URLs", add: `https://{your-hostname}/authorized/shopify`
 8. ...
 
 ## Adding the project
