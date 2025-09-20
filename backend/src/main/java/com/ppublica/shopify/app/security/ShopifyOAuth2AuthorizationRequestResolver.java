@@ -1,6 +1,8 @@
 package com.ppublica.shopify.app.security;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
@@ -35,7 +37,7 @@ import static com.ppublica.shopify.app.security.ShopifyUtils.SHOP_QUERY_PARAM;
  *  Returning null from resolve() bypasses the OAuth redirect in OAuth2AuthorizationRequestRedirectFilter.
  */
 public class ShopifyOAuth2AuthorizationRequestResolver implements OAuth2AuthorizationRequestResolver {
-
+    private static final Logger log = LoggerFactory.getLogger(ShopifyOAuth2AuthorizationRequestResolver.class);
     private final DefaultOAuth2AuthorizationRequestResolver delegate;
     private final ClientRegistration shopifyClientRegistration;
 
@@ -51,9 +53,11 @@ public class ShopifyOAuth2AuthorizationRequestResolver implements OAuth2Authoriz
     @Override
     public OAuth2AuthorizationRequest resolve(HttpServletRequest request) {
         if(!shouldInitiateOAuthFlow(request)) {
+            log.debug("Will not initiate OAuth flow, returning null");
             return null;
         }
 
+        log.debug("Initiate the OAuth flow");
         OAuth2AuthorizationRequest original = delegate.resolve(request);
         return customize(original, request);
     }
@@ -61,9 +65,11 @@ public class ShopifyOAuth2AuthorizationRequestResolver implements OAuth2Authoriz
     @Override
     public OAuth2AuthorizationRequest resolve(HttpServletRequest request, String clientRegistrationId) {
         if(!shouldInitiateOAuthFlow(request)) {
+            log.debug("Will not initiate OAuth flow, returning null");
             return null;
         }
 
+        log.debug("Initiate the OAuth flow");
         OAuth2AuthorizationRequest original = delegate.resolve(request, clientRegistrationId);
 
         return customize(original, request);
@@ -75,6 +81,7 @@ public class ShopifyOAuth2AuthorizationRequestResolver implements OAuth2Authoriz
      */
     protected OAuth2AuthorizationRequest customize(OAuth2AuthorizationRequest original, HttpServletRequest request) {
         String shop = resolveShopName(request);
+        log.debug("Customizing the OAuth2AuthorizationRequest with shop name: " + shop);
         if(shop == null || shop.isEmpty()) {
             throw new ShopifySecurityException();
         }
@@ -88,6 +95,9 @@ public class ShopifyOAuth2AuthorizationRequestResolver implements OAuth2Authoriz
                 .buildAndExpand(vars)
                 .toUriString();
 
+        log.debug("Adding authorization request uri: " + authorizationRequestUri);
+        log.debug("Adding authorization uri: " + authorizationUri);
+
         return OAuth2AuthorizationRequest.from(original)
                 .authorizationRequestUri(authorizationRequestUri)
                 .authorizationUri(authorizationUri)
@@ -99,16 +109,19 @@ public class ShopifyOAuth2AuthorizationRequestResolver implements OAuth2Authoriz
         ShopifyRequestAuthenticationToken auth = (ShopifyRequestAuthenticationToken)SecurityContextHolder.getContext().getAuthentication();
 
          if(auth == null || !auth.isAuthenticated()) {
+             log.debug("No Authentication found");
             return true;
          }
 
          ShopDetails shopDetails = (ShopDetails)auth.getPrincipal();
 
          if(!shopDetails.tokenMetadata().doesOAuthTokenExist()) {
+             log.debug("Authenticated but no OAuth token");
              return true;
          }
 
          if(!ShopifyUtils.areScopesSatisfied(shopifyClientRegistration.getScopes(), shopDetails.tokenMetadata().scope())) {
+             log.debug("Authenticated and has OAuth token, but the scopes don't match");
              return true;
          }
 
@@ -121,11 +134,12 @@ public class ShopifyOAuth2AuthorizationRequestResolver implements OAuth2Authoriz
 
         if(auth != null) {
             ShopDetails shopDetails = (ShopDetails)auth.getPrincipal();
+            log.debug("Obtaining shop from Authentication");
             return shopDetails.shop();
         }
 
         // fall back to any request param; maybe the request is from a non-embedded request
-
+        log.debug("Resolving shop param");
         return ShopifyUtils.resolveShopParamFromRequest(request);
 
 

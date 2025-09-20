@@ -2,6 +2,8 @@ package com.ppublica.shopify.app.security;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.web.DefaultRedirectStrategy;
 import org.springframework.security.web.RedirectStrategy;
 import org.springframework.web.util.HtmlUtils;
@@ -9,6 +11,7 @@ import org.springframework.web.util.HtmlUtils;
 import java.io.IOException;
 
 public class ShopifyAuthorizationRequestRedirectStrategy implements RedirectStrategy {
+    private static final Logger log = LoggerFactory.getLogger(ShopifyAuthorizationRequestRedirectStrategy.class);
     private final DefaultRedirectStrategy defaultRedirectStrategy = new DefaultRedirectStrategy();
     private final String shopifyApiKey;
 
@@ -18,11 +21,13 @@ public class ShopifyAuthorizationRequestRedirectStrategy implements RedirectStra
 
     @Override
     public void sendRedirect(HttpServletRequest request, HttpServletResponse response, String url) throws IOException {
+        log.debug("Redirecting...");
         if (!ShopifyUtils.isEmbedded(request)) {
+            log.debug("The app is not embedded... redirecting to " + url);
             defaultRedirectStrategy.sendRedirect(request, response, url);
             return;
         }
-
+        log.debug("The app is embedded...");
         renderShopifyAppBridgeRedirectPage(request, response);
 
     }
@@ -31,6 +36,7 @@ public class ShopifyAuthorizationRequestRedirectStrategy implements RedirectStra
 
     protected void renderShopifyAppBridgeRedirectPage(HttpServletRequest request, HttpServletResponse response) {
         String currentUri = request.getRequestURI();
+        log.debug("Setting the following variables in the HTML returned: shopify-api-key = {}, redirectUri = {}", shopifyApiKey, currentUri);
 
         response.setContentType("text/html;charset=UTF-8");
 
@@ -56,9 +62,9 @@ public class ShopifyAuthorizationRequestRedirectStrategy implements RedirectStra
                             const AppBridge = window['app-bridge'];
                             const createApp = AppBridge.default;
                             const app = createApp({ apiKey: apiKey, host: host, forceRedirect: true });
-
+                            
                             const Redirect = AppBridge.actions.Redirect;
-                            Redirect.create(app).dispatch(Redirect.Action.APP, `/shopify`);
+                            Redirect.create(app).dispatch(Redirect.Action.APP, redirectUri);
                           </script>
                         </body>
                         </html>
