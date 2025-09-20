@@ -1,5 +1,7 @@
 package com.ppublica.shopify.app.security;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -35,6 +37,7 @@ import static com.ppublica.shopify.app.security.ShopifyUtils.SHOP_QUERY_PARAM;
  * After successful authentication, it verifies that all requested scopes were granted.
  */
 public class ShopifyOAuth2AuthorizationCodeAuthenticationProvider implements AuthenticationProvider {
+    private static final Logger log = LoggerFactory.getLogger(ShopifyOAuth2AuthorizationCodeAuthenticationProvider.class);
     private final OAuth2AuthorizationCodeAuthenticationProvider authProvider;
     private static final String INVALID_HMAC_PARAMETER_ERROR_CODE = "invalid_hmac_parameter";
     private static final Pattern shopNameRegex = Pattern.compile("^https?://[a-zA-Z0-9][a-zA-Z0-9\\-]*\\.myshopify\\.com/?");
@@ -51,12 +54,15 @@ public class ShopifyOAuth2AuthorizationCodeAuthenticationProvider implements Aut
 
         String shop = ShopifyUtils.resolveShopQueryParamFromFullUri(requestUri);
 
+        log.debug("Using requestUri={} and shop={}", requestUri, shop);
+
         if(!isShopNameValid(shop)) {
             throw new OAuth2AuthorizationException(new OAuth2Error(INVALID_HMAC_PARAMETER_ERROR_CODE));
         }
 
         OAuth2AuthorizationCodeAuthenticationToken customizedAuthToken = addShopNameToTokenUri(authorizationCodeAuthenticationToken, shop);
 
+        log.debug("Delegating to OAuth2AuthorizationCodeAuthenticationProvider");
         OAuth2AuthorizationCodeAuthenticationToken authenticationResult = (OAuth2AuthorizationCodeAuthenticationToken)authProvider.authenticate(customizedAuthToken);
 
         if(!areAllScopesGranted(authenticationResult)) {
@@ -81,6 +87,8 @@ public class ShopifyOAuth2AuthorizationCodeAuthenticationProvider implements Aut
                 .buildAndExpand(vars)
                 .toUriString();
 
+        log.debug("Token uri with shop: {}", tokenUri);
+
         ClientRegistration newClientRegistration = ClientRegistration.withClientRegistration(authToken.getClientRegistration())
                                                         .tokenUri(tokenUri)
                                                         .build();
@@ -97,6 +105,7 @@ public class ShopifyOAuth2AuthorizationCodeAuthenticationProvider implements Aut
     protected boolean areAllScopesGranted(OAuth2AuthorizationCodeAuthenticationToken authenticationResult) {
        Set<String> requestedScopes = authenticationResult.getAuthorizationExchange().getAuthorizationRequest().getScopes();
        Set<String> approvedScopes = authenticationResult.getAccessToken().getScopes();
+        log.debug("requestedScopes: {}, approvedScopes: {}", requestedScopes, approvedScopes);
 
         return ShopifyUtils.areScopesSatisfied(requestedScopes, approvedScopes);
 

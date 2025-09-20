@@ -2,6 +2,8 @@ package com.ppublica.shopify.app.security;
 
 import com.ppublica.shopify.app.security.repository.ShopAccessTokenRepository;
 import com.ppublica.shopify.app.security.repository.ShopifyAccessTokenEntity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
@@ -11,6 +13,7 @@ import org.springframework.security.oauth2.client.registration.ClientRegistratio
 import java.util.Optional;
 
 public class AccessTokenService implements OAuth2AuthorizedClientService {
+    private static final Logger log = LoggerFactory.getLogger(AccessTokenService.class);
     private final ShopAccessTokenRepository shopAccessTokenRepository;
     private final ShopifyAccessTokenEntityMapper entityMapper = new ShopifyAccessTokenEntityMapper();
     private final ClientRegistration shopifyClientRegistration;
@@ -40,12 +43,14 @@ public class AccessTokenService implements OAuth2AuthorizedClientService {
     @Override
     @SuppressWarnings("unchecked")
     public <T extends OAuth2AuthorizedClient> T loadAuthorizedClient(String clientRegistrationId, String principalName) {
+        log.debug("Loading authorized client");
         if(!clientRegistrationId.equals(shopifyRegistrationId)) {
             throw new ShopifySecurityException();
         }
 
         Optional<ShopifyAccessTokenEntity> accessTokenEntity = shopAccessTokenRepository.accessTokenForShop(principalName);
         if(accessTokenEntity.isEmpty()) {
+            log.debug("Returning null; no token found");
             return null;
         }
 
@@ -56,11 +61,14 @@ public class AccessTokenService implements OAuth2AuthorizedClientService {
     // called by OAuth2AuthorizationCodeGrantFilter to save the request
     @Override
     public void saveAuthorizedClient(OAuth2AuthorizedClient authorizedClient, Authentication principal) {
+        log.debug("Saving an authorized client (a token)");
         shopAccessTokenRepository.saveAccessTokenForShop(entityMapper.toShopifyAccessTokenEntity(authorizedClient));
     }
 
     @Override
     public void removeAuthorizedClient(String clientRegistrationId, String principalName) {
+        log.debug("Deleting an authorized client (a token)");
+
         if(!clientRegistrationId.equals(shopifyRegistrationId)) {
             throw new ShopifySecurityException();
         }

@@ -3,6 +3,8 @@ package com.ppublica.shopify.app.security;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.web.DefaultRedirectStrategy;
 import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
 import org.springframework.security.web.savedrequest.RequestCache;
@@ -21,6 +23,7 @@ import java.util.*;
  *
  */
 public class ShopifyAppRequestCache implements RequestCache {
+    private static final Logger log = LoggerFactory.getLogger(ShopifyAppRequestCache.class);
     private RequestCache requestCache = new HttpSessionRequestCache();
 
     private final DefaultRedirectStrategy defaultRedirectStrategy = new DefaultRedirectStrategy();
@@ -99,19 +102,25 @@ public class ShopifyAppRequestCache implements RequestCache {
 
     @Override
     public void saveRequest(HttpServletRequest request, HttpServletResponse response) {
+        log.debug("Saving a request");
         requestCache.saveRequest(request, response);
     }
 
     @Override
     public SavedRequest getRequest(HttpServletRequest request, HttpServletResponse response) {
+        log.debug("Getting a request");
+
         SavedRequest savedRequest = requestCache.getRequest(request, response);
 
         String redirectUri;
 
         if(ShopifyUtils.hasActiveEmbeddedParameter(request)) {
             redirectUri = redirectToFullAppUrl(request, response);
+            log.debug("Setting redirect url to redirect to full app url: {}", redirectUri);
         } else {
             redirectUri = redirectToEmbeddedAppUrl(request, response);
+            log.debug("Setting redirect url to redirect to embedded app url: {}", redirectUri);
+
         }
 
         return new ShopifySavedRequest(redirectUri, savedRequest);
@@ -119,12 +128,16 @@ public class ShopifyAppRequestCache implements RequestCache {
 
     @Override
     public HttpServletRequest getMatchingRequest(HttpServletRequest request, HttpServletResponse response) {
+        log.debug("Getting matching request");
+
         // none are saved
         return requestCache.getMatchingRequest(request, response);
     }
 
     @Override
     public void removeRequest(HttpServletRequest request, HttpServletResponse response) {
+        log.debug("Removing request");
+
         requestCache.removeRequest(request, response);
     }
 
