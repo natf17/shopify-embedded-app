@@ -68,6 +68,19 @@ public class ShopifyOriginVerifier {
 
     }
 
+    /*
+     * Assumptions/preconditions:
+     * - To get byte[] of human-readable string (like query string), convert characters into their UTF-8 byte representation
+     * - The expected parameter is a hex-encoded byte[].
+     *
+     * To perform the comparison, the message parameter is
+     *  1. -> encoded to byte[] UTF-8 representation
+     *  2. -> signed
+     *  3. -> hex encoded
+     *
+     *  Both strings (expected and message) are UTF-8 decoded to byte[] to perform the comparison
+     *
+     */
     boolean isHmacEquals(String expected, String message) {
         try {
             Mac sha256_HMAC = Mac.getInstance("HmacSHA256");

@@ -21,7 +21,7 @@ This application demonstrates how to tweak Spring Security to authorize a Shopif
 5. Start the spring boot app: `mvn spring-boot:run`
 6. Create a tunnel to make `localhost:8080` publicly accessible. You can use ngrok or pinggy.
 7. In your Dev Dashboard, create a new version configure it:
-   - Enter the "App Url": `https://{your-hostname}/shopify`
+   - Enter the "App Url": `https://{your-hostname}/app/shopify`
    - Select "Embed app in Shopify admin"
    - Add all the scopes that are in the `application.properties`
    - Select "Use legacy install flow"
@@ -59,7 +59,7 @@ These are the app endpoints:
 ## The SPA
 The following outlines how this project meets the Shopify requirements for app installation as described [here](https://shopify.dev/docs/apps/build/authentication-authorization/access-tokens/authorization-code-grant):
 - We leverage Spring Security OAuth2 Client to perform the Authorization code grant flow and obtain the token upon installation:
-- Scenario 1: The shop is being installed (`/shopify`)
+- Scenario 1: The shop is being installed (`/app/shopify`)
   - Step 1: Verify the installation request: See `ShopifyRequestAuthenticationFilter`, `ShopifyRequestAuthenticationToken`
   - `ShopifyRequestAuthenticationProvider` authenticates the request, but the principal reflects that no OAuth token was found.
   - In `OAuth2AuthorizationRequestRedirectFilter`, `ShopifyOAuth2AuthorizationRequestResolver` builds a `OAuth2AuthorizationRequest` for the redirect (Step 2: Request authorization code)
@@ -85,7 +85,7 @@ The following outlines how this project meets the Shopify requirements for app i
     - The default `OAuth2AuthorizedClientRepository` implementation (`AuthenticatedPrincipalOAuth2...`) uses our custom `AccessTokenService` to save the token
   - Step 5: Redirect to your app's UI: by default, `OAuth2AuthorizationCodeGrantFilter` checks the `RequestCache` for a `SavedRequest` to determine where to redirect to
     - `ShopifyAppRequestCache` always returns a `SavedRequest` with the redirect url:
-      - the full app url (/shopify?shop={shop}&host={host})
+      - the full app url (/app/shopify?shop={shop}&host={host})
       - or to embedded app url ()
 
 - Scenario 2: The shop is already installed, and we have a token (`/shopify`)

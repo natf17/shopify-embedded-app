@@ -3,8 +3,11 @@ package com.ppublica.shopify.app.security;
 import java.util.List;
 import java.util.TreeMap;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.slf4j.LoggerFactory;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -15,6 +18,8 @@ public class ShopifyOriginVerifierTest {
     @BeforeAll
     static void init() {
         secret = System.getenv("app_client_secret");
+        Logger logger = (Logger) LoggerFactory.getLogger("com.example.MyClass");
+        logger.setLevel(Level.DEBUG);
     }
 
 

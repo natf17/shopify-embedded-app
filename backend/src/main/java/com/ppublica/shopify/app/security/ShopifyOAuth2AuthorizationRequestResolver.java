@@ -45,7 +45,8 @@ public class ShopifyOAuth2AuthorizationRequestResolver implements OAuth2Authoriz
                                                      String authorizationRequestBaseUri, String registrationId) {
         this.delegate = new DefaultOAuth2AuthorizationRequestResolver(clientRegistrationRepository, authorizationRequestBaseUri);
         this.delegate.setAuthorizationRequestCustomizer(customizer -> customizer
-                .parameters(params -> params.remove(OAuth2ParameterNames.RESPONSE_TYPE)));
+                .parameters(params -> params.remove(OAuth2ParameterNames.RESPONSE_TYPE))
+                .authorizationRequestUri("/authorization")); // we will change later when we customize the OAuth2AuthorizationRequest
         this.shopifyClientRegistration = clientRegistrationRepository.findByRegistrationId(registrationId);
 
     }
@@ -87,21 +88,23 @@ public class ShopifyOAuth2AuthorizationRequestResolver implements OAuth2Authoriz
         }
 
         Map<String, String> vars = Map.of("shop", shop);
-        String authorizationRequestUri = UriComponentsBuilder.fromUriString(original.getAuthorizationRequestUri())
+        String authorizationUriTemplate = shopifyClientRegistration.getProviderDetails().getAuthorizationUri();
+        String authorizationUri = UriComponentsBuilder
+                .fromUriString(authorizationUriTemplate)
                 .buildAndExpand(vars)
-                .toUriString();
+                .toUri()
+                .toString();
 
-        String authorizationUri = UriComponentsBuilder.fromUriString(original.getAuthorizationUri())
-                .buildAndExpand(vars)
-                .toUriString();
-
-        log.debug("Adding authorization request uri: " + authorizationRequestUri);
         log.debug("Adding authorization uri: " + authorizationUri);
 
-        return OAuth2AuthorizationRequest.from(original)
-                .authorizationRequestUri(authorizationRequestUri)
+        OAuth2AuthorizationRequest customizedRequest =  OAuth2AuthorizationRequest.from(original)
                 .authorizationUri(authorizationUri)
                 .build();
+
+        log.debug("OAuth2AuthorizationRequest built with [authReqUri=" + customizedRequest.getAuthorizationRequestUri()
+                    + "], [redirectUri = " + customizedRequest.getRedirectUri() + "]");
+
+        return customizedRequest;
     }
 
      protected boolean shouldInitiateOAuthFlow(HttpServletRequest request) {

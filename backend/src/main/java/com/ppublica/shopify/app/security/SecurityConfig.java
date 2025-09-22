@@ -36,8 +36,8 @@ public class SecurityConfig {
 
     private String clientRegistrationId = "shopify";
 
-    private String authorizationRequestBaseUri = "/";
-    private String pathToApp = authorizationRequestBaseUri + clientRegistrationId;
+    private String authorizationRequestBaseUri = "/app";
+    private String pathToApp = authorizationRequestBaseUri + "/" + clientRegistrationId;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, ShopifyRequestAuthenticationFilter shopifyRequestAuthenticationFilter,
@@ -135,7 +135,7 @@ public class SecurityConfig {
         return new ShopAccessTokenRepository(template);
     }
 
-    // a request to /shopify will start the oauth flow -> the client registration with
+    // a request to /app/shopify will start the oauth flow -> the client registration with
     // id "shopify" will be matched
     private OAuth2AuthorizationRequestResolver authorizationRequestResolver(
             ClientRegistrationRepository clientRegistrationRepository) {
