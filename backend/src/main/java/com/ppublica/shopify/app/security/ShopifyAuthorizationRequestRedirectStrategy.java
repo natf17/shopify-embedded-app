@@ -28,15 +28,15 @@ public class ShopifyAuthorizationRequestRedirectStrategy implements RedirectStra
             return;
         }
         log.debug("The app is embedded...");
-        renderShopifyAppBridgeRedirectPage(request, response);
+        renderShopifyAppBridgeRedirectPage(request, response, url);
 
     }
 
 
 
-    protected void renderShopifyAppBridgeRedirectPage(HttpServletRequest request, HttpServletResponse response) {
-        String currentUri = request.getRequestURI();
-        log.debug("Setting the following variables in the HTML returned: shopify-api-key = {}, redirectUri = {}", shopifyApiKey, currentUri);
+    protected void renderShopifyAppBridgeRedirectPage(HttpServletRequest request, HttpServletResponse response, String url) {
+        String redirectUrl = request.getRequestURL().toString();
+        log.debug("Setting the following variables in the HTML returned: shopify-api-key = {}, redirectUri = {}", shopifyApiKey, redirectUrl);
 
         response.setContentType("text/html;charset=UTF-8");
 
@@ -48,27 +48,30 @@ public class ShopifyAuthorizationRequestRedirectStrategy implements RedirectStra
                           <meta charset="UTF-8">
                           <title>Redirecting</title>
                           <meta name="shopify-api-key" content="%s" />
-                          <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
+                          <script src="https://unpkg.com/@shopify/app-bridge@3.7.10/umd/index.js"></script>
                         </head>
                         <body>
                           <script>
                             const params = new URLSearchParams(window.location.search);
                             const shop = params.get('shop');
                             const host = params.get('host');
-                            
+                            console.log(shop);console.log(host);
                             const apiKey = document.querySelector('meta[name="shopify-api-key"]').content;
                             const redirectUri = "%s";
-                            
+                            console.log(apiKey);console.log(redirectUri)
                             const AppBridge = window['app-bridge'];
+                            console.log(AppBridge);
                             const createApp = AppBridge.default;
                             const app = createApp({ apiKey: apiKey, host: host, forceRedirect: true });
                             
                             const Redirect = AppBridge.actions.Redirect;
-                            Redirect.create(app).dispatch(Redirect.Action.APP, redirectUri);
+                            console.log("Redirecting");
+                            console.log(Redirect);
+                            Redirect.create(app).dispatch(Redirect.Action.REMOTE, redirectUri);
                           </script>
                         </body>
                         </html>
-                    """.formatted(HtmlUtils.htmlEscape(shopifyApiKey), HtmlUtils.htmlEscape(currentUri)));
+                    """.formatted(HtmlUtils.htmlEscape(shopifyApiKey), HtmlUtils.htmlEscape(redirectUrl)));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

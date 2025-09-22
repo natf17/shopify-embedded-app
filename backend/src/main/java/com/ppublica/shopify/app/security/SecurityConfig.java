@@ -11,6 +11,7 @@ import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.oauth2.client.endpoint.RestClientAuthorizationCodeTokenResponseClient;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestRedirectFilter;
@@ -57,8 +58,8 @@ public class SecurityConfig {
             )
             .addFilterBefore(shopifyRequestAuthenticationFilter, OAuth2AuthorizationRequestRedirectFilter.class)
             .requestCache(requestCache -> requestCache.requestCache(shopifyAppRequestCache()))
-            .authenticationManager(authenticationManager); // spring internals will use this instead of authentication manager builder
-
+            .authenticationManager(authenticationManager) // spring internals will use this instead of authentication manager builder
+            .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable));
 
         return http.build();
 
@@ -81,7 +82,7 @@ public class SecurityConfig {
 
     @Bean
     public ShopifyAuthorizationRequestRedirectStrategy authorizationRedirectStrategy() {
-        return new ShopifyAuthorizationRequestRedirectStrategy(pathToApp);
+        return new ShopifyAuthorizationRequestRedirectStrategy(clientId);
     }
 
     @Bean

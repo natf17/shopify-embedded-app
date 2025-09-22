@@ -18,7 +18,7 @@ public class ShopifyOriginVerifierTest {
     @BeforeAll
     static void init() {
         secret = System.getenv("app_client_secret");
-        Logger logger = (Logger) LoggerFactory.getLogger("com.example.MyClass");
+        Logger logger = (Logger) LoggerFactory.getLogger("com.ppublica.shopify.app.security.ShopifyOriginVerifierTest");
         logger.setLevel(Level.DEBUG);
     }
 
