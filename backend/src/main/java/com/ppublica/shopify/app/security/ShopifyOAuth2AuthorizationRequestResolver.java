@@ -58,8 +58,15 @@ public class ShopifyOAuth2AuthorizationRequestResolver implements OAuth2Authoriz
             return null;
         }
 
-        log.debug("Initiate the OAuth flow");
+        log.debug("Delegating to default resolver");
         OAuth2AuthorizationRequest original = delegate.resolve(request);
+
+        if(original == null) {
+            log.debug("The request path/params do not meet req. for initiating the OAuth flow");
+            return null;
+        }
+
+        log.debug("Initiate the OAuth flow");
         return customize(original, request);
     }
 
@@ -70,15 +77,22 @@ public class ShopifyOAuth2AuthorizationRequestResolver implements OAuth2Authoriz
             return null;
         }
 
-        log.debug("Initiate the OAuth flow");
+        log.debug("Delegating to default resolver");
         OAuth2AuthorizationRequest original = delegate.resolve(request, clientRegistrationId);
 
+        if(original == null) {
+            log.debug("The request path/params do not meet req. for initiating the OAuth flow");
+            return null;
+        }
+
+        log.debug("Initiate the OAuth flow");
         return customize(original, request);
     }
 
     /*
      * Substitutes shop name into {shop} path variable in the existing authorization request and authorization uris
-     *
+     * Also forces the redirect uri (which the default resolver builds using calls to the HttpServletRequest (e.g. getScheme())
+     * to use https.
      */
     protected OAuth2AuthorizationRequest customize(OAuth2AuthorizationRequest original, HttpServletRequest request) {
         String shop = resolveShopName(request);
@@ -95,10 +109,14 @@ public class ShopifyOAuth2AuthorizationRequestResolver implements OAuth2Authoriz
                 .toUri()
                 .toString();
 
+        String httpsRedirectUri = forceHttps(original.getRedirectUri());
+
         log.debug("Adding authorization uri: " + authorizationUri);
+        log.debug("Adding redirect uri (forced to https): " + httpsRedirectUri);
 
         OAuth2AuthorizationRequest customizedRequest =  OAuth2AuthorizationRequest.from(original)
                 .authorizationUri(authorizationUri)
+                .redirectUri(httpsRedirectUri)
                 .build();
 
         log.debug("OAuth2AuthorizationRequest built with [authReqUri=" + customizedRequest.getAuthorizationRequestUri()
@@ -146,6 +164,13 @@ public class ShopifyOAuth2AuthorizationRequestResolver implements OAuth2Authoriz
         return ShopifyUtils.resolveShopParamFromRequest(request);
 
 
+    }
+
+    protected String forceHttps(String originalUrl) {
+        UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(originalUrl)
+                .scheme("https");
+
+        return builder.build().toUriString();
     }
 
 }

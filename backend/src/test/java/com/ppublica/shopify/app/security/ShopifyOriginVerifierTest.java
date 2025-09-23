@@ -45,4 +45,13 @@ public class ShopifyOriginVerifierTest {
 
     }
 
+    @Test
+    void comesFromShopify_shouldReturnTrue_whenValidString_2() {
+        String queryString = "code=faa4b6522b437b369e826f1c77e2eea8&hmac=0140da83141a1d3b6e4d1019a0196933f631b98867a26feba6d52477b3d9f29e&host=YWRtaW4uc2hvcGlmeS5jb20vc3RvcmUvc2hjbGl0ZXN0&shop=shclitest.myshopify.com&state=iiJC0Jc2Vgh1D5KBnCThP0I0bw6uaEoKqJZB_pzxt-o%3D&timestamp=1758597775";
+        ShopifyOriginVerifier verifier = new ShopifyOriginVerifier(secret);
+
+        assertTrue(verifier.comesFromShopify(queryString));
+
+    }
+
 }

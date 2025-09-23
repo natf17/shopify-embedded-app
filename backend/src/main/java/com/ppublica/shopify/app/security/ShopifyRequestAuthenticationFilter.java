@@ -55,12 +55,10 @@ public class ShopifyRequestAuthenticationFilter extends OncePerRequestFilter {
             log.debug("Authenticated");
 
         } catch (AuthenticationException ex) {
-            log.debug("Authentication failed");
-            httpServletResponse.sendError(HttpServletResponse.SC_UNAUTHORIZED);
-            return;
+            log.debug("Authentication failed. We assume the app is not embedded");
+
         }
 
-        log.info("Authenticated user");
         filterChain.doFilter(httpServletRequest, httpServletResponse);
     }
 

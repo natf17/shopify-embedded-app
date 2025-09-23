@@ -45,48 +45,55 @@ Your database is expected to have the following schema:
 ## Url paths
 These are the app endpoints:
 
-`/shopify`:
+`/app/shopify`: the app uri
 - to access the embedded app (and install)
-- must be called by Shopify from an embedded app 
+- if called by Shopify from an embedded app 
   - and already installed, the request will go through the chain and the SPA will be returned
-  - if not installed, spring security initiates the OAuth flow via a 3XX redirect or Shopify App Bridge redirect (written directly to the response)
+  - if not installed, we initiate the OAuth flow via a Shopify App Bridge redirect (written directly to the response)
+- if not called by Shopify (e.g. when App Bridge redirects to break out of the iframe) it always initiates the OAuth flow.
+  - This requires `shop` to be present as a request parameter.
 
-`/authorized/shopify`:
+`/authorized/shopify`: the app redirect uri
 - called by Shopify during the OAuth flow
 
 
 # How it works
 ## The SPA
 The following outlines how this project meets the Shopify requirements for app installation as described [here](https://shopify.dev/docs/apps/build/authentication-authorization/access-tokens/authorization-code-grant):
-- We leverage Spring Security OAuth2 Client to perform the Authorization code grant flow and obtain the token upon installation:
-- Scenario 1: The shop is being installed (`/app/shopify`)
-  - Step 1: Verify the installation request: See `ShopifyRequestAuthenticationFilter`, `ShopifyRequestAuthenticationToken`
-  - `ShopifyRequestAuthenticationProvider` authenticates the request, but the principal reflects that no OAuth token was found.
-  - In `OAuth2AuthorizationRequestRedirectFilter`, `ShopifyOAuth2AuthorizationRequestResolver` builds a `OAuth2AuthorizationRequest` for the redirect (Step 2: Request authorization code)
-  - `ShopifyAuthorizationRequestRedirectStrategy`
-    - if embedded: returns a generated html page that will exit the iframe page via an AppBridge redirect
-    - if not embedded: redirects to the authorization uri
-  - Step 3: Validate authorization code: `ShopifyOAuth2AuthorizationCodeAuthenticationProvider`
-    - Nonce check (nonce sent to authorization uri in query = nonce in current request params): the nonce sent to the auth server is guaranteed to be the same as the nonce in the cookie. So it is sufficient to only check the cookie.
-    - Nonce check (cookie = nonce in current request params)
-      - `CookieOAuth2AuthorizationRequestRepository` extracts from cookie and creates the `OAuth2AuthorizationRequest`.
-      - `OAuth2AuthorizationCodeAuthenticationProvider` compares with the nonce in current request params
-    - HMAC check (already done by `ShopifyRequestAuthenticationFilter`)
-    - Check for valid `shop` parameter (see `ShopifyOAuth2AuthorizationCodeAuthenticationProvider`)
-  - Step 4: Get an access token:
-    - insert shop name into token uri (`ShopifyOAuth2AuthorizationCodeAuthenticationProvider`)
-    - add parameters to body (already down by default: `RestClientAuthorizationCodeTokenResponseClient` and `DefaultOAuth2TokenRequestParametersConverter`)
-    - process response: `access_token` and `scope` values
-      - `DefaultMapOAuth2AccessTokenResponseConverter` (used by `RestClientAuthorizationCodeTokenResponseClient` to parse the response) correctly extracts these values.
-      - However, the `scope` string is split with `" "` as delimiter. We need to use `","`.
-        - see `ShopifyMapOAuth2AccessTokenResponseConverter`
-    - Note: if the authorization server responds with an error, `OAuth2AuthorizationCodeGrantFilter` will redirect to the redirect uri with error params. On the second pass, the filter will not match the request as an authorization response and will let the request continue. Further down the filter chain, if this path (redirect uri) requires the user to be authenticated, the AuthorizationFilter will throw an `AccessDeniedException` because the request didn't come from Shopify.
-    - The approved scopes are verified in `ShopifyOAuth2AuthorizationCodeAuthenticationProvider`
-    - The default `OAuth2AuthorizedClientRepository` implementation (`AuthenticatedPrincipalOAuth2...`) uses our custom `AccessTokenService` to save the token
-  - Step 5: Redirect to your app's UI: by default, `OAuth2AuthorizationCodeGrantFilter` checks the `RequestCache` for a `SavedRequest` to determine where to redirect to
-    - `ShopifyAppRequestCache` always returns a `SavedRequest` with the redirect url:
-      - the full app url (/app/shopify?shop={shop}&host={host})
-      - or to embedded app url ()
+- We customize the Spring Security OAuth2 Client to perform the Authorization code grant flow and obtain the token upon installation:
+
+Scenario 1: The shop is being installed (`/app/shopify`)
+- Step 1: Verify the installation request: See `ShopifyRequestAuthenticationFilter`, `ShopifyRequestAuthenticationToken`
+  - Embedded: `ShopifyRequestAuthenticationProvider` authenticates the request, but the principal reflects that no OAuth token was found.
+  - Not embedded: the request remains unauthenticated
+- Step 2: Request authorization code
+  - In `OAuth2AuthorizationRequestRedirectFilter`, `ShopifyOAuth2AuthorizationRequestResolver` builds a `OAuth2AuthorizationRequest` for the redirect. We need the `shop` to build the OAuth uris.
+    - Embedded: The `shop` parameter is resolved from the `Authentication`. All other params also resolved here.
+    - Not embedded: The `shop` parameter is resolved via a query param. All other params also resolved here.
+  - `ShopifyAuthorizationRequestRedirectStrategy` chooses where to redirect to.
+    - Embedded: returns a generated html page that will exit the iframe page via an AppBridge redirect to the app uri
+    - Not embedded: redirects to the authorization uri
+- Step 3: Validate authorization code: `ShopifyOAuth2AuthorizationCodeAuthenticationProvider`
+  - Nonce check (nonce sent to authorization uri in query = nonce in current request params): the nonce sent to the auth server is guaranteed to be the same as the nonce in the cookie. So it is sufficient to only check the cookie.
+  - Nonce check (cookie = nonce in the query)
+    - `CookieOAuth2AuthorizationRequestRepository` extracts from cookie and creates the `OAuth2AuthorizationRequest`.
+    - `OAuth2AuthorizationCodeAuthenticationProvider` compares with the nonce in current request params
+  - HMAC check (already done by `ShopifyRequestAuthenticationFilter`)
+  - Check for valid `shop` parameter (see `ShopifyOAuth2AuthorizationCodeAuthenticationProvider`)
+- Step 4: Get an access token:
+  - insert shop name into token uri (`ShopifyOAuth2AuthorizationCodeAuthenticationProvider`)
+  - add parameters to body (already down by default: `RestClientAuthorizationCodeTokenResponseClient` and `DefaultOAuth2TokenRequestParametersConverter`)
+  - process response: `access_token` and `scope` values
+    - `DefaultMapOAuth2AccessTokenResponseConverter` (used by `RestClientAuthorizationCodeTokenResponseClient` to parse the response) correctly extracts these values.
+    - However, the `scope` string is split with `" "` as delimiter. We need to use `","`.
+      - see `ShopifyMapOAuth2AccessTokenResponseConverter`
+  - Note: if the authorization server responds with an error, `OAuth2AuthorizationCodeGrantFilter` will redirect to the redirect uri with error params. On the second pass, the filter will not match the request as an authorization response and will let the request continue. Further down the filter chain, if this path (redirect uri) requires the user to be authenticated, the AuthorizationFilter will throw an `AccessDeniedException` because the request didn't come from Shopify.
+  - The approved scopes are verified in `ShopifyOAuth2AuthorizationCodeAuthenticationProvider`
+  - The default `OAuth2AuthorizedClientRepository` implementation (`AuthenticatedPrincipalOAuth2...`) uses our custom `AccessTokenService` to save the token
+- Step 5: Redirect to your app's UI: by default, `OAuth2AuthorizationCodeGrantFilter` checks the `RequestCache` for a `SavedRequest` to determine where to redirect to
+  - `ShopifyAppRequestCache` always returns a `SavedRequest` with the redirect url:
+    - the full app url (/app/shopify?shop={shop}&host={host})
+    - or to embedded app url ()
 
 - Scenario 2: The shop is already installed, and we have a token (`/shopify`)
 - Step 1: Verify the installation request: See `ShopifyInstallationRequestFilter` authenticates the request
@@ -108,3 +115,4 @@ If desired, an H2-in-memory database can be configured when running integration 
 - A way of authenticating non-embedded requests. Currently none, so trying to reach the SPA returns `401`
 - Consolidate the retrieval of the OAuth token in `AccessTokenService` to perhaps only use the `OAuth2AuthorizedClientService` interface
   - `ShopifyRequestAuthenticationFilter` should use `AccessTokenService`
+- `ShopifyRequestAuthenticationFilter` should only allow authenticated access to the redirect uri

@@ -35,7 +35,9 @@ public class ShopifyAuthorizationRequestRedirectStrategy implements RedirectStra
 
 
     protected void renderShopifyAppBridgeRedirectPage(HttpServletRequest request, HttpServletResponse response, String url) {
-        String redirectUrl = request.getRequestURL().toString();
+        String shop = ShopifyUtils.resolveShopParamFromRequest(request);
+        String redirectUrl = ShopifyUtils.addShopQueryParam(request.getRequestURL().toString(), shop);
+
         log.debug("Setting the following variables in the HTML returned: shopify-api-key = {}, redirectUri = {}", shopifyApiKey, redirectUrl);
 
         response.setContentType("text/html;charset=UTF-8");

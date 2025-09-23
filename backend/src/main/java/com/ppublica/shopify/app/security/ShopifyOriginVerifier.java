@@ -46,7 +46,6 @@ public class ShopifyOriginVerifier {
         String hmacValue = hmacValues.getFirst();
         sortedQueryStringMap.remove(HMAC_KEY);
 
-
         String sortedQueryString = toQueryString(sortedQueryStringMap);
 
         return isHmacEquals(hmacValue, sortedQueryString);
@@ -55,12 +54,13 @@ public class ShopifyOriginVerifier {
     }
 
     String toQueryString(TreeMap<String, List<String>> sortedQueryStringMap) {
+        log.debug("Sorting the query string... the query params will be url-decoded here");
         StringBuilder queryStringBuilder = new StringBuilder();
         for(String parameterName : sortedQueryStringMap.keySet()) {
             for(String parameterValue : sortedQueryStringMap.get(parameterName)) {
-                queryStringBuilder.append(parameterName);
+                queryStringBuilder.append(decodeQueryParam(parameterName));
                 queryStringBuilder.append("=");
-                queryStringBuilder.append(parameterValue);
+                queryStringBuilder.append(decodeQueryParam(parameterValue));
                 queryStringBuilder.append("&");
             }
         }
@@ -103,4 +103,9 @@ public class ShopifyOriginVerifier {
         }
         return hex.toString();
     }
+
+    private static String decodeQueryParam(String value) {
+        return UriUtils.urlDecode(value);
+    }
+
 }

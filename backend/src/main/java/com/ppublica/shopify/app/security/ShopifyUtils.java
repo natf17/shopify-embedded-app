@@ -71,5 +71,9 @@ public class ShopifyUtils {
         return true;
     }
 
+    public static String addShopQueryParam(String fullUrl, String shop) {
+        return UriUtils.addQueryParameter(fullUrl, SHOP_QUERY_PARAM, shop);
+    }
+
 
 }
