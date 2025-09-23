@@ -22,18 +22,22 @@ public class CookieOAuth2AuthorizationRequestRepository implements Authorization
     }
     @Override
     public OAuth2AuthorizationRequest loadAuthorizationRequest(HttpServletRequest request) {
-        log.debug("Loading the authorization request");
+        log.debug("Loading the authorization request from the secure cookie");
         return getOAuth2Cookie(request)
                 .map(cookie -> {
                     log.debug("Cookie found. Deserializing");
-                    return cookieSerializer.deserializeAsOAuth2AuthorizationRequest(cookie);
+                    OAuth2AuthorizationRequest req =  cookieSerializer.deserializeAsOAuth2AuthorizationRequest(cookie);
+
+                    log.debug("Returning OAuth2AuthorizationRequest: [redirectUri: " + req.getRedirectUri() + ", ...]");
+                    log.debug("HttpServletRequest scheme: " + request.getScheme());
+                    return req;
                 })
                 .orElse(null);
     }
 
     @Override
     public void saveAuthorizationRequest(OAuth2AuthorizationRequest authorizationRequest, HttpServletRequest request, HttpServletResponse response) {
-        log.debug("Saving the authorization request");
+        log.debug("Saving the authorization request in a secure cookie");
         if(authorizationRequest == null) {
             log.debug("The authorization request is null");
             return;

@@ -40,7 +40,8 @@ public class ShopifyOAuth2AuthorizationCodeAuthenticationProvider implements Aut
     private static final Logger log = LoggerFactory.getLogger(ShopifyOAuth2AuthorizationCodeAuthenticationProvider.class);
     private final OAuth2AuthorizationCodeAuthenticationProvider authProvider;
     private static final String INVALID_HMAC_PARAMETER_ERROR_CODE = "invalid_hmac_parameter";
-    private static final Pattern shopNameRegex = Pattern.compile("^https?://[a-zA-Z0-9][a-zA-Z0-9\\-]*\\.myshopify\\.com/?");
+    private static final Pattern shopNameRegexFull = Pattern.compile("^https?://[a-zA-Z0-9][a-zA-Z0-9\\-]*\\.myshopify\\.com/?");
+    private static final Pattern shopNameRegexPartial = Pattern.compile("^[a-zA-Z0-9][a-zA-Z0-9\\-]*\\.myshopify\\.com");
 
    public ShopifyOAuth2AuthorizationCodeAuthenticationProvider(OAuth2AccessTokenResponseClient<OAuth2AuthorizationCodeGrantRequest> accessTokenResponseClient) {
         this.authProvider = new OAuth2AuthorizationCodeAuthenticationProvider(accessTokenResponseClient);
@@ -54,8 +55,8 @@ public class ShopifyOAuth2AuthorizationCodeAuthenticationProvider implements Aut
 
         String shop = ShopifyUtils.resolveShopQueryParamFromFullUri(requestUri);
 
-        log.debug("Using requestUri={} and shop={}", requestUri, shop);
 
+        log.debug("Validating shop name {}", shop);
         if(!isShopNameValid(shop)) {
             throw new OAuth2AuthorizationException(new OAuth2Error(INVALID_HMAC_PARAMETER_ERROR_CODE));
         }
@@ -99,7 +100,7 @@ public class ShopifyOAuth2AuthorizationCodeAuthenticationProvider implements Aut
 
 
     protected boolean isShopNameValid(String shop) {
-       return shopNameRegex.matcher(shop).matches();
+       return shopNameRegexFull.matcher(shop).matches() || shopNameRegexPartial.matcher(shop).matches();
     }
 
     protected boolean areAllScopesGranted(OAuth2AuthorizationCodeAuthenticationToken authenticationResult) {

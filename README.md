@@ -74,9 +74,9 @@ Scenario 1: The shop is being installed (`/app/shopify`)
     - Embedded: returns a generated html page that will exit the iframe page via an AppBridge redirect to the app uri
     - Not embedded: redirects to the authorization uri
 - Step 3: Validate authorization code: `ShopifyOAuth2AuthorizationCodeAuthenticationProvider`
-  - Nonce check (nonce sent to authorization uri in query = nonce in current request params): the nonce sent to the auth server is guaranteed to be the same as the nonce in the cookie. So it is sufficient to only check the cookie.
+  - Nonce check (nonce sent to authorization uri in query = nonce in current request from Shopify): the nonce sent to the auth server is guaranteed to be the same as the nonce in the cookie. So it is sufficient to only check the cookie.
   - Nonce check (cookie = nonce in the query)
-    - `CookieOAuth2AuthorizationRequestRepository` extracts from cookie and creates the `OAuth2AuthorizationRequest`.
+    - `CookieOAuth2AuthorizationRequestRepository` reads the `OAuth2AuthorizationRequest` saved in the cookie, which includes the nonce.
     - `OAuth2AuthorizationCodeAuthenticationProvider` compares with the nonce in current request params
   - HMAC check (already done by `ShopifyRequestAuthenticationFilter`)
   - Check for valid `shop` parameter (see `ShopifyOAuth2AuthorizationCodeAuthenticationProvider`)
