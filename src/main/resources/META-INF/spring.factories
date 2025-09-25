@@ -1,1 +1,0 @@
-org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer=com.ppublica.shopify.security.configurer.ShopifySecurityConfigurer
