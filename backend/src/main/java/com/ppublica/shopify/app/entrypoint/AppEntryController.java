@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @Controller
 public class AppEntryController {
 
-    @RequestMapping("/shopify/**")
+    @RequestMapping("/app/**")
     public String forwardToAppEntryPage() {
         return "forward:/index.html";
     }

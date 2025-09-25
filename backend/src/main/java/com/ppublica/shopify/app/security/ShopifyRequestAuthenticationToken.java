@@ -35,6 +35,11 @@ public class ShopifyRequestAuthenticationToken extends AbstractAuthenticationTok
     }
 
     @Override
+    public String getName() {
+        return shop.shop();
+    }
+
+    @Override
     public void eraseCredentials() {
         this.queryString = null;
     }

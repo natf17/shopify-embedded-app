@@ -62,7 +62,12 @@ public class AccessTokenService implements OAuth2AuthorizedClientService {
     @Override
     public void saveAuthorizedClient(OAuth2AuthorizedClient authorizedClient, Authentication principal) {
         log.debug("Saving an authorized client (a token)");
-        shopAccessTokenRepository.saveAccessTokenForShop(entityMapper.toShopifyAccessTokenEntity(authorizedClient));
+
+        ShopifyAccessTokenEntity accessTokenEntity = entityMapper.toShopifyAccessTokenEntity(authorizedClient);
+
+        log.debug("It was converted to ShopifyAccessTokenEntity: {}", accessTokenEntity);
+
+        shopAccessTokenRepository.saveAccessTokenForShop(accessTokenEntity);
     }
 
     @Override

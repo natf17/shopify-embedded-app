@@ -4,15 +4,13 @@ import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.security.oauth2.core.endpoint.DefaultMapOAuth2AccessTokenResponseConverter;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AccessTokenResponse;
-import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationResponse;
+import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.util.StringUtils;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /*
@@ -27,6 +25,22 @@ public class ShopifyMapOAuth2AccessTokenResponseConverter implements Converter<M
 
     @Override
     public @Nullable OAuth2AccessTokenResponse convert(Map<String, Object> source) {
+        log.debug("Converting source map...");
+        log.debug("Adding token type to the source...");
+        source.put(OAuth2ParameterNames.TOKEN_TYPE, OAuth2AccessToken.TokenType.BEARER.getValue());
+
+        StringBuilder sb = new StringBuilder();
+        source.forEach((i,j) -> {
+            sb.append("(");
+            sb.append(i);
+            sb.append(":");
+            sb.append(j);
+            sb.append("),");
+
+        });
+        log.debug(sb.toString());
+
+        log.debug("Delegating to default converter...");
         OAuth2AccessTokenResponse response = defaultConverter.convert(source);
 
         return withCorrectedScopes(response);
