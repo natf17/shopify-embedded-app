@@ -116,6 +116,7 @@ If desired, an H2-in-memory database can be configured when running integration 
 
 # TODOs
 - encode the token in DB
+- don't forget the webhooks!
 -  build up `ShopifyAppRequestCache` so that it is a fully functional cookie-based request cache
 - `ShopifyAccessToken` scopes should be a set, not a String. Better yet, replace the custom token with the Spring default
 - Offer a way of authenticating non-embedded requests. Currently the only way is via Shopify (embedded). 
